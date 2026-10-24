@@ -24,7 +24,7 @@
 
 ### 编译/热更问题
 
-#### AOT 泛型异常：`ExecutionEngineException`
+#### AOT 泛型异常：`ExecutionEngineException`  
 
 热更代码使用了主包没有 AOT 实例的泛型。菜单 `HybridCLR → Generate → AOT Generic References` 重新生成，若仍缺失则在 `AOTGenericReferences.cs` 手动添加占位引用：
 ```csharp
@@ -65,9 +65,9 @@ Burst/IL2CPP 裁剪了代码。在 `Assets/link.xml` 中保留需要的类型：
 
 #### 热更后旧资源未更新
 
-1. CDN 资源版本文件是否更新
+1. CDN 资源版本文件是否更新  
 2. `RequestPackageVersionAsync` 是否获取到新版本号
-3. 本地测试清空 `Application.persistentDataPath` 缓存
+3. 本地测试清空 `Application.persistentDataPath` 缓存 
 
 ---
 
@@ -76,7 +76,7 @@ Burst/IL2CPP 裁剪了代码。在 `Assets/link.xml` 中保留需要的类型：
 #### 界面空白/节点找不到
 
 1. `[Window]` 特性 location 与 Prefab 文件名一致
-2. Prefab 在 `AssetRaw/UI/Prefabs/` 且 YooAsset 已收集
+2. Prefab 在 `AssetRaw/UI/Prefabs/` 且 YooAsset 已收集， 
 3. `ScriptGenerator` 路径与 Prefab 节点层级一致
 4. `FindChild` 返回 null 时加日志
 

@@ -1,0 +1,55 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using GameConfig;
+using GameConfig.takeover;
+
+namespace GameLogic.Takeover
+{
+    /// <summary>
+    /// 配置访问封装：业务代码不直接散落 ConfigSystem.Instance.Tables。
+    /// 表由 Luban 生成（Configs/GameConfig/Datas/takeover 相关 xlsx）。
+    /// </summary>
+    public static class Cfg
+    {
+        private static Tables T => ConfigSystem.Instance.Tables;
+
+        public static TbUnit TbUnit => T.TbUnit;
+        public static TbBuilding TbBuilding => T.TbBuilding;
+        public static TbSpell TbSpell => T.TbSpell;
+        public static TbEdict TbEdict => T.TbEdict;
+        public static TbMapNode TbMapNode => T.TbMapNode;
+        public static TbMapEdge TbMapEdge => T.TbMapEdge;
+        public static TbLevel TbLevel => T.TbLevel;
+
+        private static Dictionary<int, Building> _byId;
+
+        public static Building BuildingById(int id)
+        {
+            if (_byId == null)
+            {
+                _byId = new Dictionary<int, Building>();
+                foreach (var b in TbBuilding.DataList) _byId[b.Id] = b;
+            }
+            return _byId.TryGetValue(id, out var v) ? v : null;
+        }
+
+        /// <summary>节点类型 → 建筑定义：城镇=1 要塞=2 营地=3 魔法塔=4。</summary>
+        public static Building BuildingByKind(NodeKind kind)
+        {
+            switch (kind)
+            {
+                case NodeKind.Town: return BuildingById(1);
+                case NodeKind.Castle: return BuildingById(2);
+                case NodeKind.Camp: return BuildingById(3);
+                case NodeKind.MageTower: return BuildingById(4);
+                default: return null;
+            }
+        }
+
+        public static Building BuildingByKind(int kind) => BuildingByKind((NodeKind)kind);
+
+        public static IEnumerable<Unit> UnitsOf(Faction faction) =>
+            TbUnit.DataList.Where(u => u.Faction == (int)faction);
+    }
+}
+
