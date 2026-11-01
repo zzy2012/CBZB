@@ -1,0 +1,57 @@
+﻿category,id,display_name,english_name,unity_location,source_symbol,status
+unit,1,卫兵,Guards,takeover_unit_guards,,pending-original-import
+unit,2,剑士,Swordsmen,takeover_unit_swordsmen,,pending-original-import
+unit,3,罗马军团,Legionaries,takeover_unit_legionaries,,pending-original-import
+unit,4,弓箭手,Archers,takeover_unit_archers,,pending-original-import
+unit,5,弩手,Crossbowmen,takeover_unit_crossbowmen,,pending-original-import
+unit,6,骑士,Knights,takeover_unit_knights,,pending-original-import
+unit,7,捍卫者,Champions,takeover_unit_champions,,pending-original-import
+unit,8,僧人,Monks,takeover_unit_monks,,pending-original-import
+unit,9,狂热者,Zealots,takeover_unit_zealots,,pending-original-import
+unit,10,主的化身,Avatar,takeover_unit_avatar,,pending-original-import
+unit,11,投石机,Trebuchet,takeover_unit_trebuchet,,pending-original-import
+unit,12,武士,Warriors,takeover_unit_warriors,,pending-original-import
+unit,13,永恒者,Immortals,takeover_unit_immortals,,pending-original-import
+unit,14,猎人,Hunters,takeover_unit_hunters,,pending-original-import
+unit,15,毒蛇弓箭手,Serpent Archers,takeover_unit_serpent_archers,,pending-original-import
+unit,16,游牧民,Nomads,takeover_unit_nomads,,pending-original-import
+unit,17,掠夺者,Raiders,takeover_unit_raiders,,pending-original-import
+unit,18,远古骑士,Ancient Raiders,takeover_unit_ancient_raiders,,pending-original-import
+unit,19,刺客,Assassins,takeover_unit_assassins,,pending-original-import
+unit,20,投石机,Trebuchet,takeover_unit_trebuchet,,pending-original-import
+unit,21,毒素弹弓,Poison Catapult,takeover_unit_poison_catapult,,pending-original-import
+unit,22,叛军,Rebels,takeover_unit_rebels,,pending-original-import
+unit,23,跟随者,Myrmidons,takeover_unit_myrmidons,,pending-original-import
+unit,24,枪械工人,Gunsmiths,takeover_unit_gunsmiths,,pending-original-import
+unit,25,枪械机器人,Gunbots,takeover_unit_gunbots,,pending-original-import
+unit,26,巨型机器,Giantbots,takeover_unit_giantbots,,pending-original-import
+unit,27,长矛骑士,Lancers,takeover_unit_lancers,,pending-original-import
+unit,28,长矛龙骑士,Dragon Lancers,takeover_unit_dragon_lancers,,pending-original-import
+unit,29,侍僧,Acolytes,takeover_unit_acolytes,,pending-original-import
+unit,30,巫师,Wizards,takeover_unit_wizards,,pending-original-import
+unit,31,投石机,Trebuchet,takeover_unit_trebuchet,,pending-original-import
+unit,32,不死武士,Undying Warriors,takeover_unit_undying_warriors,,pending-original-import
+unit,33,僵尸武士,Zombie Warriors,takeover_unit_zombie_warriors,,pending-original-import
+unit,34,不死弓箭手,Undying Archers,takeover_unit_undying_archers,,pending-original-import
+unit,35,骷髅弓箭手,Skeleton Archers,takeover_unit_skeleton_archers,,pending-original-import
+unit,36,不死骑士,Undying Horsemen,takeover_unit_undying_horsemen,,pending-original-import
+unit,37,黑暗骑士,Dark Knights,takeover_unit_dark_knights,,pending-original-import
+unit,38,不死刺客,Undying Assassins,takeover_unit_undying_assassins,,pending-original-import
+unit,39,阴影人,Shades,takeover_unit_shades,,pending-original-import
+unit,40,投石机,Trebuchet,takeover_unit_trebuchet,,pending-original-import
+unit,41,毒素弹弓,Poison Catapult,takeover_unit_poison_catapult,,pending-original-import
+unit,42,强盗武士,Brigand Warriors,takeover_unit_brigand_warriors,,pending-original-import
+unit,43,强盗弓手,Brigand Archers,takeover_unit_brigand_archers,,pending-original-import
+unit,44,野狼,Wolves,takeover_unit_wolves,,pending-original-import
+unit,45,食人魔,Ogre,takeover_unit_ogre,,pending-original-import
+building,1,城镇,TOWN,takeover_building_town,,pending-original-import
+building,2,要塞,CASTLE,takeover_building_castle,,pending-original-import
+building,3,营地,CAMP,takeover_building_camp,,pending-original-import
+building,4,魔法塔,MAGIC TOWER,takeover_building_magetower,,pending-original-import
+building,5,农场,FARM,takeover_building_farm,,pending-original-import
+building,6,矿场,MINE,takeover_building_mine,,pending-original-import
+building,7,英雄碑,OBELISK,takeover_building_obelisk,,pending-original-import
+node,1,空地节点,EMPTY,takeover_node_empty,,pending-original-import
+node,2,可建造点,BUILD SPOT,takeover_node_buildspot,,pending-original-import
+node,3,宝箱,CHEST,takeover_node_chest,,pending-original-import
+node,4,食人魔,OGRE,takeover_node_ogre,,pending-original-import

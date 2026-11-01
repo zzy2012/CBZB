@@ -23,3 +23,10 @@ Tools/GameEventSourceGenerator/SourceGenerator/obj
 
 #openspec
 openspec/
+
+# Takeover extraction workspace (contains the original SWF and decompile output)
+GameData/
+Build/
+UnityProject/Build/
+.DS_Store
+logs/

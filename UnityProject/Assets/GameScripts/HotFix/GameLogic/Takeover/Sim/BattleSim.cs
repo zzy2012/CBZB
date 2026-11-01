@@ -94,6 +94,13 @@ namespace GameLogic.Takeover
         public bool IsGarrison;
         /// <summary>AI 专用：残血撤退中，撤退途中不再主动进攻。</summary>
         public bool Retreating;
+        public float MoraleBonus = 10f;
+        public float PoisonDamage;
+        public float PoisonSeconds;
+        public float PoisonTickTimer;
+        public float FrozenSeconds;
+        public bool ChargeConsumed;
+        public float DashRemaining;
         /// <summary>教令带来的生命/移速倍率（步兵 +HP、骑兵 +HP、全军 +移速）。</summary>
         public float HpMul = 1f;
         public float SpeedMul = 1f;
@@ -138,6 +145,16 @@ namespace GameLogic.Takeover
         }
     }
 
+    public sealed class ActiveSpellEffect
+    {
+        public GameConfig.takeover.Spell Def;
+        public PlayerState Owner;
+        public Faction Faction;
+        public Vector2 Center;
+        public float Remaining;
+        public float TickTimer;
+    }
+
     /// <summary>
     /// 战斗模拟：地图图、经济、造兵、寻路、战斗、占领、AI、胜负。
     /// 纯数据逻辑，不依赖场景，由 View 层驱动 Tick。
@@ -146,7 +163,7 @@ namespace GameLogic.Takeover
     {
         public const float ManaCap = 500f;
         public const float CaptureSeconds = 2f;
-        public const int AiBuyThreshold = 180;
+        public const int AiBuyThreshold = OriginalRules.AiBuyThreshold;
         public const float AiThinkInterval = 1.2f;
         /// <summary>AI 首次出兵前的宽限期（秒）。原版 AI 前期偏被动，给玩家铺农场的时间。</summary>
         public const float AiFirstAttackDelay = 180f;
@@ -159,6 +176,7 @@ namespace GameLogic.Takeover
         public readonly List<Squad> Squads = new List<Squad>();
         public readonly PlayerState Human = new PlayerState();
         public readonly PlayerState Enemy = new PlayerState();
+        public readonly List<ActiveSpellEffect> ActiveSpells = new List<ActiveSpellEffect>();
 
         public float Time;
         public int Stars => Time < 330f ? 3 : Time < 540f ? 2 : 1;
@@ -166,14 +184,17 @@ namespace GameLogic.Takeover
         public bool HumanVictory;
         public int LevelAssetId;
 
-        private readonly System.Random _rng = new System.Random(20120920);
+        private readonly System.Random _rng;
+        private readonly List<BattleEvent> _events = new List<BattleEvent>();
         /// <summary>每座建筑开局的驻军人数（原版建筑有守军，不是空城）。</summary>
         public static int GarrisonPerBuilding = 1;
         private int _nextSquadId = 1;
         private float _aiTimer;
 
-        public BattleSim(int levelAssetId, Faction humanFaction, Faction enemyFaction, int[] humanMods = null)
+        public BattleSim(int levelAssetId, Faction humanFaction, Faction enemyFaction,
+            int[] humanMods = null, int seed = 20120920)
         {
+            _rng = new System.Random(seed);
             if (humanMods != null)
             {
                 for (int i = 0; i < 45 && i < humanMods.Length; i++) Human.Mods[i] = humanMods[i];
@@ -181,10 +202,17 @@ namespace GameLogic.Takeover
             LevelAssetId = levelAssetId;
             Human.Faction = humanFaction;
             Enemy.Faction = enemyFaction;
+            foreach (var modifier in OriginalRules.EnemyModifiers(levelAssetId))
+            {
+                if (modifier.Id >= 0 && modifier.Id < Enemy.Mods.Length)
+                    Enemy.Mods[modifier.Id] += modifier.Value;
+            }
+            Human.UltimateMax = 200f * Human.ModMul(12);
+            Enemy.UltimateMax = 200f * Enemy.ModMul(12);
             BuildMap(levelAssetId);
             var lv = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == levelAssetId);
-            Human.Gold = (lv?.StartGold ?? 250) + Human.Mods[8];   // 教令：开局 +N 金
-            Human.Mana = lv?.StartMana ?? 100;
+            Human.Gold = (lv?.StartGold ?? OriginalRules.PlayerStartGold) + Human.Mods[8];
+            Human.Mana = lv?.StartMana ?? OriginalRules.PlayerStartMana;
             Enemy.Gold = 0;
             Enemy.Mana = 0;
             SpawnGarrisons();
@@ -203,22 +231,25 @@ namespace GameLogic.Takeover
                     Kind = (NodeKind)cfg.Kind,
                     Loc = cfg.Loc,
                     Owner = (Faction)cfg.Owner,
-                    Pos = new Vector2(cfg.X, cfg.Y),
+                    Pos = new Vector2(cfg.X, cfg.Y * OriginalRules.WorldYScale),
                 };
                 if (node.Kind >= NodeKind.Castle && node.Kind <= NodeKind.MageTower)
                 {
                     var def = Cfg.BuildingByKind((int)node.Kind);
                     if (def != null)
                     {
+                        var owner = node.Owner == Human.Faction ? Human
+                            : node.Owner == Enemy.Faction ? Enemy : null;
+                        int towerBonus = def.Id == 4 && owner != null ? owner.Mods[38] : 0;
                         node.Building = new BuildingState
                         {
                             Node = node,
                             Owner = node.Owner,
                             Kind = def.Id,
                             BaseHp = Mathf.RoundToInt(def.Hp * (node.Owner == Human.Faction ? Human.ModMul(11) : node.Owner == Enemy.Faction ? Enemy.ModMul(11) : 1f)),
-                            GoldPerSec = def.Gold,
-                            ManaPerSec = def.Mana,
-                            Supply = def.Supply,
+                            GoldPerSec = def.Gold + towerBonus,
+                            ManaPerSec = def.Mana + towerBonus,
+                            Supply = def.Supply + towerBonus,
                             UltimatePerSec = def.Ultimate,
                         };
                         node.Building.Hp = node.Building.MaxHp;
@@ -273,7 +304,11 @@ namespace GameLogic.Takeover
                         AtNode = n,
                         HomeNode = n,
                         IsGarrison = true,
+                        MoraleBonus = 10f * (fac == Human.Faction ? Human : Enemy).ModMul(15),
+                        HpMul = UnitHpMul(fac == Human.Faction ? Human : Enemy, def),
+                        SpeedMul = UnitSpeedMul(fac == Human.Faction ? Human : Enemy, def),
                     });
+                    Squads[Squads.Count - 1].Hp = def.Hp * def.UnitsCount * Squads[Squads.Count - 1].HpMul;
                 }
             }
         }
@@ -284,17 +319,96 @@ namespace GameLogic.Takeover
             Time += dt;
             TickEconomy(Human, dt);
             TickEconomy(Enemy, dt);
+            TickSpells(dt);
             TickSquads(dt);
             TickAI(dt);
             RefreshOwnership();
             CheckEnd();
         }
 
+        public IReadOnlyList<BattleEvent> DrainEvents()
+        {
+            var copy = _events.ToArray();
+            _events.Clear();
+            return copy;
+        }
+
+        public bool ExecuteCommand(PlayerState player, BattleCommand command)
+        {
+            if (player == null || IsOver) return false;
+            var node = FindNode(command.NodeId);
+            switch (command.Type)
+            {
+                case BattleCommandType.Move:
+                case BattleCommandType.Attack:
+                {
+                    var squad = player.Squads.FirstOrDefault(s => s.Id == command.SquadId && !s.IsDead);
+                    if (squad == null || node == null) return false;
+                    OrderMove(squad, node);
+                    return true;
+                }
+                case BattleCommandType.Retreat:
+                {
+                    var squad = player.Squads.FirstOrDefault(s => s.Id == command.SquadId && !s.IsDead);
+                    if (squad == null) return false;
+                    OrderRetreat(squad);
+                    return true;
+                }
+                case BattleCommandType.BuyUnit:
+                {
+                    var def = Cfg.TbUnit.DataList.FirstOrDefault(u => u.Id == command.ConfigId);
+                    return def != null && BuyUnit(player, def, node, out _) != null;
+                }
+                case BattleCommandType.Upgrade:
+                    return TryUpgrade(player, node);
+                case BattleCommandType.Build:
+                    return TryBuild(player, node, command.ConfigId, out _);
+                case BattleCommandType.CastSpell:
+                {
+                    var spell = Cfg.TbSpell.DataList.FirstOrDefault(s => s.Id == command.ConfigId);
+                    return spell != null && TryCastSpell(player, spell, node, out _);
+                }
+                default:
+                    return false;
+            }
+        }
+
+        public MapNode FindNode(int id) => Nodes.FirstOrDefault(n => n.Id == id);
+
         private void TickEconomy(PlayerState p, float dt)
         {
             p.Gold += p.NetGoldIncome() * dt;
             p.Mana = Mathf.Min(ManaCap, p.Mana + p.ManaIncome * dt);
             p.Ultimate = Mathf.Min(p.UltimateMax, p.Ultimate + p.UltimateRate * dt);
+        }
+
+        private void TickSpells(float dt)
+        {
+            for (int i = ActiveSpells.Count - 1; i >= 0; i--)
+            {
+                var effect = ActiveSpells[i];
+                effect.Remaining -= dt;
+                effect.TickTimer -= dt;
+                if (effect.TickTimer <= 0f)
+                {
+                    effect.TickTimer = 1f;
+                    ApplySpellPulse(effect);
+                }
+                if (effect.Remaining <= 0f) ActiveSpells.RemoveAt(i);
+            }
+
+            foreach (var squad in Squads.Where(s => !s.IsDead))
+            {
+                if (!OriginalRules.TryAbility(squad.Def.Abilities, "DivinePresence", out int healing)
+                    || healing <= 0)
+                    continue;
+                foreach (var ally in Squads)
+                {
+                    if (ally.IsDead || ally.Faction != squad.Faction || ally == squad) continue;
+                    if ((ally.Pos - squad.Pos).sqrMagnitude <= 75f * 75f)
+                        ally.Hp = Mathf.Min(ally.HpPerSoldier * ally.MaxSoldiers, ally.Hp + healing * dt);
+                }
+            }
         }
 
         private void RefreshOwnership()
@@ -329,27 +443,44 @@ namespace GameLogic.Takeover
         public bool CanBuy(PlayerState p, GameConfig.takeover.Unit def, MapNode at, out string reason)
         {
             reason = null;
-            if (p.Gold < def.Cost) { reason = "金币不足"; return false; }
+            if (p.Gold < UnitCost(p, def)) { reason = "金币不足"; return false; }
             if (p.FreeSupply < def.Upkeep) { reason = "补给不足"; return false; }
             if (at == null || at.Building == null || at.Building.Owner != p.Faction) { reason = "不是己方建筑"; return false; }
-            if (!AllowedAt(at.Building, def)) { reason = "该建筑不能生产此兵种"; return false; }
+            if (!AllowedAt(p, at.Building, def)) { reason = "该建筑不能生产此兵种"; return false; }
             return true;
         }
 
         /// <summary>建筑等级决定可用科技阶：0级→1阶，1级→2阶，2级→3阶。</summary>
         public static bool AllowedAt(BuildingState b, GameConfig.takeover.Unit def)
+            => AllowedAt(null, b, def);
+
+        public static bool AllowedAt(PlayerState p, BuildingState b, GameConfig.takeover.Unit def)
         {
             var bd = Cfg.BuildingById(b.Kind);
             if (bd == null) return false;
             if (!bd.AllowedTypes.Contains(def.UnitType)) return false;
-            return def.Tier <= b.Level + 1;
+            int troopUpgrade = p == null ? 0 : p.Mods[TierModifier(def.UnitType)];
+            return def.Tier <= Mathf.Min(3, b.Level + 1 + troopUpgrade);
+        }
+
+        private static int TierModifier(int unitType)
+        {
+            switch ((UnitKind)unitType)
+            {
+                case UnitKind.Infantry: return 0;
+                case UnitKind.Cavalry: return 1;
+                case UnitKind.Archers: return 2;
+                case UnitKind.Siege: return 3;
+                case UnitKind.Magic: return 4;
+                default: return 0;
+            }
         }
 
         public Squad BuyUnit(PlayerState p, GameConfig.takeover.Unit def, MapNode at, out string reason)
         {
             reason = null;
             if (!CanBuy(p, def, at, out reason)) return null;
-            p.Gold -= Mathf.RoundToInt(def.Cost * (def.Abilities.Contains("Undead") ? p.ModMul(28) : 1f));
+            p.Gold -= UnitCost(p, def);
             var squad = new Squad
             {
                 Id = _nextSquadId++,
@@ -358,7 +489,8 @@ namespace GameLogic.Takeover
                 Soldiers = def.UnitsCount,
                 MaxSoldiers = def.UnitsCount,
                 HpMul = UnitHpMul(p, def),
-                SpeedMul = p.ModMul(19),
+                SpeedMul = UnitSpeedMul(p, def),
+                MoraleBonus = 10f * p.ModMul(15),
                 Pos = at.Pos,
                 AtNode = at,
             };
@@ -366,6 +498,12 @@ namespace GameLogic.Takeover
             Squads.Add(squad);
             p.Squads.Add(squad);
             return squad;
+        }
+
+        private static int UnitCost(PlayerState p, GameConfig.takeover.Unit def)
+        {
+            float multiplier = OriginalRules.HasAbility(def.Abilities, "Undead") ? p.ModMul(28) : 1f;
+            return Mathf.RoundToInt(def.Cost * multiplier);
         }
 
         /// <summary>教令：解锁某教令的某一档，把修正值叠加到该玩家的修正器上。</summary>
@@ -382,6 +520,9 @@ namespace GameLogic.Takeover
             if (def.UnitType == (int)UnitKind.Cavalry) return p.ModMul(39);
             return 1f;
         }
+
+        private static float UnitSpeedMul(PlayerState p, GameConfig.takeover.Unit def) =>
+            p.ModMul(def.UnitType == (int)UnitKind.Siege ? 27 : 19);
 
         public bool TryUpgrade(PlayerState p, MapNode at)
         {
@@ -410,7 +551,7 @@ namespace GameLogic.Takeover
             if (spot == null || spot.Kind != NodeKind.BuildSpot || spot.Building != null) { reason = "不是可建造空位"; return false; }
             var def = Cfg.BuildingById(buildingId);
             if (def == null || def.BuildCost <= 0) { reason = "不可建造"; return false; }
-            if (p.Gold < def.BuildCost) { reason = "金币不足"; return false; }
+            if (p.Gold < Mathf.RoundToInt(def.BuildCost * p.ModMul(31))) { reason = "金币不足"; return false; }
             if (!IsLocControlled(p, spot.Loc)) { reason = "不在己方控制范围"; return false; }
             return true;
         }
@@ -436,6 +577,133 @@ namespace GameLogic.Takeover
             spot.Building = b;
             if (!p.OwnedNodes.Contains(spot)) p.OwnedNodes.Add(spot);
             return true;
+        }
+
+        public bool TryCastSpell(PlayerState p, GameConfig.takeover.Spell spell, MapNode target, out string reason)
+        {
+            reason = null;
+            if (p == null || spell == null || target == null) { reason = "无效法术或目标"; return false; }
+            if ((int)p.Faction != spell.Faction) { reason = "阵营不匹配"; return false; }
+
+            bool ultimate = spell.SpellType == 2;
+            if (ultimate)
+            {
+                if (p.Ultimate + 0.0001f < p.UltimateMax) { reason = "终极技能尚未充满"; return false; }
+                p.Ultimate = 0f;
+            }
+            else
+            {
+                int cost = Mathf.RoundToInt(spell.Cost * p.ModMul(35));
+                if (p.Mana < cost) { reason = "法力不足"; return false; }
+                p.Mana -= cost;
+            }
+
+            var effect = new ActiveSpellEffect
+            {
+                Def = spell,
+                Owner = p,
+                Faction = p.Faction,
+                Center = target.Pos,
+                Remaining = Mathf.Max(0.05f, spell.Time * (spell.SpellType == 1 ? p.ModMul(6) : 1f)),
+                TickTimer = 0f,
+            };
+            ActiveSpells.Add(effect);
+            ApplySpellPulse(effect);
+            _events.Add(new BattleEvent
+            {
+                Kind = ultimate ? "UltimateCast" : "SpellCast",
+                ActorId = (int)p.Faction,
+                TargetId = target.Id,
+                Value = spell.Id,
+                Position = target.Pos,
+            });
+            return true;
+        }
+
+        private void ApplySpellPulse(ActiveSpellEffect effect)
+        {
+            var name = effect.Def.Name ?? string.Empty;
+            float radius = Mathf.Max(0f, effect.Def.Radius);
+            float radiusSq = radius * radius;
+            int power = effect.Def.Power;
+
+            foreach (var squad in Squads.Where(s => !s.IsDead))
+            {
+                if ((squad.Pos - effect.Center).sqrMagnitude > radiusSq) continue;
+                bool ally = squad.Faction == effect.Faction;
+
+                if (name.Contains("LORD'S JUDGEMENT") || name.Contains("STONEWORMS")
+                    || name.Contains("CATACLYSM") || name.Contains("TERROR")
+                    || name.Contains("CALL TO THE GRAVE"))
+                {
+                    if (!ally)
+                    {
+                        if (name.Contains("TERROR"))
+                            squad.MoraleBonus = Mathf.Max(1f, squad.MoraleBonus - power);
+                        else
+                        {
+                            float damage = power;
+                            if (name.Contains("LORD'S JUDGEMENT") && effect.Owner != null)
+                                damage *= effect.Owner.ModMul(10);
+                            ApplyDamage(squad, damage);
+                        }
+                    }
+                }
+                else if (name.Contains("ICE BLAST"))
+                {
+                    if (!ally) squad.FrozenSeconds = Mathf.Max(squad.FrozenSeconds, 5f);
+                }
+                else if (name.Contains("CONSECRATION") || name.Contains("LIBERATION")
+                         || name.Contains("SIGN OF THE ADVENT"))
+                {
+                    if (ally) squad.Hp = Mathf.Min(squad.HpPerSoldier * squad.MaxSoldiers, squad.Hp + power);
+                }
+                else if (name.Contains("HEROISM") || name.Contains("BLOODLUST")
+                         || name.Contains("DESECRATION"))
+                {
+                    if (ally) squad.MoraleBonus = Mathf.Min(100f, squad.MoraleBonus + power);
+                }
+                else if (name.Contains("GRAND TRANSFORMATION"))
+                {
+                    if (!ally) ApplyDamage(squad, Mathf.Max(1, power));
+                }
+            }
+
+            if (name.Contains("DISENTOMB"))
+            {
+                var node = NearestNode(effect.Center);
+                for (int i = 0; i < Mathf.Max(1, power); i++) SummonSpellUnit(effect.Faction, node);
+            }
+            else if (name.Contains("RAISE DEAD"))
+            {
+                SummonSpellUnit(effect.Faction, NearestNode(effect.Center));
+            }
+        }
+
+        private void SummonSpellUnit(Faction faction, MapNode node)
+        {
+            var player = faction == Human.Faction ? Human : faction == Enemy.Faction ? Enemy : null;
+            if (player == null || node == null) return;
+            var def = Cfg.TbUnit.DataList.FirstOrDefault(u => u.Faction == (int)faction
+                                                              && u.UnitType == (int)UnitKind.Infantry
+                                                              && u.Tier == 1);
+            if (def == null) return;
+            var squad = new Squad
+            {
+                Id = _nextSquadId++,
+                Faction = faction,
+                Def = def,
+                Soldiers = def.UnitsCount,
+                MaxSoldiers = def.UnitsCount,
+                HpMul = UnitHpMul(player, def),
+                SpeedMul = UnitSpeedMul(player, def),
+                MoraleBonus = 10f * player.ModMul(15),
+                Pos = node.Pos,
+                AtNode = node,
+            };
+            squad.Hp = squad.HpPerSoldier * squad.MaxSoldiers;
+            Squads.Add(squad);
+            player.Squads.Add(squad);
         }
 
         private MapNode FindBuildSpot(PlayerState p)
@@ -468,6 +736,8 @@ namespace GameLogic.Takeover
             }
             s.PathIndex = 0;
             s.IdleTimer = 0f;
+            if (OriginalRules.TryAbility(s.Def.Abilities, "HorrificDash", out int dash))
+                s.DashRemaining = Mathf.Max(0f, dash);
         }
 
         /// <summary>最近的敌方建筑。</summary>
@@ -529,10 +799,33 @@ namespace GameLogic.Takeover
                 var s = Squads[i];
                 if (s.IsDead)
                 {
+                    var owner = s.Faction == Human.Faction ? Human : s.Faction == Enemy.Faction ? Enemy : null;
+                    if (owner != null && owner.Mods[26] > 0)
+                        owner.Ultimate = Mathf.Min(owner.UltimateMax,
+                            owner.Ultimate + owner.UltimateMax * owner.Mods[26] / 100f);
                     Squads.RemoveAt(i);
                     Human.Squads.Remove(s);
                     Enemy.Squads.Remove(s);
                     continue;
+                }
+
+                if (s.FrozenSeconds > 0f)
+                {
+                    s.FrozenSeconds = Mathf.Max(0f, s.FrozenSeconds - dt);
+                    s.AttackTimer = Mathf.Max(s.AttackTimer, 0f);
+                    continue;
+                }
+
+                if (s.PoisonSeconds > 0f)
+                {
+                    s.PoisonSeconds = Mathf.Max(0f, s.PoisonSeconds - dt);
+                    s.PoisonTickTimer -= dt;
+                    if (s.PoisonTickTimer <= 0f)
+                    {
+                        s.PoisonTickTimer = 3f;
+                        ApplyDamage(s, s.PoisonDamage);
+                        if (s.IsDead) continue;
+                    }
                 }
 
                 // 1) 交战优先：射程内发现敌军就停下开打（远程因此能站在射程外输出）
@@ -543,6 +836,7 @@ namespace GameLogic.Takeover
                 }
                 else
                 {
+                    s.ChargeConsumed = false;
                     MoveAlongPath(s, dt);
                     var node = s.AtNode;
                     if (node != null && node.Building != null && node.Building.Owner != s.Faction)
@@ -566,6 +860,13 @@ namespace GameLogic.Takeover
                 if (s.Path == null && s.AtNode?.Building != null && s.AtNode.Building.Owner == s.Faction)
                 {
                     s.Hp = Mathf.Min(s.HpPerSoldier * s.MaxSoldiers, s.Hp + s.HpPerSoldier * 0.15f * dt);
+                }
+                var regeneratingOwner = s.Faction == Human.Faction ? Human : s.Faction == Enemy.Faction ? Enemy : null;
+                if (regeneratingOwner != null && regeneratingOwner.Mods[40] > 0
+                    && s.Def.Name.IndexOf("Giant", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    float maxHp = s.HpPerSoldier * s.MaxSoldiers;
+                    s.Hp = Mathf.Min(maxHp, s.Hp + maxHp * regeneratingOwner.Mods[40] / 100f * dt);
                 }
 
                 // 自动推进：闲置 3 秒去找下一个敌方主建筑（人类只剩 1 队时不自作主张）
@@ -598,7 +899,8 @@ namespace GameLogic.Takeover
             var target = s.Path[s.PathIndex];
             var delta = target.Pos - s.Pos;
             float dist = delta.magnitude;
-            float step = s.Speed * dt;
+            float step = s.Speed * dt + s.DashRemaining;
+            s.DashRemaining = 0f;
             if (dist <= step)
             {
                 s.Pos = target.Pos;
@@ -634,15 +936,79 @@ namespace GameLogic.Takeover
             if (s.AttackTimer > 0f) return;
             s.AttackTimer = Mathf.Max(0.2f, s.Def.AttackSpeed * 0.1f);
 
-            float dmg = RollDamage(s) * MoraleMul(s);
+            bool frozenDamage = target.FrozenSeconds > 0f;
+            float dmg = frozenDamage ? MaxRollDamage(s) * MoraleMul(s) : RollDamage(s) * MoraleMul(s);
             if (s.Def.UnitType == (int)UnitKind.Archers || s.Def.UnitType == (int)UnitKind.Siege)
                 dmg *= s.Faction == Human.Faction ? Human.ModMul(13) : Enemy.ModMul(13);
 
+            float distance = (target.Pos - s.Pos).magnitude;
             // 远程被贴脸才吃近战惩罚
-            if (s.Def.Range > 0 && (target.Pos - s.Pos).magnitude < 40f)
+            if (s.Def.Range > 0 && distance < 40f)
                 dmg *= (100 - s.Def.MeleePenalty) / 100f;
 
+            if (OriginalRules.TryAbility(s.Def.Abilities, "Charge", out int charge) && !s.ChargeConsumed)
+            {
+                dmg += Mathf.Floor(dmg * charge / 10f);
+                s.ChargeConsumed = true;
+            }
+
+            if (target.Def.UnitType == (int)UnitKind.Cavalry
+                && OriginalRules.TryAbility(s.Def.Abilities, "LongSpear", out int spear))
+                dmg *= 1f + spear / 100f;
+
+            if (distance > 40f && OriginalRules.TryAbility(target.Def.Abilities, "ShieldWall", out int shield))
+                dmg *= shield / 100f;
+
+            var attackingPlayer = s.Faction == Human.Faction ? Human : s.Faction == Enemy.Faction ? Enemy : null;
+            if (OriginalRules.HasAbility(s.Def.Abilities, "Mechanism")
+                && attackingPlayer != null
+                && _rng.NextDouble() < attackingPlayer.Mods[32] / 100f)
+                dmg *= 2f;
+
             ApplyDamage(target, dmg);
+
+            if (OriginalRules.TryAbility(s.Def.Abilities, "FreezeArrow", out int freezeArrow)
+                || OriginalRules.TryAbility(s.Def.Abilities, "FreezeBlast", out freezeArrow))
+            {
+                float freezeChance = freezeArrow / 100f;
+                if (target.Def.UnitType == (int)UnitKind.Infantry && attackingPlayer != null)
+                    freezeChance += attackingPlayer.Mods[33] / 100f;
+                if (_rng.NextDouble() < freezeChance)
+                {
+                    float modifier = attackingPlayer?.Mods[30] ?? 0;
+                    target.FrozenSeconds = Mathf.Max(target.FrozenSeconds, 3f + modifier);
+                }
+            }
+
+            if (OriginalRules.TryAbility(s.Def.Abilities, "Poisonous", out int poison)
+                && !OriginalRules.HasAbility(target.Def.Abilities, "PoisonImmunity"))
+            {
+                target.PoisonDamage = Mathf.Max(target.PoisonDamage, poison);
+                target.PoisonSeconds = 3f;
+                target.PoisonTickTimer = Mathf.Min(target.PoisonTickTimer <= 0f ? 3f : target.PoisonTickTimer, 3f);
+            }
+
+            if (OriginalRules.TryAbility(s.Def.Abilities, "Intimidiation", out int intimidation))
+                target.MoraleBonus = Mathf.Max(1f, target.MoraleBonus - intimidation);
+
+            if (OriginalRules.TryAbility(s.Def.Abilities, "SplashDamage", out int splash))
+            {
+                foreach (var other in Squads)
+                {
+                    if (other == target || other.IsDead || other.Faction == s.Faction) continue;
+                    if ((other.Pos - target.Pos).sqrMagnitude <= splash * splash)
+                        ApplyDamage(other, dmg);
+                }
+            }
+
+            _events.Add(new BattleEvent
+            {
+                Kind = target.IsDead ? "SquadKilled" : "SquadDamaged",
+                ActorId = s.Id,
+                TargetId = target.Id,
+                Value = dmg,
+                Position = target.Pos,
+            });
         }
 
         private void AttackBuilding(Squad s, MapNode node, float dt)
@@ -655,8 +1021,8 @@ namespace GameLogic.Takeover
 
             float dmg = RollDamage(s) * MoraleMul(s);
             dmg *= s.Faction == Human.Faction ? Human.ModMul(18) : Enemy.ModMul(18);
-            if (s.Def.Abilities.Contains("SiegeWeapon")) dmg *= 1.5f;
-            if (s.Def.Abilities.Contains("SplashDamage")) dmg *= 1.1f;
+            if (OriginalRules.TryAbility(s.Def.Abilities, "SiegeWeapon", out int siege))
+                dmg *= 1f + siege / 100f;
             node.Building.Hp = Mathf.Max(0, node.Building.Hp - Mathf.RoundToInt(dmg));
             node.Building.CaptureProgress = 0f;
         }
@@ -689,11 +1055,29 @@ namespace GameLogic.Takeover
         {
             int alive = s.AliveSoldiers;
             float roll = Mathf.Lerp(s.Def.DmgMin, s.Def.DmgMax, (float)_rng.NextDouble());
-            return roll * alive;
+            return roll * alive * SpellDamageMultiplier(s);
+        }
+
+        private float MaxRollDamage(Squad s) =>
+            s.Def.DmgMax * s.AliveSoldiers * SpellDamageMultiplier(s);
+
+        private float SpellDamageMultiplier(Squad squad)
+        {
+            float multiplier = 1f;
+            foreach (var effect in ActiveSpells)
+            {
+                if (effect.Faction != squad.Faction) continue;
+                if ((squad.Pos - effect.Center).sqrMagnitude > effect.Def.Radius * effect.Def.Radius) continue;
+                var name = effect.Def.Name ?? string.Empty;
+                if (name.Contains("BLOODLUST") || name.Contains("FROST ENCHANTMENT")
+                    || name.Contains("LIBERATION") || name.Contains("DESECRATION"))
+                    multiplier *= 1f + effect.Def.Power / 100f;
+            }
+            return multiplier;
         }
 
         /// <summary>士气伤害倍率。原版 PRP_MORALE_BONUS 基准值是 10（=1.0x），单位表里的 morale=50 是士气池，不是倍率。</summary>
-        private static float MoraleMul(Squad s) => 1f;
+        private static float MoraleMul(Squad s) => Mathf.Clamp(s.MoraleBonus, 1f, 100f) / 10f;
 
         private void ApplyDamage(Squad target, float dmg)
         {
@@ -717,7 +1101,9 @@ namespace GameLogic.Takeover
             node.Building.Owner = by;
             node.Building.CaptureProgress = 0f;
             node.Building.Level = 0;
-            node.Building.BaseHp = def?.Hp ?? 500;
+            float hpMultiplier = by == Human.Faction ? Human.ModMul(11)
+                : by == Enemy.Faction ? Enemy.ModMul(11) : 1f;
+            node.Building.BaseHp = Mathf.RoundToInt((def?.Hp ?? 500) * hpMultiplier);
             node.Building.Hp = Mathf.RoundToInt(node.Building.MaxHp * 0.3f);
             node.Building.GoldPerSec = def?.Gold ?? 0;
             node.Building.ManaPerSec = def?.Mana ?? 0;
@@ -734,6 +1120,9 @@ namespace GameLogic.Takeover
                 if (!Enemy.OwnedNodes.Contains(node)) Enemy.OwnedNodes.Add(node);
                 Human.OwnedNodes.Remove(node);
             }
+            var capturer = by == Human.Faction ? Human : by == Enemy.Faction ? Enemy : null;
+            if (capturer != null && capturer.Mods[22] > 0)
+                capturer.Gold += capturer.Mods[22];
         }
 
         // ------------------------------------------------------------------ AI
@@ -783,10 +1172,27 @@ namespace GameLogic.Takeover
                 if (spot != null) TryBuild(Enemy, spot, 6, out _);
             }
 
-            // 4) 战术：残血撤退 + 增援被围攻的建筑
+            // 4) 法术：终极技能充满立即释放，普通法术按固定概率使用
+            var spells = Cfg.TbSpell.DataList.Where(s => s.Faction == (int)Enemy.Faction).ToList();
+            var spellTarget = FindThreatenedBuilding(260f)
+                              ?? Human.OwnedNodes.OrderBy(n => (n.Pos - Enemy.OwnedNodes.FirstOrDefault()?.Pos ?? Vector2.zero).sqrMagnitude)
+                                  .FirstOrDefault();
+            var ultimate = spells.FirstOrDefault(s => s.SpellType == 2);
+            if (ultimate != null && Enemy.Ultimate + 0.0001f >= Enemy.UltimateMax && spellTarget != null)
+            {
+                TryCastSpell(Enemy, ultimate, spellTarget, out _);
+            }
+            else if (spellTarget != null && _rng.NextDouble() < 0.12d)
+            {
+                var normalSpells = spells.Where(s => s.SpellType != 2 && Enemy.Mana >= s.Cost).ToList();
+                if (normalSpells.Count > 0)
+                    TryCastSpell(Enemy, normalSpells[_rng.Next(normalSpells.Count)], spellTarget, out _);
+            }
+
+            // 5) 战术：残血撤退 + 增援被围攻的建筑
             DoAITactics();
 
-            // 5) 进攻：老家被打就先防守，不外出
+            // 6) 进攻：老家被打就先防守，不外出
             if (Time < AiFirstAttackDelay) return;
             if (FindThreatenedBuilding(220f) != null) return;
 

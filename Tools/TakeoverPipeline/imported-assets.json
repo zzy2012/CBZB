@@ -1,0 +1,5176 @@
+{
+  "source_classes": 1016,
+  "imported": 948,
+  "missing": [],
+  "assets": [
+    {
+      "category": "sprite",
+      "class_name": "GreenInfantryUp_Go",
+      "character_id": 6093,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_1_guards",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6093_GreenInfantryUp_Go_GreenInfantryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenInfantry2Up_Go",
+      "character_id": 7432,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_2_swordsmen",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7432_GreenInfantry2Up_Go_GreenInfantry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenInfantry3Up_Go",
+      "character_id": 7953,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_3_legionaries",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7953_GreenInfantry3Up_Go_GreenInfantry3Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenArchersUp_Go",
+      "character_id": 7079,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_4_archers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7079_GreenArchersUp_Go_GreenArchersUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenArchers2Up_Go",
+      "character_id": 7128,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_5_crossbowmen",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7128_GreenArchers2Up_Go_GreenArchers2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenCavalryUp_Go",
+      "character_id": 2705,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_6_knights",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2705_GreenCavalryUp_Go_GreenCavalryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenCavalry2Up_Go",
+      "character_id": 1270,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_7_champions",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1270_GreenCavalry2Up_Go_GreenCavalry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenMagicUp_Go",
+      "character_id": 5022,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_8_monks",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5022_GreenMagicUp_Go_GreenMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenMagic2Up_Go",
+      "character_id": 3404,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_9_zealots",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3404_GreenMagic2Up_Go_GreenMagic2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenMagic3Up_Go",
+      "character_id": 6374,
+      "frame_count": 19,
+      "unity_location": "takeover_unit_10_avatar",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6374_GreenMagic3Up_Go_GreenMagic3Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GreenSiegeUp_Go",
+      "character_id": 2463,
+      "frame_count": 15,
+      "unity_location": "takeover_unit_11_trebuchet",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2463_GreenSiegeUp_Go_GreenSiegeUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedInfantryUp_Go",
+      "character_id": 6058,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_12_warriors",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6058_RedInfantryUp_Go_RedInfantryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedInfantry2Up_Go",
+      "character_id": 3401,
+      "frame_count": 31,
+      "unity_location": "takeover_unit_13_immortals",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3401_RedInfantry2Up_Go_RedInfantry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedArchersUp_Go",
+      "character_id": 5297,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_14_hunters",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5297_RedArchersUp_Go_RedArchersUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedArchers2Up_Go",
+      "character_id": 4792,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_15_serpent_archers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4792_RedArchers2Up_Go_RedArchers2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedCavalryUp_Go",
+      "character_id": 5634,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_16_nomads",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5634_RedCavalryUp_Go_RedCavalryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedCavalry2Up_Go",
+      "character_id": 2513,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_17_raiders",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2513_RedCavalry2Up_Go_RedCavalry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedCavalry3Up_Go",
+      "character_id": 1785,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_18_ancient_raiders",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1785_RedCavalry3Up_Go_RedCavalry3Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedMagicUp_Go",
+      "character_id": 6051,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_19_assassins",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6051_RedMagicUp_Go_RedMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedSiegeUp_Go",
+      "character_id": 5849,
+      "frame_count": 15,
+      "unity_location": "takeover_unit_20_trebuchet",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5849_RedSiegeUp_Go_RedSiegeUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "RedSiege2Up_Go",
+      "character_id": 4755,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_21_poison_catapult",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4755_RedSiege2Up_Go_RedSiege2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueInfantryUp_Go",
+      "character_id": 5936,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_22_rebels",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5936_BlueInfantryUp_Go_BlueInfantryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueInfantry2Up_Go",
+      "character_id": 1252,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_23_myrmidons",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1252_BlueInfantry2Up_Go_BlueInfantry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueArchersUp_Go",
+      "character_id": 1595,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_24_gunsmiths",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1595_BlueArchersUp_Go_BlueArchersUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueArchers2Up_Go",
+      "character_id": 3794,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_25_gunbots",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3794_BlueArchers2Up_Go_BlueArchers2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueArchers3Up_Go",
+      "character_id": 1101,
+      "frame_count": 27,
+      "unity_location": "takeover_unit_26_giantbots",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1101_BlueArchers3Up_Go_BlueArchers3Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueCavalryUp_Go",
+      "character_id": 7125,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_27_lancers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7125_BlueCavalryUp_Go_BlueCavalryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueCavalry2Up_Go",
+      "character_id": 2581,
+      "frame_count": 39,
+      "unity_location": "takeover_unit_28_dragon_lancers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2581_BlueCavalry2Up_Go_BlueCavalry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueMagicUp_Go",
+      "character_id": 5186,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_29_acolytes",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5186_BlueMagicUp_Go_BlueMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueMagic2Up_Go",
+      "character_id": 6369,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_30_wizards",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6369_BlueMagic2Up_Go_BlueMagic2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "BlueSiegeUp_Go",
+      "character_id": 6675,
+      "frame_count": 15,
+      "unity_location": "takeover_unit_31_trebuchet",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6675_BlueSiegeUp_Go_BlueSiegeUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleInfantryUp_Go",
+      "character_id": 5307,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_32_undying_warriors",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5307_PurpleInfantryUp_Go_PurpleInfantryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleInfantry2Up_Go",
+      "character_id": 7019,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_33_zombie_warriors",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7019_PurpleInfantry2Up_Go_PurpleInfantry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleArchersUp_Go",
+      "character_id": 3359,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_34_undying_archers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3359_PurpleArchersUp_Go_PurpleArchersUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleArchers2Up_Go",
+      "character_id": 6393,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_35_skeleton_archers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6393_PurpleArchers2Up_Go_PurpleArchers2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleCavalryUp_Go",
+      "character_id": 7668,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_36_undying_horsemen",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7668_PurpleCavalryUp_Go_PurpleCavalryUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleCavalry2Up_Go",
+      "character_id": 4031,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_37_dark_knights",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4031_PurpleCavalry2Up_Go_PurpleCavalry2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleMagicUp_Go",
+      "character_id": 6887,
+      "frame_count": 40,
+      "unity_location": "takeover_unit_38_undying_assassins",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6887_PurpleMagicUp_Go_PurpleMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleMagic2Up_Go",
+      "character_id": 6688,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_39_shades",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6688_PurpleMagic2Up_Go_PurpleMagic2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleSiegeUp_Go",
+      "character_id": 6690,
+      "frame_count": 15,
+      "unity_location": "takeover_unit_40_trebuchet",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6690_PurpleSiegeUp_Go_PurpleSiegeUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "PurpleSiege2Up_Go",
+      "character_id": 7221,
+      "frame_count": 20,
+      "unity_location": "takeover_unit_41_poison_catapult",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7221_PurpleSiege2Up_Go_PurpleSiege2Up_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GrayMagicUp_Go",
+      "character_id": 1992,
+      "frame_count": 19,
+      "unity_location": "takeover_unit_42_brigand_warriors",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1992_GrayMagicUp_Go_GrayMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GrayMagicUp_Go",
+      "character_id": 1992,
+      "frame_count": 19,
+      "unity_location": "takeover_unit_43_brigand_archers",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1992_GrayMagicUp_Go_GrayMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "GrayMagicUp_Go",
+      "character_id": 1992,
+      "frame_count": 19,
+      "unity_location": "takeover_unit_44_wolves",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1992_GrayMagicUp_Go_GrayMagicUp_Go/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeDefenderOgreClass",
+      "character_id": 999,
+      "frame_count": 1,
+      "unity_location": "takeover_unit_45_ogre",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_999_NodeDefenderOgreClass_NodeDefenderOgreClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeTownGreenClass",
+      "character_id": 3862,
+      "frame_count": 1,
+      "unity_location": "takeover_building_1_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3862_NodeTownGreenClass_NodeTownGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeTownRedClass",
+      "character_id": 1555,
+      "frame_count": 1,
+      "unity_location": "takeover_building_1_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1555_NodeTownRedClass_NodeTownRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeTownBlueClass",
+      "character_id": 1558,
+      "frame_count": 1,
+      "unity_location": "takeover_building_1_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1558_NodeTownBlueClass_NodeTownBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeTownPurpleClass",
+      "character_id": 993,
+      "frame_count": 1,
+      "unity_location": "takeover_building_1_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_993_NodeTownPurpleClass_NodeTownPurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeTownGreenClass",
+      "character_id": 3862,
+      "frame_count": 1,
+      "unity_location": "takeover_building_1",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3862_NodeTownGreenClass_NodeTownGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCastleGreenClass",
+      "character_id": 2812,
+      "frame_count": 1,
+      "unity_location": "takeover_building_2_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2812_NodeCastleGreenClass_NodeCastleGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCastleRedClass",
+      "character_id": 989,
+      "frame_count": 1,
+      "unity_location": "takeover_building_2_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_989_NodeCastleRedClass_NodeCastleRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCastleBlueClass",
+      "character_id": 986,
+      "frame_count": 1,
+      "unity_location": "takeover_building_2_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_986_NodeCastleBlueClass_NodeCastleBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCastlePurpleClass",
+      "character_id": 994,
+      "frame_count": 1,
+      "unity_location": "takeover_building_2_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_994_NodeCastlePurpleClass_NodeCastlePurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCastleGreenClass",
+      "character_id": 2812,
+      "frame_count": 1,
+      "unity_location": "takeover_building_2",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2812_NodeCastleGreenClass_NodeCastleGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCampGreenClass",
+      "character_id": 5473,
+      "frame_count": 1,
+      "unity_location": "takeover_building_3_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5473_NodeCampGreenClass_NodeCampGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCampRedClass",
+      "character_id": 5845,
+      "frame_count": 1,
+      "unity_location": "takeover_building_3_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5845_NodeCampRedClass_NodeCampRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCampBlueClass",
+      "character_id": 5339,
+      "frame_count": 1,
+      "unity_location": "takeover_building_3_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5339_NodeCampBlueClass_NodeCampBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCampPurpleClass",
+      "character_id": 2909,
+      "frame_count": 1,
+      "unity_location": "takeover_building_3_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_2909_NodeCampPurpleClass_NodeCampPurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeCampGreenClass",
+      "character_id": 5473,
+      "frame_count": 1,
+      "unity_location": "takeover_building_3",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5473_NodeCampGreenClass_NodeCampGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeMageTowerGreenClass",
+      "character_id": 5532,
+      "frame_count": 1,
+      "unity_location": "takeover_building_4_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5532_NodeMageTowerGreenClass_NodeMageTowerGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeMageTowerRedClass",
+      "character_id": 1576,
+      "frame_count": 1,
+      "unity_location": "takeover_building_4_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1576_NodeMageTowerRedClass_NodeMageTowerRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeMageTowerBlueClass",
+      "character_id": 1557,
+      "frame_count": 1,
+      "unity_location": "takeover_building_4_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1557_NodeMageTowerBlueClass_NodeMageTowerBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeMageTowerPurpleClass",
+      "character_id": 981,
+      "frame_count": 1,
+      "unity_location": "takeover_building_4_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_981_NodeMageTowerPurpleClass_NodeMageTowerPurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeMageTowerGreenClass",
+      "character_id": 5532,
+      "frame_count": 1,
+      "unity_location": "takeover_building_4",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5532_NodeMageTowerGreenClass_NodeMageTowerGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "VillageGreenClass",
+      "character_id": 3886,
+      "frame_count": 100,
+      "unity_location": "takeover_building_5_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3886_VillageGreenClass_VillageGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "VillageRedClass",
+      "character_id": 5015,
+      "frame_count": 1,
+      "unity_location": "takeover_building_5_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5015_VillageRedClass_VillageRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "VillageBlueClass",
+      "character_id": 552,
+      "frame_count": 1,
+      "unity_location": "takeover_building_5_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_552_VillageBlueClass_VillageBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "VillagePurpleClass",
+      "character_id": 3457,
+      "frame_count": 1,
+      "unity_location": "takeover_building_5_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3457_VillagePurpleClass_VillagePurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "VillageGreenClass",
+      "character_id": 3886,
+      "frame_count": 100,
+      "unity_location": "takeover_building_5",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3886_VillageGreenClass_VillageGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "MineGreenClass",
+      "character_id": 5887,
+      "frame_count": 1,
+      "unity_location": "takeover_building_6_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5887_MineGreenClass_MineGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "MineRedClass",
+      "character_id": 6246,
+      "frame_count": 60,
+      "unity_location": "takeover_building_6_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6246_MineRedClass_MineRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "MineBlueClass",
+      "character_id": 5509,
+      "frame_count": 1,
+      "unity_location": "takeover_building_6_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5509_MineBlueClass_MineBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "MinePurpleClass",
+      "character_id": 4083,
+      "frame_count": 60,
+      "unity_location": "takeover_building_6_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4083_MinePurpleClass_MinePurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "MineGreenClass",
+      "character_id": 5887,
+      "frame_count": 1,
+      "unity_location": "takeover_building_6",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5887_MineGreenClass_MineGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "ObeliskGreenClass",
+      "character_id": 1148,
+      "frame_count": 1,
+      "unity_location": "takeover_building_7_green",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1148_ObeliskGreenClass_ObeliskGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "ObeliskRedClass",
+      "character_id": 7013,
+      "frame_count": 1,
+      "unity_location": "takeover_building_7_red",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_7013_ObeliskRedClass_ObeliskRedClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "ObeliskBlueClass",
+      "character_id": 4762,
+      "frame_count": 1,
+      "unity_location": "takeover_building_7_blue",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4762_ObeliskBlueClass_ObeliskBlueClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "ObeliskPurpleClass",
+      "character_id": 3866,
+      "frame_count": 1,
+      "unity_location": "takeover_building_7_purple",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3866_ObeliskPurpleClass_ObeliskPurpleClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "ObeliskGreenClass",
+      "character_id": 1148,
+      "frame_count": 1,
+      "unity_location": "takeover_building_7",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1148_ObeliskGreenClass_ObeliskGreenClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeBuildHereClass",
+      "character_id": 996,
+      "frame_count": 1,
+      "unity_location": "takeover_node_buildspot",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_996_NodeBuildHereClass_NodeBuildHereClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeChestClass",
+      "character_id": 1001,
+      "frame_count": 1,
+      "unity_location": "takeover_node_chest",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_1001_NodeChestClass_NodeChestClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "NodeDefenderOgreClass",
+      "character_id": 999,
+      "frame_count": 1,
+      "unity_location": "takeover_node_ogre",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_999_NodeDefenderOgreClass_NodeDefenderOgreClass/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level1Class",
+      "character_id": 4206,
+      "frame_count": 1,
+      "unity_location": "takeover_map_1",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4206_Level1Class_Level1Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level2Class",
+      "character_id": 5812,
+      "frame_count": 1,
+      "unity_location": "takeover_map_2",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5812_Level2Class_Level2Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level3Class",
+      "character_id": 4897,
+      "frame_count": 1,
+      "unity_location": "takeover_map_3",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4897_Level3Class_Level3Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level4Class",
+      "character_id": 4790,
+      "frame_count": 1,
+      "unity_location": "takeover_map_4",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4790_Level4Class_Level4Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level5Class",
+      "character_id": 6440,
+      "frame_count": 1,
+      "unity_location": "takeover_map_5",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6440_Level5Class_Level5Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level6Class",
+      "character_id": 4189,
+      "frame_count": 1,
+      "unity_location": "takeover_map_6",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4189_Level6Class_Level6Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level7Class",
+      "character_id": 5371,
+      "frame_count": 1,
+      "unity_location": "takeover_map_7",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5371_Level7Class_Level7Class/1.png"
+    },
+    {
+      "category": "sprite",
+      "class_name": "Level8Class",
+      "character_id": 3693,
+      "frame_count": 1,
+      "unity_location": "takeover_map_8",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3693_Level8Class_Level8Class/1.png"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellIceBlast",
+      "character_id": 1390,
+      "unity_location": "takeover_sfx_1390_sndSpellIceBlast_sndSpellIceBlast",
+      "source": "GameData/extracted/takeover104/sounds_wav/1390_sndSpellIceBlast_sndSpellIceBlast.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUltimateDeclaration",
+      "character_id": 1547,
+      "unity_location": "takeover_sfx_1547_sndUltimateDeclaration_sndUltimateDeclaration",
+      "source": "GameData/extracted/takeover104/sounds_wav/1547_sndUltimateDeclaration_sndUltimateDeclaration.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUnitFrozen",
+      "character_id": 1606,
+      "unity_location": "takeover_sfx_1606_sndUnitFrozen_sndUnitFrozen",
+      "source": "GameData/extracted/takeover104/sounds_wav/1606_sndUnitFrozen_sndUnitFrozen.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSendSiege",
+      "character_id": 1643,
+      "unity_location": "takeover_sfx_1643_sndSendSiege_sndSendSiege",
+      "source": "GameData/extracted/takeover104/sounds_wav/1643_sndSendSiege_sndSendSiege.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBannerRemove",
+      "character_id": 1887,
+      "unity_location": "takeover_sfx_1887_sndBannerRemove_sndBannerRemove",
+      "source": "GameData/extracted/takeover104/sounds_wav/1887_sndBannerRemove_sndBannerRemove.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSendHorses",
+      "character_id": 2434,
+      "unity_location": "takeover_sfx_2434_sndSendHorses_sndSendHorses",
+      "source": "GameData/extracted/takeover104/sounds_wav/2434_sndSendHorses_sndSendHorses.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2589",
+      "character_id": 2589,
+      "unity_location": "takeover_sfx_2589",
+      "source": "GameData/extracted/takeover104/sounds_wav/2589.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2590",
+      "character_id": 2590,
+      "unity_location": "takeover_sfx_2590",
+      "source": "GameData/extracted/takeover104/sounds_wav/2590.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2594",
+      "character_id": 2594,
+      "unity_location": "takeover_sfx_2594",
+      "source": "GameData/extracted/takeover104/sounds_wav/2594.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2595",
+      "character_id": 2595,
+      "unity_location": "takeover_sfx_2595",
+      "source": "GameData/extracted/takeover104/sounds_wav/2595.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2596",
+      "character_id": 2596,
+      "unity_location": "takeover_sfx_2596",
+      "source": "GameData/extracted/takeover104/sounds_wav/2596.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2601",
+      "character_id": 2601,
+      "unity_location": "takeover_sfx_2601",
+      "source": "GameData/extracted/takeover104/sounds_wav/2601.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "2602",
+      "character_id": 2602,
+      "unity_location": "takeover_sfx_2602",
+      "source": "GameData/extracted/takeover104/sounds_wav/2602.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBannerSet",
+      "character_id": 2874,
+      "unity_location": "takeover_sfx_2874_sndBannerSet_sndBannerSet",
+      "source": "GameData/extracted/takeover104/sounds_wav/2874_sndBannerSet_sndBannerSet.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUltimateDeclareUndead",
+      "character_id": 2894,
+      "unity_location": "takeover_sfx_2894_sndUltimateDeclareUndead_sndUltimateDeclareUndead",
+      "source": "GameData/extracted/takeover104/sounds_wav/2894_sndUltimateDeclareUndead_sndUltimateDeclareUndead.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "musicGameplayClass",
+      "character_id": 2910,
+      "unity_location": "takeover_sfx_2910_musicGameplayClass_musicGameplayClass",
+      "source": "GameData/extracted/takeover104/sounds_wav/2910_musicGameplayClass_musicGameplayClass.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadHorse2",
+      "character_id": 2920,
+      "unity_location": "takeover_sfx_2920_sndDeadHorse2_sndDeadHorse2",
+      "source": "GameData/extracted/takeover104/sounds_wav/2920_sndDeadHorse2_sndDeadHorse2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadHorse1",
+      "character_id": 2973,
+      "unity_location": "takeover_sfx_2973_sndDeadHorse1_sndDeadHorse1",
+      "source": "GameData/extracted/takeover104/sounds_wav/2973_sndDeadHorse1_sndDeadHorse1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBuildFarm",
+      "character_id": 3138,
+      "unity_location": "takeover_sfx_3138_sndBuildFarm_sndBuildFarm",
+      "source": "GameData/extracted/takeover104/sounds_wav/3138_sndBuildFarm_sndBuildFarm.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUltimateDeclareTransformation",
+      "character_id": 3147,
+      "unity_location": "takeover_sfx_3147_sndUltimateDeclareTransformation_sndUltimateDeclareTransformation",
+      "source": "GameData/extracted/takeover104/sounds_wav/3147_sndUltimateDeclareTransformation_sndUltimateDeclareTransformation.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadUndead1",
+      "character_id": 3153,
+      "unity_location": "takeover_sfx_3153_sndDeadUndead1_sndDeadUndead1",
+      "source": "GameData/extracted/takeover104/sounds_wav/3153_sndDeadUndead1_sndDeadUndead1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadUndead2",
+      "character_id": 3368,
+      "unity_location": "takeover_sfx_3368_sndDeadUndead2_sndDeadUndead2",
+      "source": "GameData/extracted/takeover104/sounds_wav/3368_sndDeadUndead2_sndDeadUndead2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUnitHeroic",
+      "character_id": 3458,
+      "unity_location": "takeover_sfx_3458_sndUnitHeroic_sndUnitHeroic",
+      "source": "GameData/extracted/takeover104/sounds_wav/3458_sndUnitHeroic_sndUnitHeroic.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUltimateDeclareAvatar",
+      "character_id": 3504,
+      "unity_location": "takeover_sfx_3504_sndUltimateDeclareAvatar_sndUltimateDeclareAvatar",
+      "source": "GameData/extracted/takeover104/sounds_wav/3504_sndUltimateDeclareAvatar_sndUltimateDeclareAvatar.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUnitFeared",
+      "character_id": 3923,
+      "unity_location": "takeover_sfx_3923_sndUnitFeared_sndUnitFeared",
+      "source": "GameData/extracted/takeover104/sounds_wav/3923_sndUnitFeared_sndUnitFeared.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndWindowClose",
+      "character_id": 3968,
+      "unity_location": "takeover_sfx_3968_sndWindowClose_sndWindowClose",
+      "source": "GameData/extracted/takeover104/sounds_wav/3968_sndWindowClose_sndWindowClose.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndChestOpen",
+      "character_id": 3969,
+      "unity_location": "takeover_sfx_3969_sndChestOpen_sndChestOpen",
+      "source": "GameData/extracted/takeover104/sounds_wav/3969_sndChestOpen_sndChestOpen.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellDisentomb",
+      "character_id": 4101,
+      "unity_location": "takeover_sfx_4101_sndSpellDisentomb_sndSpellDisentomb",
+      "source": "GameData/extracted/takeover104/sounds_wav/4101_sndSpellDisentomb_sndSpellDisentomb.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndChestGold",
+      "character_id": 4310,
+      "unity_location": "takeover_sfx_4310_sndChestGold_sndChestGold",
+      "source": "GameData/extracted/takeover104/sounds_wav/4310_sndChestGold_sndChestGold.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndHitSiege",
+      "character_id": 4901,
+      "unity_location": "takeover_sfx_4901_sndHitSiege_sndHitSiege",
+      "source": "GameData/extracted/takeover104/sounds_wav/4901_sndHitSiege_sndHitSiege.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBuildObelisk",
+      "character_id": 5184,
+      "unity_location": "takeover_sfx_5184_sndBuildObelisk_sndBuildObelisk",
+      "source": "GameData/extracted/takeover104/sounds_wav/5184_sndBuildObelisk_sndBuildObelisk.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSendSoldiers",
+      "character_id": 5221,
+      "unity_location": "takeover_sfx_5221_sndSendSoldiers_sndSendSoldiers",
+      "source": "GameData/extracted/takeover104/sounds_wav/5221_sndSendSoldiers_sndSendSoldiers.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSquadLevelUp",
+      "character_id": 5239,
+      "unity_location": "takeover_sfx_5239_sndSquadLevelUp_sndSquadLevelUp",
+      "source": "GameData/extracted/takeover104/sounds_wav/5239_sndSquadLevelUp_sndSquadLevelUp.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "5382",
+      "character_id": 5382,
+      "unity_location": "takeover_sfx_5382",
+      "source": "GameData/extracted/takeover104/sounds_wav/5382.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "5393",
+      "character_id": 5393,
+      "unity_location": "takeover_sfx_5393",
+      "source": "GameData/extracted/takeover104/sounds_wav/5393.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBuildMine",
+      "character_id": 5455,
+      "unity_location": "takeover_sfx_5455_sndBuildMine_sndBuildMine",
+      "source": "GameData/extracted/takeover104/sounds_wav/5455_sndBuildMine_sndBuildMine.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDestructionBuilding",
+      "character_id": 5466,
+      "unity_location": "takeover_sfx_5466_sndDestructionBuilding_sndDestructionBuilding",
+      "source": "GameData/extracted/takeover104/sounds_wav/5466_sndDestructionBuilding_sndDestructionBuilding.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackSword1",
+      "character_id": 5491,
+      "unity_location": "takeover_sfx_5491_sndAttackSword1_sndAttackSword1",
+      "source": "GameData/extracted/takeover104/sounds_wav/5491_sndAttackSword1_sndAttackSword1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackSword2",
+      "character_id": 5492,
+      "unity_location": "takeover_sfx_5492_sndAttackSword2_sndAttackSword2",
+      "source": "GameData/extracted/takeover104/sounds_wav/5492_sndAttackSword2_sndAttackSword2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackSword3",
+      "character_id": 5510,
+      "unity_location": "takeover_sfx_5510_sndAttackSword3_sndAttackSword3",
+      "source": "GameData/extracted/takeover104/sounds_wav/5510_sndAttackSword3_sndAttackSword3.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellTerror",
+      "character_id": 5527,
+      "unity_location": "takeover_sfx_5527_sndSpellTerror_sndSpellTerror",
+      "source": "GameData/extracted/takeover104/sounds_wav/5527_sndSpellTerror_sndSpellTerror.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellLordsJudgement",
+      "character_id": 5621,
+      "unity_location": "takeover_sfx_5621_sndSpellLordsJudgement_sndSpellLordsJudgement",
+      "source": "GameData/extracted/takeover104/sounds_wav/5621_sndSpellLordsJudgement_sndSpellLordsJudgement.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBeginBattleArchers",
+      "character_id": 5636,
+      "unity_location": "takeover_sfx_5636_sndBeginBattleArchers_sndBeginBattleArchers",
+      "source": "GameData/extracted/takeover104/sounds_wav/5636_sndBeginBattleArchers_sndBeginBattleArchers.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackGun2",
+      "character_id": 5847,
+      "unity_location": "takeover_sfx_5847_sndAttackGun2_sndAttackGun2",
+      "source": "GameData/extracted/takeover104/sounds_wav/5847_sndAttackGun2_sndAttackGun2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackGun1",
+      "character_id": 5848,
+      "unity_location": "takeover_sfx_5848_sndAttackGun1_sndAttackGun1",
+      "source": "GameData/extracted/takeover104/sounds_wav/5848_sndAttackGun1_sndAttackGun1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBuildGraveyard",
+      "character_id": 5891,
+      "unity_location": "takeover_sfx_5891_sndBuildGraveyard_sndBuildGraveyard",
+      "source": "GameData/extracted/takeover104/sounds_wav/5891_sndBuildGraveyard_sndBuildGraveyard.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSendBots",
+      "character_id": 5892,
+      "unity_location": "takeover_sfx_5892_sndSendBots_sndSendBots",
+      "source": "GameData/extracted/takeover104/sounds_wav/5892_sndSendBots_sndSendBots.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSendCrowd",
+      "character_id": 6080,
+      "unity_location": "takeover_sfx_6080_sndSendCrowd_sndSendCrowd",
+      "source": "GameData/extracted/takeover104/sounds_wav/6080_sndSendCrowd_sndSendCrowd.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDestructionStronghold",
+      "character_id": 6087,
+      "unity_location": "takeover_sfx_6087_sndDestructionStronghold_sndDestructionStronghold",
+      "source": "GameData/extracted/takeover104/sounds_wav/6087_sndDestructionStronghold_sndDestructionStronghold.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndUltimateDeclareCataclysm",
+      "character_id": 6088,
+      "unity_location": "takeover_sfx_6088_sndUltimateDeclareCataclysm_sndUltimateDeclareCataclysm",
+      "source": "GameData/extracted/takeover104/sounds_wav/6088_sndUltimateDeclareCataclysm_sndUltimateDeclareCataclysm.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackBow1",
+      "character_id": 6692,
+      "unity_location": "takeover_sfx_6692_sndAttackBow1_sndAttackBow1",
+      "source": "GameData/extracted/takeover104/sounds_wav/6692_sndAttackBow1_sndAttackBow1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackBow2",
+      "character_id": 6754,
+      "unity_location": "takeover_sfx_6754_sndAttackBow2_sndAttackBow2",
+      "source": "GameData/extracted/takeover104/sounds_wav/6754_sndAttackBow2_sndAttackBow2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadSiege",
+      "character_id": 6757,
+      "unity_location": "takeover_sfx_6757_sndDeadSiege_sndDeadSiege",
+      "source": "GameData/extracted/takeover104/sounds_wav/6757_sndDeadSiege_sndDeadSiege.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackMagic1",
+      "character_id": 6817,
+      "unity_location": "takeover_sfx_6817_sndAttackMagic1_sndAttackMagic1",
+      "source": "GameData/extracted/takeover104/sounds_wav/6817_sndAttackMagic1_sndAttackMagic1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackMagic2",
+      "character_id": 6818,
+      "unity_location": "takeover_sfx_6818_sndAttackMagic2_sndAttackMagic2",
+      "source": "GameData/extracted/takeover104/sounds_wav/6818_sndAttackMagic2_sndAttackMagic2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellIceBlastLaunch",
+      "character_id": 6921,
+      "unity_location": "takeover_sfx_6921_sndSpellIceBlastLaunch_sndSpellIceBlastLaunch",
+      "source": "GameData/extracted/takeover104/sounds_wav/6921_sndSpellIceBlastLaunch_sndSpellIceBlastLaunch.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBeginBattleSoldiers",
+      "character_id": 7015,
+      "unity_location": "takeover_sfx_7015_sndBeginBattleSoldiers_sndBeginBattleSoldiers",
+      "source": "GameData/extracted/takeover104/sounds_wav/7015_sndBeginBattleSoldiers_sndBeginBattleSoldiers.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndButtonClick",
+      "character_id": 7058,
+      "unity_location": "takeover_sfx_7058_sndButtonClick_sndButtonClick",
+      "source": "GameData/extracted/takeover104/sounds_wav/7058_sndButtonClick_sndButtonClick.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadMan3",
+      "character_id": 7172,
+      "unity_location": "takeover_sfx_7172_sndDeadMan3_sndDeadMan3",
+      "source": "GameData/extracted/takeover104/sounds_wav/7172_sndDeadMan3_sndDeadMan3.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadMan1",
+      "character_id": 7173,
+      "unity_location": "takeover_sfx_7173_sndDeadMan1_sndDeadMan1",
+      "source": "GameData/extracted/takeover104/sounds_wav/7173_sndDeadMan1_sndDeadMan1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadMan2",
+      "character_id": 7176,
+      "unity_location": "takeover_sfx_7176_sndDeadMan2_sndDeadMan2",
+      "source": "GameData/extracted/takeover104/sounds_wav/7176_sndDeadMan2_sndDeadMan2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackSiege",
+      "character_id": 7232,
+      "unity_location": "takeover_sfx_7232_sndAttackSiege_sndAttackSiege",
+      "source": "GameData/extracted/takeover104/sounds_wav/7232_sndAttackSiege_sndAttackSiege.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellFrostEnchantment",
+      "character_id": 7355,
+      "unity_location": "takeover_sfx_7355_sndSpellFrostEnchantment_sndSpellFrostEnchantment",
+      "source": "GameData/extracted/takeover104/sounds_wav/7355_sndSpellFrostEnchantment_sndSpellFrostEnchantment.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBeginBattleOgre",
+      "character_id": 7368,
+      "unity_location": "takeover_sfx_7368_sndBeginBattleOgre_sndBeginBattleOgre",
+      "source": "GameData/extracted/takeover104/sounds_wav/7368_sndBeginBattleOgre_sndBeginBattleOgre.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndHitArrow1",
+      "character_id": 7384,
+      "unity_location": "takeover_sfx_7384_sndHitArrow1_sndHitArrow1",
+      "source": "GameData/extracted/takeover104/sounds_wav/7384_sndHitArrow1_sndHitArrow1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndHitArrow2",
+      "character_id": 7390,
+      "unity_location": "takeover_sfx_7390_sndHitArrow2_sndHitArrow2",
+      "source": "GameData/extracted/takeover104/sounds_wav/7390_sndHitArrow2_sndHitArrow2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBeginBattleBots",
+      "character_id": 7417,
+      "unity_location": "takeover_sfx_7417_sndBeginBattleBots_sndBeginBattleBots",
+      "source": "GameData/extracted/takeover104/sounds_wav/7417_sndBeginBattleBots_sndBeginBattleBots.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackOgre",
+      "character_id": 7444,
+      "unity_location": "takeover_sfx_7444_sndAttackOgre_sndAttackOgre",
+      "source": "GameData/extracted/takeover104/sounds_wav/7444_sndAttackOgre_sndAttackOgre.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadBot",
+      "character_id": 7451,
+      "unity_location": "takeover_sfx_7451_sndDeadBot_sndDeadBot",
+      "source": "GameData/extracted/takeover104/sounds_wav/7451_sndDeadBot_sndDeadBot.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSendReptiles",
+      "character_id": 7539,
+      "unity_location": "takeover_sfx_7539_sndSendReptiles_sndSendReptiles",
+      "source": "GameData/extracted/takeover104/sounds_wav/7539_sndSendReptiles_sndSendReptiles.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndSpellSummonStoneworms",
+      "character_id": 7667,
+      "unity_location": "takeover_sfx_7667_sndSpellSummonStoneworms_sndSpellSummonStoneworms",
+      "source": "GameData/extracted/takeover104/sounds_wav/7667_sndSpellSummonStoneworms_sndSpellSummonStoneworms.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndBeginBattleUndead",
+      "character_id": 7902,
+      "unity_location": "takeover_sfx_7902_sndBeginBattleUndead_sndBeginBattleUndead",
+      "source": "GameData/extracted/takeover104/sounds_wav/7902_sndBeginBattleUndead_sndBeginBattleUndead.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndButtonOver",
+      "character_id": 7954,
+      "unity_location": "takeover_sfx_7954_sndButtonOver_sndButtonOver",
+      "source": "GameData/extracted/takeover104/sounds_wav/7954_sndButtonOver_sndButtonOver.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackStaff1",
+      "character_id": 8107,
+      "unity_location": "takeover_sfx_8107_sndAttackStaff1_sndAttackStaff1",
+      "source": "GameData/extracted/takeover104/sounds_wav/8107_sndAttackStaff1_sndAttackStaff1.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndAttackStaff2",
+      "character_id": 8108,
+      "unity_location": "takeover_sfx_8108_sndAttackStaff2_sndAttackStaff2",
+      "source": "GameData/extracted/takeover104/sounds_wav/8108_sndAttackStaff2_sndAttackStaff2.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadReptile",
+      "character_id": 8110,
+      "unity_location": "takeover_sfx_8110_sndDeadReptile_sndDeadReptile",
+      "source": "GameData/extracted/takeover104/sounds_wav/8110_sndDeadReptile_sndDeadReptile.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "musicMenuClass",
+      "character_id": 8126,
+      "unity_location": "takeover_sfx_8126_musicMenuClass_musicMenuClass",
+      "source": "GameData/extracted/takeover104/sounds_wav/8126_musicMenuClass_musicMenuClass.wav"
+    },
+    {
+      "category": "audio",
+      "class_name": "sndDeadOgre",
+      "character_id": 952,
+      "unity_location": "takeover_sfx_952_sndDeadOgre_sndDeadOgre",
+      "source": "GameData/extracted/takeover104/sounds_wav/952_sndDeadOgre_sndDeadOgre.wav"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_11_NotMaryKate",
+      "source": "GameData/extracted/takeover104/fonts/11_NotMaryKate.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_1609_Franklin_Gothic_Heavy",
+      "source": "GameData/extracted/takeover104/fonts/1609_Franklin Gothic Heavy.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_1715_Arial",
+      "source": "GameData/extracted/takeover104/fonts/1715_Arial.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_1_Tahoma",
+      "source": "GameData/extracted/takeover104/fonts/1_Tahoma.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_29_Franklin_Gothic_Medium",
+      "source": "GameData/extracted/takeover104/fonts/29_Franklin Gothic Medium.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_328_Chaparral_Pro",
+      "source": "GameData/extracted/takeover104/fonts/328_Chaparral Pro.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_4588_NotMaryKate",
+      "source": "GameData/extracted/takeover104/fonts/4588_NotMaryKate.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_4_Arial_Black",
+      "source": "GameData/extracted/takeover104/fonts/4_Arial Black.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_5243_Vinque",
+      "source": "GameData/extracted/takeover104/fonts/5243_Vinque.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_5247_Tahoma",
+      "source": "GameData/extracted/takeover104/fonts/5247_Tahoma.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_5249_BlackCastleMF",
+      "source": "GameData/extracted/takeover104/fonts/5249_BlackCastleMF.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_6098_Anagram_NF",
+      "source": "GameData/extracted/takeover104/fonts/6098_Anagram NF.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_6105_NotMaryKate",
+      "source": "GameData/extracted/takeover104/fonts/6105_NotMaryKate.ttf"
+    },
+    {
+      "category": "font",
+      "unity_location": "takeover_font_976_Arial",
+      "source": "GameData/extracted/takeover104/fonts/976_Arial.ttf"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1168",
+      "source": "GameData/extracted/takeover104/images/1168.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1170",
+      "source": "GameData/extracted/takeover104/images/1170.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1172",
+      "source": "GameData/extracted/takeover104/images/1172.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1174",
+      "source": "GameData/extracted/takeover104/images/1174.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1176",
+      "source": "GameData/extracted/takeover104/images/1176.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1178",
+      "source": "GameData/extracted/takeover104/images/1178.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1180",
+      "source": "GameData/extracted/takeover104/images/1180.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1182",
+      "source": "GameData/extracted/takeover104/images/1182.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1184",
+      "source": "GameData/extracted/takeover104/images/1184.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1186",
+      "source": "GameData/extracted/takeover104/images/1186.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1188",
+      "source": "GameData/extracted/takeover104/images/1188.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1190",
+      "source": "GameData/extracted/takeover104/images/1190.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1192",
+      "source": "GameData/extracted/takeover104/images/1192.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1194",
+      "source": "GameData/extracted/takeover104/images/1194.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1196",
+      "source": "GameData/extracted/takeover104/images/1196.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1198",
+      "source": "GameData/extracted/takeover104/images/1198.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1200",
+      "source": "GameData/extracted/takeover104/images/1200.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1202",
+      "source": "GameData/extracted/takeover104/images/1202.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1204",
+      "source": "GameData/extracted/takeover104/images/1204.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1206",
+      "source": "GameData/extracted/takeover104/images/1206.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1208",
+      "source": "GameData/extracted/takeover104/images/1208.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1210",
+      "source": "GameData/extracted/takeover104/images/1210.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1212",
+      "source": "GameData/extracted/takeover104/images/1212.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1214",
+      "source": "GameData/extracted/takeover104/images/1214.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1216",
+      "source": "GameData/extracted/takeover104/images/1216.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1218",
+      "source": "GameData/extracted/takeover104/images/1218.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1220",
+      "source": "GameData/extracted/takeover104/images/1220.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1222",
+      "source": "GameData/extracted/takeover104/images/1222.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1224",
+      "source": "GameData/extracted/takeover104/images/1224.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1226",
+      "source": "GameData/extracted/takeover104/images/1226.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1442",
+      "source": "GameData/extracted/takeover104/images/1442.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1456",
+      "source": "GameData/extracted/takeover104/images/1456.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1474",
+      "source": "GameData/extracted/takeover104/images/1474.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1488",
+      "source": "GameData/extracted/takeover104/images/1488.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1491",
+      "source": "GameData/extracted/takeover104/images/1491.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1494",
+      "source": "GameData/extracted/takeover104/images/1494.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_1497",
+      "source": "GameData/extracted/takeover104/images/1497.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_2168",
+      "source": "GameData/extracted/takeover104/images/2168.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_24",
+      "source": "GameData/extracted/takeover104/images/24.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_2585",
+      "source": "GameData/extracted/takeover104/images/2585.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_2608",
+      "source": "GameData/extracted/takeover104/images/2608.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_2644",
+      "source": "GameData/extracted/takeover104/images/2644.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_2810",
+      "source": "GameData/extracted/takeover104/images/2810.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3071",
+      "source": "GameData/extracted/takeover104/images/3071.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3073",
+      "source": "GameData/extracted/takeover104/images/3073.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3075",
+      "source": "GameData/extracted/takeover104/images/3075.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3077",
+      "source": "GameData/extracted/takeover104/images/3077.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3079",
+      "source": "GameData/extracted/takeover104/images/3079.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3081",
+      "source": "GameData/extracted/takeover104/images/3081.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3083",
+      "source": "GameData/extracted/takeover104/images/3083.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3085",
+      "source": "GameData/extracted/takeover104/images/3085.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3087",
+      "source": "GameData/extracted/takeover104/images/3087.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3089",
+      "source": "GameData/extracted/takeover104/images/3089.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3091",
+      "source": "GameData/extracted/takeover104/images/3091.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3093",
+      "source": "GameData/extracted/takeover104/images/3093.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3095",
+      "source": "GameData/extracted/takeover104/images/3095.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3097",
+      "source": "GameData/extracted/takeover104/images/3097.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3099",
+      "source": "GameData/extracted/takeover104/images/3099.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3101",
+      "source": "GameData/extracted/takeover104/images/3101.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3103",
+      "source": "GameData/extracted/takeover104/images/3103.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3105",
+      "source": "GameData/extracted/takeover104/images/3105.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3107",
+      "source": "GameData/extracted/takeover104/images/3107.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3109",
+      "source": "GameData/extracted/takeover104/images/3109.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3111",
+      "source": "GameData/extracted/takeover104/images/3111.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3113",
+      "source": "GameData/extracted/takeover104/images/3113.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3115",
+      "source": "GameData/extracted/takeover104/images/3115.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3117",
+      "source": "GameData/extracted/takeover104/images/3117.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3119",
+      "source": "GameData/extracted/takeover104/images/3119.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3121",
+      "source": "GameData/extracted/takeover104/images/3121.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3123",
+      "source": "GameData/extracted/takeover104/images/3123.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3125",
+      "source": "GameData/extracted/takeover104/images/3125.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3127",
+      "source": "GameData/extracted/takeover104/images/3127.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3129",
+      "source": "GameData/extracted/takeover104/images/3129.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3155",
+      "source": "GameData/extracted/takeover104/images/3155.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3158",
+      "source": "GameData/extracted/takeover104/images/3158.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3160",
+      "source": "GameData/extracted/takeover104/images/3160.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3162",
+      "source": "GameData/extracted/takeover104/images/3162.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3164",
+      "source": "GameData/extracted/takeover104/images/3164.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3166",
+      "source": "GameData/extracted/takeover104/images/3166.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3168",
+      "source": "GameData/extracted/takeover104/images/3168.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3170",
+      "source": "GameData/extracted/takeover104/images/3170.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3172",
+      "source": "GameData/extracted/takeover104/images/3172.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3174",
+      "source": "GameData/extracted/takeover104/images/3174.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3176",
+      "source": "GameData/extracted/takeover104/images/3176.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3178",
+      "source": "GameData/extracted/takeover104/images/3178.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3180",
+      "source": "GameData/extracted/takeover104/images/3180.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3182",
+      "source": "GameData/extracted/takeover104/images/3182.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3184",
+      "source": "GameData/extracted/takeover104/images/3184.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3186",
+      "source": "GameData/extracted/takeover104/images/3186.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3188",
+      "source": "GameData/extracted/takeover104/images/3188.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3190",
+      "source": "GameData/extracted/takeover104/images/3190.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3192",
+      "source": "GameData/extracted/takeover104/images/3192.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3194",
+      "source": "GameData/extracted/takeover104/images/3194.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3196",
+      "source": "GameData/extracted/takeover104/images/3196.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3198",
+      "source": "GameData/extracted/takeover104/images/3198.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3200",
+      "source": "GameData/extracted/takeover104/images/3200.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3203",
+      "source": "GameData/extracted/takeover104/images/3203.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3205",
+      "source": "GameData/extracted/takeover104/images/3205.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3207",
+      "source": "GameData/extracted/takeover104/images/3207.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3209",
+      "source": "GameData/extracted/takeover104/images/3209.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3211",
+      "source": "GameData/extracted/takeover104/images/3211.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3213",
+      "source": "GameData/extracted/takeover104/images/3213.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3215",
+      "source": "GameData/extracted/takeover104/images/3215.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3217",
+      "source": "GameData/extracted/takeover104/images/3217.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3219",
+      "source": "GameData/extracted/takeover104/images/3219.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3221",
+      "source": "GameData/extracted/takeover104/images/3221.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3223",
+      "source": "GameData/extracted/takeover104/images/3223.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3225",
+      "source": "GameData/extracted/takeover104/images/3225.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3227",
+      "source": "GameData/extracted/takeover104/images/3227.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3229",
+      "source": "GameData/extracted/takeover104/images/3229.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3231",
+      "source": "GameData/extracted/takeover104/images/3231.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3233",
+      "source": "GameData/extracted/takeover104/images/3233.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3235",
+      "source": "GameData/extracted/takeover104/images/3235.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3237",
+      "source": "GameData/extracted/takeover104/images/3237.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3239",
+      "source": "GameData/extracted/takeover104/images/3239.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3241",
+      "source": "GameData/extracted/takeover104/images/3241.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3243",
+      "source": "GameData/extracted/takeover104/images/3243.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3245",
+      "source": "GameData/extracted/takeover104/images/3245.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3247",
+      "source": "GameData/extracted/takeover104/images/3247.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3250",
+      "source": "GameData/extracted/takeover104/images/3250.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3252",
+      "source": "GameData/extracted/takeover104/images/3252.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3254",
+      "source": "GameData/extracted/takeover104/images/3254.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3256",
+      "source": "GameData/extracted/takeover104/images/3256.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3258",
+      "source": "GameData/extracted/takeover104/images/3258.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3260",
+      "source": "GameData/extracted/takeover104/images/3260.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3262",
+      "source": "GameData/extracted/takeover104/images/3262.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3264",
+      "source": "GameData/extracted/takeover104/images/3264.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3266",
+      "source": "GameData/extracted/takeover104/images/3266.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3268",
+      "source": "GameData/extracted/takeover104/images/3268.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3270",
+      "source": "GameData/extracted/takeover104/images/3270.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3272",
+      "source": "GameData/extracted/takeover104/images/3272.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3274",
+      "source": "GameData/extracted/takeover104/images/3274.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3276",
+      "source": "GameData/extracted/takeover104/images/3276.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3278",
+      "source": "GameData/extracted/takeover104/images/3278.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3280",
+      "source": "GameData/extracted/takeover104/images/3280.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3282",
+      "source": "GameData/extracted/takeover104/images/3282.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3284",
+      "source": "GameData/extracted/takeover104/images/3284.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3286",
+      "source": "GameData/extracted/takeover104/images/3286.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3288",
+      "source": "GameData/extracted/takeover104/images/3288.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3290",
+      "source": "GameData/extracted/takeover104/images/3290.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3292",
+      "source": "GameData/extracted/takeover104/images/3292.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3294",
+      "source": "GameData/extracted/takeover104/images/3294.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3296",
+      "source": "GameData/extracted/takeover104/images/3296.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3298",
+      "source": "GameData/extracted/takeover104/images/3298.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3300",
+      "source": "GameData/extracted/takeover104/images/3300.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3302",
+      "source": "GameData/extracted/takeover104/images/3302.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3304",
+      "source": "GameData/extracted/takeover104/images/3304.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3306",
+      "source": "GameData/extracted/takeover104/images/3306.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3308",
+      "source": "GameData/extracted/takeover104/images/3308.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3310",
+      "source": "GameData/extracted/takeover104/images/3310.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3312",
+      "source": "GameData/extracted/takeover104/images/3312.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3314",
+      "source": "GameData/extracted/takeover104/images/3314.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3316",
+      "source": "GameData/extracted/takeover104/images/3316.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3318",
+      "source": "GameData/extracted/takeover104/images/3318.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3320",
+      "source": "GameData/extracted/takeover104/images/3320.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3322",
+      "source": "GameData/extracted/takeover104/images/3322.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3324",
+      "source": "GameData/extracted/takeover104/images/3324.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3326",
+      "source": "GameData/extracted/takeover104/images/3326.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3328",
+      "source": "GameData/extracted/takeover104/images/3328.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3330",
+      "source": "GameData/extracted/takeover104/images/3330.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3332",
+      "source": "GameData/extracted/takeover104/images/3332.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3334",
+      "source": "GameData/extracted/takeover104/images/3334.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3336",
+      "source": "GameData/extracted/takeover104/images/3336.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3338",
+      "source": "GameData/extracted/takeover104/images/3338.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3340",
+      "source": "GameData/extracted/takeover104/images/3340.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3342",
+      "source": "GameData/extracted/takeover104/images/3342.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3344",
+      "source": "GameData/extracted/takeover104/images/3344.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3346",
+      "source": "GameData/extracted/takeover104/images/3346.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3348",
+      "source": "GameData/extracted/takeover104/images/3348.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3350",
+      "source": "GameData/extracted/takeover104/images/3350.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3352",
+      "source": "GameData/extracted/takeover104/images/3352.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3354",
+      "source": "GameData/extracted/takeover104/images/3354.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_346",
+      "source": "GameData/extracted/takeover104/images/346.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_351",
+      "source": "GameData/extracted/takeover104/images/351.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_354",
+      "source": "GameData/extracted/takeover104/images/354.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_356",
+      "source": "GameData/extracted/takeover104/images/356.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_358",
+      "source": "GameData/extracted/takeover104/images/358.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_361",
+      "source": "GameData/extracted/takeover104/images/361.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_363",
+      "source": "GameData/extracted/takeover104/images/363.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_365",
+      "source": "GameData/extracted/takeover104/images/365.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3656",
+      "source": "GameData/extracted/takeover104/images/3656.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_367",
+      "source": "GameData/extracted/takeover104/images/367.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3682",
+      "source": "GameData/extracted/takeover104/images/3682.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3684",
+      "source": "GameData/extracted/takeover104/images/3684.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3686",
+      "source": "GameData/extracted/takeover104/images/3686.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3688",
+      "source": "GameData/extracted/takeover104/images/3688.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_370",
+      "source": "GameData/extracted/takeover104/images/370.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3710",
+      "source": "GameData/extracted/takeover104/images/3710.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_372",
+      "source": "GameData/extracted/takeover104/images/372.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3720",
+      "source": "GameData/extracted/takeover104/images/3720.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3722",
+      "source": "GameData/extracted/takeover104/images/3722.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3739",
+      "source": "GameData/extracted/takeover104/images/3739.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_374",
+      "source": "GameData/extracted/takeover104/images/374.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3741",
+      "source": "GameData/extracted/takeover104/images/3741.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3743",
+      "source": "GameData/extracted/takeover104/images/3743.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3745",
+      "source": "GameData/extracted/takeover104/images/3745.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3747",
+      "source": "GameData/extracted/takeover104/images/3747.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3749",
+      "source": "GameData/extracted/takeover104/images/3749.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3751",
+      "source": "GameData/extracted/takeover104/images/3751.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3753",
+      "source": "GameData/extracted/takeover104/images/3753.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3755",
+      "source": "GameData/extracted/takeover104/images/3755.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3757",
+      "source": "GameData/extracted/takeover104/images/3757.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_376",
+      "source": "GameData/extracted/takeover104/images/376.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3760",
+      "source": "GameData/extracted/takeover104/images/3760.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3762",
+      "source": "GameData/extracted/takeover104/images/3762.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3764",
+      "source": "GameData/extracted/takeover104/images/3764.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3766",
+      "source": "GameData/extracted/takeover104/images/3766.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_3768",
+      "source": "GameData/extracted/takeover104/images/3768.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_379",
+      "source": "GameData/extracted/takeover104/images/379.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_381",
+      "source": "GameData/extracted/takeover104/images/381.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_383",
+      "source": "GameData/extracted/takeover104/images/383.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_385",
+      "source": "GameData/extracted/takeover104/images/385.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_389",
+      "source": "GameData/extracted/takeover104/images/389.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_391",
+      "source": "GameData/extracted/takeover104/images/391.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_393",
+      "source": "GameData/extracted/takeover104/images/393.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_395",
+      "source": "GameData/extracted/takeover104/images/395.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_399",
+      "source": "GameData/extracted/takeover104/images/399.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_401",
+      "source": "GameData/extracted/takeover104/images/401.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_403",
+      "source": "GameData/extracted/takeover104/images/403.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_408",
+      "source": "GameData/extracted/takeover104/images/408.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_410",
+      "source": "GameData/extracted/takeover104/images/410.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_412",
+      "source": "GameData/extracted/takeover104/images/412.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_414",
+      "source": "GameData/extracted/takeover104/images/414.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4203",
+      "source": "GameData/extracted/takeover104/images/4203.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4204",
+      "source": "GameData/extracted/takeover104/images/4204.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4228",
+      "source": "GameData/extracted/takeover104/images/4228.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4230",
+      "source": "GameData/extracted/takeover104/images/4230.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4232",
+      "source": "GameData/extracted/takeover104/images/4232.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4234",
+      "source": "GameData/extracted/takeover104/images/4234.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4236",
+      "source": "GameData/extracted/takeover104/images/4236.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4238",
+      "source": "GameData/extracted/takeover104/images/4238.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4240",
+      "source": "GameData/extracted/takeover104/images/4240.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4242",
+      "source": "GameData/extracted/takeover104/images/4242.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4244",
+      "source": "GameData/extracted/takeover104/images/4244.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4246",
+      "source": "GameData/extracted/takeover104/images/4246.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4248",
+      "source": "GameData/extracted/takeover104/images/4248.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4250",
+      "source": "GameData/extracted/takeover104/images/4250.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4252",
+      "source": "GameData/extracted/takeover104/images/4252.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4254",
+      "source": "GameData/extracted/takeover104/images/4254.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4256",
+      "source": "GameData/extracted/takeover104/images/4256.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4258",
+      "source": "GameData/extracted/takeover104/images/4258.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4260",
+      "source": "GameData/extracted/takeover104/images/4260.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4262",
+      "source": "GameData/extracted/takeover104/images/4262.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4264",
+      "source": "GameData/extracted/takeover104/images/4264.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4266",
+      "source": "GameData/extracted/takeover104/images/4266.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4268",
+      "source": "GameData/extracted/takeover104/images/4268.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4270",
+      "source": "GameData/extracted/takeover104/images/4270.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4272",
+      "source": "GameData/extracted/takeover104/images/4272.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4274",
+      "source": "GameData/extracted/takeover104/images/4274.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4276",
+      "source": "GameData/extracted/takeover104/images/4276.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4278",
+      "source": "GameData/extracted/takeover104/images/4278.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4280",
+      "source": "GameData/extracted/takeover104/images/4280.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4282",
+      "source": "GameData/extracted/takeover104/images/4282.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4284",
+      "source": "GameData/extracted/takeover104/images/4284.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4286",
+      "source": "GameData/extracted/takeover104/images/4286.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_435",
+      "source": "GameData/extracted/takeover104/images/435.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_437",
+      "source": "GameData/extracted/takeover104/images/437.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_439",
+      "source": "GameData/extracted/takeover104/images/439.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_441",
+      "source": "GameData/extracted/takeover104/images/441.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_444",
+      "source": "GameData/extracted/takeover104/images/444.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4447",
+      "source": "GameData/extracted/takeover104/images/4447.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_446",
+      "source": "GameData/extracted/takeover104/images/446.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_448",
+      "source": "GameData/extracted/takeover104/images/448.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4482",
+      "source": "GameData/extracted/takeover104/images/4482.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4483",
+      "source": "GameData/extracted/takeover104/images/4483.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_450",
+      "source": "GameData/extracted/takeover104/images/450.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_454",
+      "source": "GameData/extracted/takeover104/images/454.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_456",
+      "source": "GameData/extracted/takeover104/images/456.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_458",
+      "source": "GameData/extracted/takeover104/images/458.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4585",
+      "source": "GameData/extracted/takeover104/images/4585.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_460",
+      "source": "GameData/extracted/takeover104/images/460.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_463",
+      "source": "GameData/extracted/takeover104/images/463.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_465",
+      "source": "GameData/extracted/takeover104/images/465.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_467",
+      "source": "GameData/extracted/takeover104/images/467.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4686",
+      "source": "GameData/extracted/takeover104/images/4686.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4688",
+      "source": "GameData/extracted/takeover104/images/4688.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_469",
+      "source": "GameData/extracted/takeover104/images/469.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4690",
+      "source": "GameData/extracted/takeover104/images/4690.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4692",
+      "source": "GameData/extracted/takeover104/images/4692.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4694",
+      "source": "GameData/extracted/takeover104/images/4694.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4696",
+      "source": "GameData/extracted/takeover104/images/4696.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4698",
+      "source": "GameData/extracted/takeover104/images/4698.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4700",
+      "source": "GameData/extracted/takeover104/images/4700.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4702",
+      "source": "GameData/extracted/takeover104/images/4702.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4704",
+      "source": "GameData/extracted/takeover104/images/4704.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4706",
+      "source": "GameData/extracted/takeover104/images/4706.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4708",
+      "source": "GameData/extracted/takeover104/images/4708.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4710",
+      "source": "GameData/extracted/takeover104/images/4710.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4712",
+      "source": "GameData/extracted/takeover104/images/4712.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4714",
+      "source": "GameData/extracted/takeover104/images/4714.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4716",
+      "source": "GameData/extracted/takeover104/images/4716.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4718",
+      "source": "GameData/extracted/takeover104/images/4718.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4720",
+      "source": "GameData/extracted/takeover104/images/4720.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4722",
+      "source": "GameData/extracted/takeover104/images/4722.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4724",
+      "source": "GameData/extracted/takeover104/images/4724.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4726",
+      "source": "GameData/extracted/takeover104/images/4726.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4728",
+      "source": "GameData/extracted/takeover104/images/4728.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4730",
+      "source": "GameData/extracted/takeover104/images/4730.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4732",
+      "source": "GameData/extracted/takeover104/images/4732.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4734",
+      "source": "GameData/extracted/takeover104/images/4734.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4736",
+      "source": "GameData/extracted/takeover104/images/4736.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4738",
+      "source": "GameData/extracted/takeover104/images/4738.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4740",
+      "source": "GameData/extracted/takeover104/images/4740.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4742",
+      "source": "GameData/extracted/takeover104/images/4742.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4744",
+      "source": "GameData/extracted/takeover104/images/4744.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4813",
+      "source": "GameData/extracted/takeover104/images/4813.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4815",
+      "source": "GameData/extracted/takeover104/images/4815.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4817",
+      "source": "GameData/extracted/takeover104/images/4817.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4819",
+      "source": "GameData/extracted/takeover104/images/4819.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4821",
+      "source": "GameData/extracted/takeover104/images/4821.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4823",
+      "source": "GameData/extracted/takeover104/images/4823.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4825",
+      "source": "GameData/extracted/takeover104/images/4825.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4827",
+      "source": "GameData/extracted/takeover104/images/4827.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4829",
+      "source": "GameData/extracted/takeover104/images/4829.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4831",
+      "source": "GameData/extracted/takeover104/images/4831.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4833",
+      "source": "GameData/extracted/takeover104/images/4833.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4835",
+      "source": "GameData/extracted/takeover104/images/4835.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4837",
+      "source": "GameData/extracted/takeover104/images/4837.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4839",
+      "source": "GameData/extracted/takeover104/images/4839.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4841",
+      "source": "GameData/extracted/takeover104/images/4841.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4843",
+      "source": "GameData/extracted/takeover104/images/4843.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4845",
+      "source": "GameData/extracted/takeover104/images/4845.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4847",
+      "source": "GameData/extracted/takeover104/images/4847.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4849",
+      "source": "GameData/extracted/takeover104/images/4849.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_4851",
+      "source": "GameData/extracted/takeover104/images/4851.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5037",
+      "source": "GameData/extracted/takeover104/images/5037.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5039",
+      "source": "GameData/extracted/takeover104/images/5039.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5041",
+      "source": "GameData/extracted/takeover104/images/5041.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5043",
+      "source": "GameData/extracted/takeover104/images/5043.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5045",
+      "source": "GameData/extracted/takeover104/images/5045.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5047",
+      "source": "GameData/extracted/takeover104/images/5047.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5049",
+      "source": "GameData/extracted/takeover104/images/5049.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5051",
+      "source": "GameData/extracted/takeover104/images/5051.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5053",
+      "source": "GameData/extracted/takeover104/images/5053.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5055",
+      "source": "GameData/extracted/takeover104/images/5055.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5057",
+      "source": "GameData/extracted/takeover104/images/5057.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5059",
+      "source": "GameData/extracted/takeover104/images/5059.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5061",
+      "source": "GameData/extracted/takeover104/images/5061.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5063",
+      "source": "GameData/extracted/takeover104/images/5063.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5065",
+      "source": "GameData/extracted/takeover104/images/5065.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5067",
+      "source": "GameData/extracted/takeover104/images/5067.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5069",
+      "source": "GameData/extracted/takeover104/images/5069.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5071",
+      "source": "GameData/extracted/takeover104/images/5071.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5073",
+      "source": "GameData/extracted/takeover104/images/5073.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5075",
+      "source": "GameData/extracted/takeover104/images/5075.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5077",
+      "source": "GameData/extracted/takeover104/images/5077.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5079",
+      "source": "GameData/extracted/takeover104/images/5079.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5081",
+      "source": "GameData/extracted/takeover104/images/5081.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5083",
+      "source": "GameData/extracted/takeover104/images/5083.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5085",
+      "source": "GameData/extracted/takeover104/images/5085.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5087",
+      "source": "GameData/extracted/takeover104/images/5087.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5089",
+      "source": "GameData/extracted/takeover104/images/5089.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5091",
+      "source": "GameData/extracted/takeover104/images/5091.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5093",
+      "source": "GameData/extracted/takeover104/images/5093.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5095",
+      "source": "GameData/extracted/takeover104/images/5095.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5097",
+      "source": "GameData/extracted/takeover104/images/5097.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5099",
+      "source": "GameData/extracted/takeover104/images/5099.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5101",
+      "source": "GameData/extracted/takeover104/images/5101.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5103",
+      "source": "GameData/extracted/takeover104/images/5103.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5105",
+      "source": "GameData/extracted/takeover104/images/5105.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5107",
+      "source": "GameData/extracted/takeover104/images/5107.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5109",
+      "source": "GameData/extracted/takeover104/images/5109.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5111",
+      "source": "GameData/extracted/takeover104/images/5111.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5113",
+      "source": "GameData/extracted/takeover104/images/5113.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5115",
+      "source": "GameData/extracted/takeover104/images/5115.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5195",
+      "source": "GameData/extracted/takeover104/images/5195.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5367",
+      "source": "GameData/extracted/takeover104/images/5367.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5368",
+      "source": "GameData/extracted/takeover104/images/5368.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5369",
+      "source": "GameData/extracted/takeover104/images/5369.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5554",
+      "source": "GameData/extracted/takeover104/images/5554.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5556",
+      "source": "GameData/extracted/takeover104/images/5556.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5558",
+      "source": "GameData/extracted/takeover104/images/5558.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5560",
+      "source": "GameData/extracted/takeover104/images/5560.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5562",
+      "source": "GameData/extracted/takeover104/images/5562.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5564",
+      "source": "GameData/extracted/takeover104/images/5564.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5566",
+      "source": "GameData/extracted/takeover104/images/5566.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5568",
+      "source": "GameData/extracted/takeover104/images/5568.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5570",
+      "source": "GameData/extracted/takeover104/images/5570.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5572",
+      "source": "GameData/extracted/takeover104/images/5572.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5574",
+      "source": "GameData/extracted/takeover104/images/5574.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5576",
+      "source": "GameData/extracted/takeover104/images/5576.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5578",
+      "source": "GameData/extracted/takeover104/images/5578.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5580",
+      "source": "GameData/extracted/takeover104/images/5580.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5582",
+      "source": "GameData/extracted/takeover104/images/5582.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5584",
+      "source": "GameData/extracted/takeover104/images/5584.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5586",
+      "source": "GameData/extracted/takeover104/images/5586.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5588",
+      "source": "GameData/extracted/takeover104/images/5588.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5590",
+      "source": "GameData/extracted/takeover104/images/5590.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5592",
+      "source": "GameData/extracted/takeover104/images/5592.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5594",
+      "source": "GameData/extracted/takeover104/images/5594.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5596",
+      "source": "GameData/extracted/takeover104/images/5596.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5598",
+      "source": "GameData/extracted/takeover104/images/5598.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5600",
+      "source": "GameData/extracted/takeover104/images/5600.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5602",
+      "source": "GameData/extracted/takeover104/images/5602.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5604",
+      "source": "GameData/extracted/takeover104/images/5604.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5606",
+      "source": "GameData/extracted/takeover104/images/5606.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5608",
+      "source": "GameData/extracted/takeover104/images/5608.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5610",
+      "source": "GameData/extracted/takeover104/images/5610.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5612",
+      "source": "GameData/extracted/takeover104/images/5612.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5649",
+      "source": "GameData/extracted/takeover104/images/5649.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5651",
+      "source": "GameData/extracted/takeover104/images/5651.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5653",
+      "source": "GameData/extracted/takeover104/images/5653.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5655",
+      "source": "GameData/extracted/takeover104/images/5655.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5657",
+      "source": "GameData/extracted/takeover104/images/5657.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5659",
+      "source": "GameData/extracted/takeover104/images/5659.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5661",
+      "source": "GameData/extracted/takeover104/images/5661.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5663",
+      "source": "GameData/extracted/takeover104/images/5663.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5665",
+      "source": "GameData/extracted/takeover104/images/5665.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5667",
+      "source": "GameData/extracted/takeover104/images/5667.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5669",
+      "source": "GameData/extracted/takeover104/images/5669.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5671",
+      "source": "GameData/extracted/takeover104/images/5671.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5673",
+      "source": "GameData/extracted/takeover104/images/5673.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5675",
+      "source": "GameData/extracted/takeover104/images/5675.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5677",
+      "source": "GameData/extracted/takeover104/images/5677.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5679",
+      "source": "GameData/extracted/takeover104/images/5679.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5681",
+      "source": "GameData/extracted/takeover104/images/5681.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5683",
+      "source": "GameData/extracted/takeover104/images/5683.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5685",
+      "source": "GameData/extracted/takeover104/images/5685.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5687",
+      "source": "GameData/extracted/takeover104/images/5687.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5689",
+      "source": "GameData/extracted/takeover104/images/5689.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5691",
+      "source": "GameData/extracted/takeover104/images/5691.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5693",
+      "source": "GameData/extracted/takeover104/images/5693.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5695",
+      "source": "GameData/extracted/takeover104/images/5695.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5697",
+      "source": "GameData/extracted/takeover104/images/5697.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5699",
+      "source": "GameData/extracted/takeover104/images/5699.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5701",
+      "source": "GameData/extracted/takeover104/images/5701.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5703",
+      "source": "GameData/extracted/takeover104/images/5703.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5705",
+      "source": "GameData/extracted/takeover104/images/5705.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5707",
+      "source": "GameData/extracted/takeover104/images/5707.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5709",
+      "source": "GameData/extracted/takeover104/images/5709.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5711",
+      "source": "GameData/extracted/takeover104/images/5711.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5713",
+      "source": "GameData/extracted/takeover104/images/5713.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5715",
+      "source": "GameData/extracted/takeover104/images/5715.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5717",
+      "source": "GameData/extracted/takeover104/images/5717.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5719",
+      "source": "GameData/extracted/takeover104/images/5719.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5721",
+      "source": "GameData/extracted/takeover104/images/5721.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5723",
+      "source": "GameData/extracted/takeover104/images/5723.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5725",
+      "source": "GameData/extracted/takeover104/images/5725.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5727",
+      "source": "GameData/extracted/takeover104/images/5727.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5729",
+      "source": "GameData/extracted/takeover104/images/5729.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5731",
+      "source": "GameData/extracted/takeover104/images/5731.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5733",
+      "source": "GameData/extracted/takeover104/images/5733.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5735",
+      "source": "GameData/extracted/takeover104/images/5735.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5737",
+      "source": "GameData/extracted/takeover104/images/5737.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5739",
+      "source": "GameData/extracted/takeover104/images/5739.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5741",
+      "source": "GameData/extracted/takeover104/images/5741.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5743",
+      "source": "GameData/extracted/takeover104/images/5743.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5745",
+      "source": "GameData/extracted/takeover104/images/5745.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5747",
+      "source": "GameData/extracted/takeover104/images/5747.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5749",
+      "source": "GameData/extracted/takeover104/images/5749.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5751",
+      "source": "GameData/extracted/takeover104/images/5751.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5753",
+      "source": "GameData/extracted/takeover104/images/5753.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5755",
+      "source": "GameData/extracted/takeover104/images/5755.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5757",
+      "source": "GameData/extracted/takeover104/images/5757.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5759",
+      "source": "GameData/extracted/takeover104/images/5759.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5761",
+      "source": "GameData/extracted/takeover104/images/5761.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5763",
+      "source": "GameData/extracted/takeover104/images/5763.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5765",
+      "source": "GameData/extracted/takeover104/images/5765.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5767",
+      "source": "GameData/extracted/takeover104/images/5767.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5769",
+      "source": "GameData/extracted/takeover104/images/5769.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5771",
+      "source": "GameData/extracted/takeover104/images/5771.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5773",
+      "source": "GameData/extracted/takeover104/images/5773.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5775",
+      "source": "GameData/extracted/takeover104/images/5775.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5777",
+      "source": "GameData/extracted/takeover104/images/5777.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5779",
+      "source": "GameData/extracted/takeover104/images/5779.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5781",
+      "source": "GameData/extracted/takeover104/images/5781.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5783",
+      "source": "GameData/extracted/takeover104/images/5783.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5785",
+      "source": "GameData/extracted/takeover104/images/5785.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_5787",
+      "source": "GameData/extracted/takeover104/images/5787.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_596",
+      "source": "GameData/extracted/takeover104/images/596.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6096",
+      "source": "GameData/extracted/takeover104/images/6096.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6102",
+      "source": "GameData/extracted/takeover104/images/6102.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6103",
+      "source": "GameData/extracted/takeover104/images/6103.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6108",
+      "source": "GameData/extracted/takeover104/images/6108.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6115",
+      "source": "GameData/extracted/takeover104/images/6115.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6118",
+      "source": "GameData/extracted/takeover104/images/6118.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6121",
+      "source": "GameData/extracted/takeover104/images/6121.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6124",
+      "source": "GameData/extracted/takeover104/images/6124.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6144",
+      "source": "GameData/extracted/takeover104/images/6144.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6147",
+      "source": "GameData/extracted/takeover104/images/6147.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6179",
+      "source": "GameData/extracted/takeover104/images/6179.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6182",
+      "source": "GameData/extracted/takeover104/images/6182.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6190",
+      "source": "GameData/extracted/takeover104/images/6190.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6193",
+      "source": "GameData/extracted/takeover104/images/6193.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6200",
+      "source": "GameData/extracted/takeover104/images/6200.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6203",
+      "source": "GameData/extracted/takeover104/images/6203.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6210",
+      "source": "GameData/extracted/takeover104/images/6210.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6213",
+      "source": "GameData/extracted/takeover104/images/6213.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6289",
+      "source": "GameData/extracted/takeover104/images/6289.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6291",
+      "source": "GameData/extracted/takeover104/images/6291.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6293",
+      "source": "GameData/extracted/takeover104/images/6293.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6295",
+      "source": "GameData/extracted/takeover104/images/6295.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6297",
+      "source": "GameData/extracted/takeover104/images/6297.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6299",
+      "source": "GameData/extracted/takeover104/images/6299.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6301",
+      "source": "GameData/extracted/takeover104/images/6301.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6303",
+      "source": "GameData/extracted/takeover104/images/6303.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6305",
+      "source": "GameData/extracted/takeover104/images/6305.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6307",
+      "source": "GameData/extracted/takeover104/images/6307.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6309",
+      "source": "GameData/extracted/takeover104/images/6309.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6311",
+      "source": "GameData/extracted/takeover104/images/6311.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6474",
+      "source": "GameData/extracted/takeover104/images/6474.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6581",
+      "source": "GameData/extracted/takeover104/images/6581.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6586",
+      "source": "GameData/extracted/takeover104/images/6586.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6588",
+      "source": "GameData/extracted/takeover104/images/6588.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6590",
+      "source": "GameData/extracted/takeover104/images/6590.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6592",
+      "source": "GameData/extracted/takeover104/images/6592.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6594",
+      "source": "GameData/extracted/takeover104/images/6594.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6596",
+      "source": "GameData/extracted/takeover104/images/6596.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6598",
+      "source": "GameData/extracted/takeover104/images/6598.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6600",
+      "source": "GameData/extracted/takeover104/images/6600.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6602",
+      "source": "GameData/extracted/takeover104/images/6602.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6604",
+      "source": "GameData/extracted/takeover104/images/6604.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6606",
+      "source": "GameData/extracted/takeover104/images/6606.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6608",
+      "source": "GameData/extracted/takeover104/images/6608.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6610",
+      "source": "GameData/extracted/takeover104/images/6610.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6612",
+      "source": "GameData/extracted/takeover104/images/6612.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6614",
+      "source": "GameData/extracted/takeover104/images/6614.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6616",
+      "source": "GameData/extracted/takeover104/images/6616.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6618",
+      "source": "GameData/extracted/takeover104/images/6618.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6620",
+      "source": "GameData/extracted/takeover104/images/6620.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6622",
+      "source": "GameData/extracted/takeover104/images/6622.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6624",
+      "source": "GameData/extracted/takeover104/images/6624.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6626",
+      "source": "GameData/extracted/takeover104/images/6626.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6628",
+      "source": "GameData/extracted/takeover104/images/6628.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6630",
+      "source": "GameData/extracted/takeover104/images/6630.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6632",
+      "source": "GameData/extracted/takeover104/images/6632.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6634",
+      "source": "GameData/extracted/takeover104/images/6634.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6636",
+      "source": "GameData/extracted/takeover104/images/6636.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6693",
+      "source": "GameData/extracted/takeover104/images/6693.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6695",
+      "source": "GameData/extracted/takeover104/images/6695.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6697",
+      "source": "GameData/extracted/takeover104/images/6697.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6699",
+      "source": "GameData/extracted/takeover104/images/6699.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6701",
+      "source": "GameData/extracted/takeover104/images/6701.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6703",
+      "source": "GameData/extracted/takeover104/images/6703.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6705",
+      "source": "GameData/extracted/takeover104/images/6705.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6707",
+      "source": "GameData/extracted/takeover104/images/6707.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6709",
+      "source": "GameData/extracted/takeover104/images/6709.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6711",
+      "source": "GameData/extracted/takeover104/images/6711.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6713",
+      "source": "GameData/extracted/takeover104/images/6713.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6715",
+      "source": "GameData/extracted/takeover104/images/6715.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6717",
+      "source": "GameData/extracted/takeover104/images/6717.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6719",
+      "source": "GameData/extracted/takeover104/images/6719.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6721",
+      "source": "GameData/extracted/takeover104/images/6721.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6723",
+      "source": "GameData/extracted/takeover104/images/6723.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6725",
+      "source": "GameData/extracted/takeover104/images/6725.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6727",
+      "source": "GameData/extracted/takeover104/images/6727.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6729",
+      "source": "GameData/extracted/takeover104/images/6729.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6731",
+      "source": "GameData/extracted/takeover104/images/6731.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6733",
+      "source": "GameData/extracted/takeover104/images/6733.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6735",
+      "source": "GameData/extracted/takeover104/images/6735.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6737",
+      "source": "GameData/extracted/takeover104/images/6737.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6739",
+      "source": "GameData/extracted/takeover104/images/6739.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6741",
+      "source": "GameData/extracted/takeover104/images/6741.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6743",
+      "source": "GameData/extracted/takeover104/images/6743.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6745",
+      "source": "GameData/extracted/takeover104/images/6745.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6747",
+      "source": "GameData/extracted/takeover104/images/6747.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6749",
+      "source": "GameData/extracted/takeover104/images/6749.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_6751",
+      "source": "GameData/extracted/takeover104/images/6751.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7000",
+      "source": "GameData/extracted/takeover104/images/7000.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7369",
+      "source": "GameData/extracted/takeover104/images/7369.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7453",
+      "source": "GameData/extracted/takeover104/images/7453.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7455",
+      "source": "GameData/extracted/takeover104/images/7455.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7457",
+      "source": "GameData/extracted/takeover104/images/7457.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7459",
+      "source": "GameData/extracted/takeover104/images/7459.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7461",
+      "source": "GameData/extracted/takeover104/images/7461.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7463",
+      "source": "GameData/extracted/takeover104/images/7463.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7465",
+      "source": "GameData/extracted/takeover104/images/7465.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7467",
+      "source": "GameData/extracted/takeover104/images/7467.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7469",
+      "source": "GameData/extracted/takeover104/images/7469.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7471",
+      "source": "GameData/extracted/takeover104/images/7471.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7473",
+      "source": "GameData/extracted/takeover104/images/7473.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7475",
+      "source": "GameData/extracted/takeover104/images/7475.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7477",
+      "source": "GameData/extracted/takeover104/images/7477.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7479",
+      "source": "GameData/extracted/takeover104/images/7479.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7481",
+      "source": "GameData/extracted/takeover104/images/7481.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7483",
+      "source": "GameData/extracted/takeover104/images/7483.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7485",
+      "source": "GameData/extracted/takeover104/images/7485.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7487",
+      "source": "GameData/extracted/takeover104/images/7487.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7489",
+      "source": "GameData/extracted/takeover104/images/7489.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7491",
+      "source": "GameData/extracted/takeover104/images/7491.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7493",
+      "source": "GameData/extracted/takeover104/images/7493.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7495",
+      "source": "GameData/extracted/takeover104/images/7495.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7497",
+      "source": "GameData/extracted/takeover104/images/7497.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7499",
+      "source": "GameData/extracted/takeover104/images/7499.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7501",
+      "source": "GameData/extracted/takeover104/images/7501.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7503",
+      "source": "GameData/extracted/takeover104/images/7503.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7505",
+      "source": "GameData/extracted/takeover104/images/7505.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7507",
+      "source": "GameData/extracted/takeover104/images/7507.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7509",
+      "source": "GameData/extracted/takeover104/images/7509.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7511",
+      "source": "GameData/extracted/takeover104/images/7511.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7554",
+      "source": "GameData/extracted/takeover104/images/7554.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7556",
+      "source": "GameData/extracted/takeover104/images/7556.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7558",
+      "source": "GameData/extracted/takeover104/images/7558.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7560",
+      "source": "GameData/extracted/takeover104/images/7560.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7562",
+      "source": "GameData/extracted/takeover104/images/7562.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7564",
+      "source": "GameData/extracted/takeover104/images/7564.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7566",
+      "source": "GameData/extracted/takeover104/images/7566.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7568",
+      "source": "GameData/extracted/takeover104/images/7568.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7570",
+      "source": "GameData/extracted/takeover104/images/7570.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7572",
+      "source": "GameData/extracted/takeover104/images/7572.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7574",
+      "source": "GameData/extracted/takeover104/images/7574.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7576",
+      "source": "GameData/extracted/takeover104/images/7576.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7578",
+      "source": "GameData/extracted/takeover104/images/7578.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7580",
+      "source": "GameData/extracted/takeover104/images/7580.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7582",
+      "source": "GameData/extracted/takeover104/images/7582.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7584",
+      "source": "GameData/extracted/takeover104/images/7584.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7586",
+      "source": "GameData/extracted/takeover104/images/7586.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7588",
+      "source": "GameData/extracted/takeover104/images/7588.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7590",
+      "source": "GameData/extracted/takeover104/images/7590.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7592",
+      "source": "GameData/extracted/takeover104/images/7592.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7594",
+      "source": "GameData/extracted/takeover104/images/7594.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7596",
+      "source": "GameData/extracted/takeover104/images/7596.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7598",
+      "source": "GameData/extracted/takeover104/images/7598.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7600",
+      "source": "GameData/extracted/takeover104/images/7600.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7603",
+      "source": "GameData/extracted/takeover104/images/7603.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7605",
+      "source": "GameData/extracted/takeover104/images/7605.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7607",
+      "source": "GameData/extracted/takeover104/images/7607.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7609",
+      "source": "GameData/extracted/takeover104/images/7609.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7611",
+      "source": "GameData/extracted/takeover104/images/7611.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7684",
+      "source": "GameData/extracted/takeover104/images/7684.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7686",
+      "source": "GameData/extracted/takeover104/images/7686.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7688",
+      "source": "GameData/extracted/takeover104/images/7688.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7690",
+      "source": "GameData/extracted/takeover104/images/7690.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7692",
+      "source": "GameData/extracted/takeover104/images/7692.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7694",
+      "source": "GameData/extracted/takeover104/images/7694.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7696",
+      "source": "GameData/extracted/takeover104/images/7696.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7698",
+      "source": "GameData/extracted/takeover104/images/7698.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7700",
+      "source": "GameData/extracted/takeover104/images/7700.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7702",
+      "source": "GameData/extracted/takeover104/images/7702.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7704",
+      "source": "GameData/extracted/takeover104/images/7704.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7706",
+      "source": "GameData/extracted/takeover104/images/7706.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7708",
+      "source": "GameData/extracted/takeover104/images/7708.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7710",
+      "source": "GameData/extracted/takeover104/images/7710.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7712",
+      "source": "GameData/extracted/takeover104/images/7712.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7714",
+      "source": "GameData/extracted/takeover104/images/7714.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7716",
+      "source": "GameData/extracted/takeover104/images/7716.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7718",
+      "source": "GameData/extracted/takeover104/images/7718.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7720",
+      "source": "GameData/extracted/takeover104/images/7720.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7722",
+      "source": "GameData/extracted/takeover104/images/7722.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7724",
+      "source": "GameData/extracted/takeover104/images/7724.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7726",
+      "source": "GameData/extracted/takeover104/images/7726.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7728",
+      "source": "GameData/extracted/takeover104/images/7728.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7730",
+      "source": "GameData/extracted/takeover104/images/7730.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7732",
+      "source": "GameData/extracted/takeover104/images/7732.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7734",
+      "source": "GameData/extracted/takeover104/images/7734.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7736",
+      "source": "GameData/extracted/takeover104/images/7736.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7738",
+      "source": "GameData/extracted/takeover104/images/7738.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7740",
+      "source": "GameData/extracted/takeover104/images/7740.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7742",
+      "source": "GameData/extracted/takeover104/images/7742.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7745",
+      "source": "GameData/extracted/takeover104/images/7745.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7747",
+      "source": "GameData/extracted/takeover104/images/7747.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7749",
+      "source": "GameData/extracted/takeover104/images/7749.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7751",
+      "source": "GameData/extracted/takeover104/images/7751.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7753",
+      "source": "GameData/extracted/takeover104/images/7753.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7755",
+      "source": "GameData/extracted/takeover104/images/7755.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7757",
+      "source": "GameData/extracted/takeover104/images/7757.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7759",
+      "source": "GameData/extracted/takeover104/images/7759.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7761",
+      "source": "GameData/extracted/takeover104/images/7761.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7763",
+      "source": "GameData/extracted/takeover104/images/7763.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7765",
+      "source": "GameData/extracted/takeover104/images/7765.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7767",
+      "source": "GameData/extracted/takeover104/images/7767.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7769",
+      "source": "GameData/extracted/takeover104/images/7769.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7771",
+      "source": "GameData/extracted/takeover104/images/7771.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7773",
+      "source": "GameData/extracted/takeover104/images/7773.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7775",
+      "source": "GameData/extracted/takeover104/images/7775.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7777",
+      "source": "GameData/extracted/takeover104/images/7777.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7779",
+      "source": "GameData/extracted/takeover104/images/7779.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7781",
+      "source": "GameData/extracted/takeover104/images/7781.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7783",
+      "source": "GameData/extracted/takeover104/images/7783.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7785",
+      "source": "GameData/extracted/takeover104/images/7785.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7787",
+      "source": "GameData/extracted/takeover104/images/7787.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7789",
+      "source": "GameData/extracted/takeover104/images/7789.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7791",
+      "source": "GameData/extracted/takeover104/images/7791.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7793",
+      "source": "GameData/extracted/takeover104/images/7793.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7795",
+      "source": "GameData/extracted/takeover104/images/7795.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7797",
+      "source": "GameData/extracted/takeover104/images/7797.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7799",
+      "source": "GameData/extracted/takeover104/images/7799.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7801",
+      "source": "GameData/extracted/takeover104/images/7801.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7803",
+      "source": "GameData/extracted/takeover104/images/7803.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7814",
+      "source": "GameData/extracted/takeover104/images/7814.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7832",
+      "source": "GameData/extracted/takeover104/images/7832.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7835",
+      "source": "GameData/extracted/takeover104/images/7835.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7845",
+      "source": "GameData/extracted/takeover104/images/7845.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7850",
+      "source": "GameData/extracted/takeover104/images/7850.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7852",
+      "source": "GameData/extracted/takeover104/images/7852.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7854",
+      "source": "GameData/extracted/takeover104/images/7854.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7856",
+      "source": "GameData/extracted/takeover104/images/7856.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7858",
+      "source": "GameData/extracted/takeover104/images/7858.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7860",
+      "source": "GameData/extracted/takeover104/images/7860.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7863",
+      "source": "GameData/extracted/takeover104/images/7863.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7865",
+      "source": "GameData/extracted/takeover104/images/7865.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7867",
+      "source": "GameData/extracted/takeover104/images/7867.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7869",
+      "source": "GameData/extracted/takeover104/images/7869.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7871",
+      "source": "GameData/extracted/takeover104/images/7871.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7873",
+      "source": "GameData/extracted/takeover104/images/7873.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7875",
+      "source": "GameData/extracted/takeover104/images/7875.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7877",
+      "source": "GameData/extracted/takeover104/images/7877.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7880",
+      "source": "GameData/extracted/takeover104/images/7880.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7882",
+      "source": "GameData/extracted/takeover104/images/7882.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7920",
+      "source": "GameData/extracted/takeover104/images/7920.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7955",
+      "source": "GameData/extracted/takeover104/images/7955.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7957",
+      "source": "GameData/extracted/takeover104/images/7957.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7959",
+      "source": "GameData/extracted/takeover104/images/7959.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7961",
+      "source": "GameData/extracted/takeover104/images/7961.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7963",
+      "source": "GameData/extracted/takeover104/images/7963.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7965",
+      "source": "GameData/extracted/takeover104/images/7965.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7967",
+      "source": "GameData/extracted/takeover104/images/7967.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7969",
+      "source": "GameData/extracted/takeover104/images/7969.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7971",
+      "source": "GameData/extracted/takeover104/images/7971.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7973",
+      "source": "GameData/extracted/takeover104/images/7973.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7975",
+      "source": "GameData/extracted/takeover104/images/7975.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7978",
+      "source": "GameData/extracted/takeover104/images/7978.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7980",
+      "source": "GameData/extracted/takeover104/images/7980.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7982",
+      "source": "GameData/extracted/takeover104/images/7982.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7984",
+      "source": "GameData/extracted/takeover104/images/7984.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7986",
+      "source": "GameData/extracted/takeover104/images/7986.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7988",
+      "source": "GameData/extracted/takeover104/images/7988.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7990",
+      "source": "GameData/extracted/takeover104/images/7990.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7992",
+      "source": "GameData/extracted/takeover104/images/7992.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7994",
+      "source": "GameData/extracted/takeover104/images/7994.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7996",
+      "source": "GameData/extracted/takeover104/images/7996.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_7998",
+      "source": "GameData/extracted/takeover104/images/7998.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8",
+      "source": "GameData/extracted/takeover104/images/8.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8000",
+      "source": "GameData/extracted/takeover104/images/8000.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8002",
+      "source": "GameData/extracted/takeover104/images/8002.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8004",
+      "source": "GameData/extracted/takeover104/images/8004.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8006",
+      "source": "GameData/extracted/takeover104/images/8006.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8008",
+      "source": "GameData/extracted/takeover104/images/8008.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8010",
+      "source": "GameData/extracted/takeover104/images/8010.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8012",
+      "source": "GameData/extracted/takeover104/images/8012.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8015",
+      "source": "GameData/extracted/takeover104/images/8015.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8017",
+      "source": "GameData/extracted/takeover104/images/8017.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8019",
+      "source": "GameData/extracted/takeover104/images/8019.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8021",
+      "source": "GameData/extracted/takeover104/images/8021.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8023",
+      "source": "GameData/extracted/takeover104/images/8023.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8025",
+      "source": "GameData/extracted/takeover104/images/8025.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8027",
+      "source": "GameData/extracted/takeover104/images/8027.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8029",
+      "source": "GameData/extracted/takeover104/images/8029.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8031",
+      "source": "GameData/extracted/takeover104/images/8031.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8033",
+      "source": "GameData/extracted/takeover104/images/8033.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8035",
+      "source": "GameData/extracted/takeover104/images/8035.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8037",
+      "source": "GameData/extracted/takeover104/images/8037.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8039",
+      "source": "GameData/extracted/takeover104/images/8039.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8041",
+      "source": "GameData/extracted/takeover104/images/8041.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8043",
+      "source": "GameData/extracted/takeover104/images/8043.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8045",
+      "source": "GameData/extracted/takeover104/images/8045.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8047",
+      "source": "GameData/extracted/takeover104/images/8047.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8049",
+      "source": "GameData/extracted/takeover104/images/8049.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8051",
+      "source": "GameData/extracted/takeover104/images/8051.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8053",
+      "source": "GameData/extracted/takeover104/images/8053.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8055",
+      "source": "GameData/extracted/takeover104/images/8055.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8057",
+      "source": "GameData/extracted/takeover104/images/8057.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8059",
+      "source": "GameData/extracted/takeover104/images/8059.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8061",
+      "source": "GameData/extracted/takeover104/images/8061.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8063",
+      "source": "GameData/extracted/takeover104/images/8063.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8065",
+      "source": "GameData/extracted/takeover104/images/8065.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8067",
+      "source": "GameData/extracted/takeover104/images/8067.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8069",
+      "source": "GameData/extracted/takeover104/images/8069.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8071",
+      "source": "GameData/extracted/takeover104/images/8071.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8073",
+      "source": "GameData/extracted/takeover104/images/8073.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8172",
+      "source": "GameData/extracted/takeover104/images/8172.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_8173",
+      "source": "GameData/extracted/takeover104/images/8173.jpg"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_974",
+      "source": "GameData/extracted/takeover104/images/974.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_982",
+      "source": "GameData/extracted/takeover104/images/982.png"
+    },
+    {
+      "category": "raw-image",
+      "unity_location": "takeover_raw_987",
+      "source": "GameData/extracted/takeover104/images/987.png"
+    }
+  ]
+}
