@@ -1,6 +1,6 @@
 {
   "source_classes": 1016,
-  "imported": 948,
+  "imported": 949,
   "missing": [],
   "assets": [
     {
@@ -645,6 +645,14 @@
     },
     {
       "category": "sprite",
+      "class_name": "EmptyNodeClass",
+      "character_id": 997,
+      "frame_count": 1,
+      "unity_location": "takeover_node_empty",
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_997_EmptyNodeClass_EmptyNodeClass/1.png"
+    },
+    {
+      "category": "sprite",
       "class_name": "NodeBuildHereClass",
       "character_id": 996,
       "frame_count": 1,
@@ -668,68 +676,108 @@
       "source": "GameData/extracted/takeover104/sprites/DefineSprite_999_NodeDefenderOgreClass_NodeDefenderOgreClass/1.png"
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level1Class",
       "character_id": 4206,
-      "frame_count": 1,
       "unity_location": "takeover_map_1",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4206_Level1Class_Level1Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4206_Level1Class_Level1Class/1.png",
+      "crop": [
+        246,
+        145,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level2Class",
       "character_id": 5812,
-      "frame_count": 1,
       "unity_location": "takeover_map_2",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5812_Level2Class_Level2Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5812_Level2Class_Level2Class/1.png",
+      "crop": [
+        244,
+        144,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level3Class",
       "character_id": 4897,
-      "frame_count": 1,
       "unity_location": "takeover_map_3",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4897_Level3Class_Level3Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4897_Level3Class_Level3Class/1.png",
+      "crop": [
+        231,
+        158,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level4Class",
       "character_id": 4790,
-      "frame_count": 1,
       "unity_location": "takeover_map_4",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4790_Level4Class_Level4Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4790_Level4Class_Level4Class/1.png",
+      "crop": [
+        264,
+        126,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level5Class",
       "character_id": 6440,
-      "frame_count": 1,
       "unity_location": "takeover_map_5",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6440_Level5Class_Level5Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_6440_Level5Class_Level5Class/1.png",
+      "crop": [
+        112,
+        156,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level6Class",
       "character_id": 4189,
-      "frame_count": 1,
       "unity_location": "takeover_map_6",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4189_Level6Class_Level6Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_4189_Level6Class_Level6Class/1.png",
+      "crop": [
+        56,
+        168,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level7Class",
       "character_id": 5371,
-      "frame_count": 1,
       "unity_location": "takeover_map_7",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5371_Level7Class_Level7Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_5371_Level7Class_Level7Class/1.png",
+      "crop": [
+        152,
+        186,
+        800,
+        600
+      ]
     },
     {
-      "category": "sprite",
+      "category": "map",
       "class_name": "Level8Class",
       "character_id": 3693,
-      "frame_count": 1,
       "unity_location": "takeover_map_8",
-      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3693_Level8Class_Level8Class/1.png"
+      "source": "GameData/extracted/takeover104/sprites/DefineSprite_3693_Level8Class_Level8Class/1.png",
+      "crop": [
+        93,
+        83,
+        800,
+        600
+      ]
     },
     {
       "category": "audio",

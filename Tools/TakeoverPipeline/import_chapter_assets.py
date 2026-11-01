@@ -8,6 +8,8 @@ import csv
 import json
 import re
 import shutil
+import struct
+import zlib
 from collections import defaultdict
 from pathlib import Path
 
@@ -72,6 +74,88 @@ def frames(folder: Path) -> list[Path]:
 def copy_frame(source: Path, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, destination)
+
+
+def crop_rgba_png(source: Path, destination: Path, width: int, height: int) -> tuple[int, int, int, int]:
+    """Crop a non-interlaced 8-bit RGBA PNG without external dependencies."""
+    data = source.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        raise ValueError(f"Not a PNG: {source}")
+
+    position = 8
+    png_width = png_height = bit_depth = color_type = interlace = None
+    compressed = bytearray()
+    while position < len(data):
+        length = struct.unpack(">I", data[position:position + 4])[0]
+        chunk_type = data[position + 4:position + 8]
+        payload = data[position + 8:position + 8 + length]
+        position += 12 + length
+        if chunk_type == b"IHDR":
+            png_width, png_height, bit_depth, color_type, _, _, interlace = struct.unpack(
+                ">IIBBBBB", payload)
+        elif chunk_type == b"IDAT":
+            compressed.extend(payload)
+        elif chunk_type == b"IEND":
+            break
+
+    if bit_depth != 8 or color_type != 6 or interlace != 0:
+        raise ValueError(f"Unsupported map PNG format: {source}")
+    if width > png_width or height > png_height:
+        raise ValueError(f"Crop exceeds source: {source}")
+
+    bpp = 4
+    stride = png_width * bpp
+    crop_x = (png_width - width) // 2
+    crop_y = (png_height - height) // 2
+    raw = zlib.decompress(bytes(compressed))
+    rows: list[bytes] = []
+    previous = bytearray(stride)
+    offset = 0
+    for _ in range(png_height):
+        filter_type = raw[offset]
+        offset += 1
+        encoded = raw[offset:offset + stride]
+        offset += stride
+        row = bytearray(stride)
+        for i, value in enumerate(encoded):
+            left = row[i - bpp] if i >= bpp else 0
+            above = previous[i]
+            upper_left = previous[i - bpp] if i >= bpp else 0
+            if filter_type == 0:
+                prediction = 0
+            elif filter_type == 1:
+                prediction = left
+            elif filter_type == 2:
+                prediction = above
+            elif filter_type == 3:
+                prediction = (left + above) // 2
+            elif filter_type == 4:
+                p = left + above - upper_left
+                pa, pb, pc = abs(p - left), abs(p - above), abs(p - upper_left)
+                prediction = left if pa <= pb and pa <= pc else above if pb <= pc else upper_left
+            else:
+                raise ValueError(f"Unsupported PNG filter {filter_type}: {source}")
+            row[i] = (value + prediction) & 0xFF
+        rows.append(bytes(row[crop_x * bpp:(crop_x + width) * bpp]))
+        previous = row
+
+    filtered = b"".join(b"\x00" + row for row in rows[crop_y:crop_y + height])
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(payload))
+            + kind
+            + payload
+            + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+        )
+    output = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(filtered, 9))
+        + chunk(b"IEND", b"")
+    )
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_bytes(output)
+    return crop_x, crop_y, width, height
 
 
 def import_sprite(
@@ -174,6 +258,7 @@ def main() -> int:
         )
 
     for class_name, location in (
+        ("EmptyNodeClass", "takeover_node_empty"),
         ("NodeBuildHereClass", "takeover_node_buildspot"),
         ("NodeChestClass", "takeover_node_chest"),
         ("NodeDefenderOgreClass", "takeover_node_ogre"),
@@ -181,15 +266,24 @@ def main() -> int:
         import_sprite(symbols, sprite_root, class_name, location, sprite_out, mapping, missing, 0)
 
     for level_id in range(1, 9):
-        import_sprite(
-            symbols,
-            sprite_root,
-            f"Level{level_id}Class",
-            f"takeover_map_{level_id}",
-            map_out,
-            mapping,
-            missing,
-            0,
+        class_name = f"Level{level_id}Class"
+        character_id = symbols.get(class_name)
+        folder = sprite_dir(sprite_root, character_id) if character_id is not None else None
+        images = frames(folder) if folder else []
+        if not images:
+            missing.append(f"{class_name}: DefineSprite_{character_id or '?'}")
+            continue
+        destination = map_out / f"takeover_map_{level_id}.png"
+        crop = crop_rgba_png(images[0], destination, 800, 600)
+        mapping.append(
+            {
+                "category": "map",
+                "class_name": class_name,
+                "character_id": character_id,
+                "unity_location": f"takeover_map_{level_id}",
+                "source": str(images[0]),
+                "crop": list(crop),
+            }
         )
 
     for sound in sorted((args.source / "sounds_wav").glob("*.wav")):

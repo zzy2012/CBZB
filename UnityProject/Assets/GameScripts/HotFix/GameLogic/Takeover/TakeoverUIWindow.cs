@@ -27,6 +27,7 @@ namespace GameLogic.Takeover
         private Text _resources;
         private Text _clock;
         private Text _toast;
+        private GameObject _toastPanel;
         private Text _resultTitle;
         private Text _resultBody;
         private Text _inspectorTitle;
@@ -88,11 +89,17 @@ namespace GameLogic.Takeover
         protected override void OnUpdate()
         {
             if (_runner == null || _hud == null || _inspector == null || _spellBar == null) return;
+            if (_runner.Simulation != null && _runner.Simulation.IsOver)
+            {
+                _inspector.SetActive(false);
+                if (_toastPanel != null && Time.unscaledTime >= _toastUntil) _toastPanel.SetActive(false);
+                return;
+            }
             if (_hud.activeSelf && _runner.Simulation != null)
                 RefreshHud();
             RefreshInspector();
-            if (_toast != null && Time.unscaledTime >= _toastUntil && _toast.gameObject.activeSelf)
-                _toast.gameObject.SetActive(false);
+            if (_toastPanel != null && Time.unscaledTime >= _toastUntil && _toastPanel.activeSelf)
+                _toastPanel.SetActive(false);
         }
 
         public void ShowLevelSelect()
@@ -122,7 +129,11 @@ namespace GameLogic.Takeover
         public void ShowResult(BattleSimulation simulation)
         {
             if (_result == null || simulation == null) return;
+            _result.transform.SetAsLastSibling();
             _result.SetActive(true);
+            _hud?.SetActive(false);
+            _inspector?.SetActive(false);
+            _spellBar?.SetActive(false);
             _resultTitle.text = simulation.HumanVictory ? "胜利" : "战败";
             if (simulation.HumanVictory)
             {
@@ -138,9 +149,10 @@ namespace GameLogic.Takeover
 
         public void ShowToast(string message, float seconds = 2.5f)
         {
-            if (_toast == null || string.IsNullOrEmpty(message)) return;
+            if (_toast == null || _toastPanel == null || string.IsNullOrEmpty(message)) return;
             _toast.text = message;
-            _toast.gameObject.SetActive(true);
+            _toastPanel.SetActive(true);
+            _toastPanel.transform.SetAsLastSibling();
             _toastUntil = Time.unscaledTime + seconds;
         }
 
@@ -164,11 +176,22 @@ namespace GameLogic.Takeover
             AddImage(_result, new Color(0f, 0f, 0f, 0.62f));
             BuildResult(_result.transform);
 
-            _toast = CreateText("Toast", root, 18, TextAnchor.MiddleCenter,
+            _toastPanel = MakePanel("ToastPanel", root,
                 new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                new Vector2(0f, 110f), new Vector2(760f, 42f));
-            _toast.color = new Color(1f, 0.91f, 0.53f);
-            _toast.gameObject.SetActive(false);
+                new Vector2(0f, 112f), new Vector2(700f, 52f),
+                new Color(0.02f, 0.025f, 0.02f, 0.88f)).gameObject;
+            _toast = CreateText("ToastText", _toastPanel.transform, 19, TextAnchor.MiddleCenter,
+                Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f),
+                new Vector2(14f, 3f), new Vector2(-28f, -6f));
+            _toast.color = new Color(1f, 0.95f, 0.72f);
+            _toast.fontStyle = FontStyle.Bold;
+            var shadow = _toast.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            shadow.effectDistance = new Vector2(2f, -2f);
+            var outline = _toast.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            outline.effectDistance = new Vector2(1.2f, -1.2f);
+            _toastPanel.SetActive(false);
         }
 
         private void BuildMenu(Transform root)
@@ -223,46 +246,46 @@ namespace GameLogic.Takeover
         private void BuildHud(Transform root)
         {
             var top = MakePanel("Top", root, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(0f, 1f), new Vector2(24f, -20f), new Vector2(560f, 140f),
-                new Color(0.08f, 0.10f, 0.09f, 0.88f));
-            _resources = CreateText("Resources", top, 19, TextAnchor.UpperLeft,
+                new Vector2(0f, 1f), new Vector2(16f, -12f), new Vector2(356f, 104f),
+                new Color(0.035f, 0.055f, 0.045f, 0.52f));
+            _resources = CreateText("Resources", top, 15, TextAnchor.UpperLeft,
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
-                new Vector2(16f, -12f), new Vector2(-32f, 110f));
-            _clock = CreateText("Clock", top, 16, TextAnchor.UpperRight,
+                new Vector2(12f, -8f), new Vector2(-24f, 82f));
+            _clock = CreateText("Clock", top, 12, TextAnchor.UpperRight,
                 new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f),
-                new Vector2(-16f, -104f), new Vector2(210f, 28f));
+                new Vector2(-12f, -78f), new Vector2(150f, 20f));
 
             var controls = MakePanel("Controls", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(650f, 58f),
-                new Color(0.08f, 0.10f, 0.09f, 0.90f));
-            CreateButton("Pause", controls, new Vector2(-270f, 0f), new Vector2(100f, 38f), "暂停",
+                new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(494f, 44f),
+                new Color(0.035f, 0.055f, 0.045f, 0.50f));
+            CreateButton("Pause", controls, new Vector2(-202f, 0f), new Vector2(84f, 30f), "暂停",
                 delegate { _runner?.TogglePause(); });
-            CreateButton("Speed1", controls, new Vector2(-155f, 0f), new Vector2(72f, 38f), "×1",
+            CreateButton("Speed1", controls, new Vector2(-108f, 0f), new Vector2(58f, 30f), "×1",
                 delegate { _runner?.SetSpeed(1f); });
-            CreateButton("Speed2", controls, new Vector2(-72f, 0f), new Vector2(72f, 38f), "×2",
+            CreateButton("Speed2", controls, new Vector2(-40f, 0f), new Vector2(58f, 30f), "×2",
                 delegate { _runner?.SetSpeed(2f); });
-            CreateButton("Restart", controls, new Vector2(25f, 0f), new Vector2(100f, 38f), "重开",
+            CreateButton("Restart", controls, new Vector2(38f, 0f), new Vector2(84f, 30f), "重开",
                 delegate { _runner?.NewGame(); });
-            CreateButton("Levels", controls, new Vector2(145f, 0f), new Vector2(100f, 38f), "关卡",
+            CreateButton("Levels", controls, new Vector2(136f, 0f), new Vector2(84f, 30f), "关卡",
                 delegate { _runner?.ShowLevelSelect(); });
 
             _inspector = MakePanel("Inspector", root, new Vector2(1f, 1f), new Vector2(1f, 1f),
-                new Vector2(1f, 1f), new Vector2(-24f, -20f), new Vector2(360f, 500f),
-                new Color(0.08f, 0.10f, 0.09f, 0.92f)).gameObject;
-            _inspectorTitle = CreateText("InspectorTitle", _inspector.transform, 21, TextAnchor.UpperLeft,
+                new Vector2(1f, 1f), new Vector2(-12f, -12f), new Vector2(274f, 356f),
+                new Color(0.035f, 0.055f, 0.045f, 0.54f)).gameObject;
+            _inspectorTitle = CreateText("InspectorTitle", _inspector.transform, 17, TextAnchor.UpperLeft,
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
-                new Vector2(16f, -14f), new Vector2(-32f, 36f));
-            _inspectorBody = CreateText("InspectorBody", _inspector.transform, 15, TextAnchor.UpperLeft,
+                new Vector2(12f, -10f), new Vector2(-24f, 30f));
+            _inspectorBody = CreateText("InspectorBody", _inspector.transform, 13, TextAnchor.UpperLeft,
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
-                new Vector2(16f, -56f), new Vector2(-32f, 92f));
+                new Vector2(12f, -44f), new Vector2(-24f, 78f));
             var actions = CreateRect("Actions", _inspector.transform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(0f, 1f), new Vector2(16f, -154f), new Vector2(-32f, 330f));
+                new Vector2(0f, 1f), new Vector2(12f, -126f), new Vector2(-24f, 220f));
             _inspectorActions = actions;
             _inspector.SetActive(false);
 
             _spellBar = MakePanel("Spells", root, new Vector2(0f, 0f), new Vector2(0f, 0f),
-                new Vector2(0f, 0f), new Vector2(24f, 92f), new Vector2(430f, 72f),
-                new Color(0.08f, 0.10f, 0.09f, 0.90f)).gameObject;
+                new Vector2(0f, 0f), new Vector2(16f, 64f), new Vector2(354f, 56f),
+                new Color(0.035f, 0.055f, 0.045f, 0.48f)).gameObject;
         }
 
         private void BuildResult(Transform root)
@@ -315,7 +338,7 @@ namespace GameLogic.Takeover
                 $"补给 {player.SupplyUsed}/{player.SupplyCap}   " +
                 $"部队 {player.Squads.Count(s => !s.IsDead)}   " +
                 $"敌城 {sim.Enemy.OwnedNodes.Count}";
-            _clock.text = $"{FormatTime(sim.Time)}\n三星 < {FormatTime(330f)}";
+            _clock.text = $"{FormatTime(sim.Time)}  ·  三星 < {FormatTime(330f)}";
         }
 
         private void RefreshInspector()
@@ -367,13 +390,13 @@ namespace GameLogic.Takeover
                     var unit = units[i];
                     bool canBuy = _runner.CanBuy(unit, node);
                     var button = CreateButton($"Buy{unit.Id}", _inspectorActions,
-                        new Vector2(0f, -40f - i * 44f), new Vector2(320f, 38f),
+                        new Vector2(0f, -34f - i * 40f), new Vector2(250f, 32f),
                         $"{unit.CnName}  {unit.Cost}金  补给{unit.Upkeep}",
                         delegate { _runner.Buy(unit, node); });
                     button.interactable = canBuy;
                 }
                 var upgrade = CreateButton("Upgrade", _inspectorActions,
-                    new Vector2(0f, -52f - units.Count * 44f), new Vector2(320f, 38f),
+                    new Vector2(0f, -46f - units.Count * 40f), new Vector2(250f, 32f),
                     building.Level >= 2 ? "已满级" : $"升级 { (building.Level == 0 ? 350 : 500) } 金",
                     delegate { _runner.Upgrade(node); });
                 upgrade.interactable = building.Level < 2;
@@ -389,7 +412,7 @@ namespace GameLogic.Takeover
                     if (def == null) continue;
                     string effect = def.Supply > 0 ? "补给 +1" : def.Gold > 0 ? "金币 +1/s" : "法力 +1/s";
                     CreateButton($"Build{id}", _inspectorActions, new Vector2(0f, -40f - i * 44f),
-                        new Vector2(320f, 38f), $"{def.CnName}  {def.BuildCost}金  {effect}",
+                        new Vector2(250f, 32f), $"{def.CnName}  {def.BuildCost}金  {effect}",
                         delegate { _runner.Build(node, id); });
                 }
             }
@@ -411,10 +434,10 @@ namespace GameLogic.Takeover
             {
                 var spell = spells[i];
                 var button = CreateButton($"Spell{spell.Id}", _spellBar.transform,
-                    new Vector2(-155f + i * 102f, 0f), new Vector2(94f, 50f),
+                    new Vector2(-126f + i * 82f, 0f), new Vector2(76f, 40f),
                     $"{spell.CnName}\n{(spell.SpellType == 2 ? "终极" : spell.Cost.ToString())}",
                     delegate { _runner.BeginSpellTarget(spell); });
-                button.GetComponentInChildren<Text>().fontSize = 13;
+                button.GetComponentInChildren<Text>().fontSize = 11;
             }
         }
 
@@ -468,7 +491,7 @@ namespace GameLogic.Takeover
             var rect = CreateRect(name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f), position, size);
             var image = rect.gameObject.AddComponent<Image>();
-            image.color = new Color(0.20f, 0.25f, 0.21f, 0.98f);
+            image.color = new Color(0.15f, 0.20f, 0.16f, 0.84f);
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
             button.onClick.AddListener(action);
@@ -479,7 +502,7 @@ namespace GameLogic.Takeover
             colors.disabledColor = new Color(0.42f, 0.42f, 0.42f, 0.65f);
             button.colors = colors;
 
-            var text = CreateText("Label", rect, 17, TextAnchor.MiddleCenter,
+            var text = CreateText("Label", rect, 14, TextAnchor.MiddleCenter,
                 Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
             text.text = label;
             text.color = new Color(0.96f, 0.93f, 0.81f);
@@ -490,7 +513,7 @@ namespace GameLogic.Takeover
         {
             var image = go.AddComponent<Image>();
             image.color = color;
-            image.raycastTarget = true;
+            image.raycastTarget = false;
         }
 
         private static void ClearChildren(Transform parent)

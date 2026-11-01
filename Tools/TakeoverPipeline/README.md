@@ -19,6 +19,7 @@
 - 运行 `python Tools/TakeoverPipeline/generate_asset_manifest.py` 生成固定 location 清单。
 - 按原版 SymbolClass / 类名建立 `original_symbol -> Unity location` 映射。
 - 将地图、建筑、单位、HUD、图标、音频和字体导入 `Assets/AssetRaw`。
+- `import_chapter_assets.py` 会把地图 Sprite 从导出边界居中裁切为原版 800×600，避免背景缩放后与逻辑坐标错位。
 - 以原版 SWF 舞台尺寸设置场景和 CanvasScaler，并保留原版 Y 轴 `×2` 等距比例。
 - 对照 `Docs/城邦争霸数值/` 和反编译源码核对规则，未确认项不得用近似值替代。
 

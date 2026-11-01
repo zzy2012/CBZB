@@ -46,6 +46,9 @@ namespace GameLogic.Takeover
                     var nodes = tables.TbMapNode.DataList.Where(n => n.LevelId == id).ToList();
                     var keys = new HashSet<string>(nodes.Select(n => n.NodeKey));
                     var edges = tables.TbMapEdge.DataList.Where(e => e.LevelId == id).ToList();
+                    Check(nodes.All(n => n.X >= 0f && n.X <= OriginalRules.NativeStageWidth
+                                         && n.Y >= 0f && n.Y <= OriginalRules.NativeStageHeight),
+                        $"L{id} 节点超出 800×600 地图坐标范围", failures);
                     Check(nodes.Count > 0, $"L{id} 没有地图节点", failures);
                     Check(edges.Count > 0, $"L{id} 没有地图道路", failures);
                     Check(edges.All(e => keys.Contains(e.NodeA) && keys.Contains(e.NodeB)),

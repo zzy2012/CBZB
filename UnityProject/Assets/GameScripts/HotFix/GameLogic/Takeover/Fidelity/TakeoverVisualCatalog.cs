@@ -75,12 +75,15 @@ namespace GameLogic.Takeover
 
         public static void Bind(SpriteRenderer renderer, MapNode node)
         {
-            if (node.Building != null)
-            {
-                Bind(renderer, BuildingLocation(node.Building.Kind, node.Building.Owner));
-                return;
-            }
-            Bind(renderer, NodeLocation(node.Kind));
+            Bind(renderer, LocationFor(node));
+        }
+
+        public static string LocationFor(MapNode node)
+        {
+            if (node == null) return string.Empty;
+            return node.Building != null
+                ? BuildingLocation(node.Building.Kind, node.Building.Owner)
+                : NodeLocation(node.Kind);
         }
 
         public static bool Bind(SpriteRenderer renderer, string location)

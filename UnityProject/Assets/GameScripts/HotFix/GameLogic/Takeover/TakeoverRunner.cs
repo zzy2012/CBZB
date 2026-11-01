@@ -12,13 +12,13 @@ namespace GameLogic.Takeover
     /// </summary>
     public sealed class TakeoverRunner : MonoBehaviour
     {
+        private const float NativeSpriteScale = 100f;
         private BattleSimulation _sim;
         private Camera _cam;
         private Transform _root;
-        private Sprite _square;
         private readonly Dictionary<MapNode, SpriteRenderer> _nodeViews = new Dictionary<MapNode, SpriteRenderer>();
         private readonly Dictionary<int, SpriteRenderer> _squadViews = new Dictionary<int, SpriteRenderer>();
-        private readonly HashSet<int> _boundBuildingNodes = new HashSet<int>();
+        private readonly Dictionary<int, string> _boundNodeVisuals = new Dictionary<int, string>();
         private SpriteRenderer _mapBackground;
         private MapNode _selected;
         private Squad _selectedSquad;
@@ -42,7 +42,6 @@ namespace GameLogic.Takeover
             Application.targetFrameRate = 60;
             // 关掉 TEngine 自带的 DEBUGGER 面板，避免遮住玩法 HUD
             try { GameModule.Debugger.ActiveWindow = false; } catch { }
-            _square = MakeSprite();
             _cam = Camera.main;
             if (_cam == null)
             {
@@ -62,16 +61,6 @@ namespace GameLogic.Takeover
         private void OnDestroy()
         {
             TakeoverSpriteCache.Clear();
-        }
-
-        private static Sprite MakeSprite()
-        {
-            var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
-            var px = new Color32[64];
-            for (int i = 0; i < px.Length; i++) px[i] = new Color32(255, 255, 255, 255);
-            tex.SetPixels32(px);
-            tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, 8, 8), new Vector2(0.5f, 0.5f), 8f);
         }
 
         public void NewGame()
@@ -106,7 +95,7 @@ namespace GameLogic.Takeover
             foreach (Transform c in _root) Destroy(c.gameObject);
             _nodeViews.Clear();
             _squadViews.Clear();
-            _boundBuildingNodes.Clear();
+            _boundNodeVisuals.Clear();
             _selected = null;
             _selectedSquad = null;
             _paused = false;
@@ -143,8 +132,8 @@ namespace GameLogic.Takeover
         private void FocusCamera()
         {
             if (_sim.Nodes.Count == 0) return;
-            var min = new Vector2(float.MaxValue, float.MaxValue);
-            var max = new Vector2(float.MinValue, float.MinValue);
+            var min = Vector2.zero;
+            var max = new Vector2(OriginalRules.NativeStageWidth, OriginalRules.NativeStageHeight);
             foreach (var n in _sim.Nodes)
             {
                 var display = DisplayPosition(n.Pos);
@@ -153,15 +142,14 @@ namespace GameLogic.Takeover
             }
             var center = (min + max) * 0.5f;
             _cam.transform.position = new Vector3(center.x, center.y, -10f);
-            float halfH = Mathf.Max(1f, (max.y - min.y) * 0.55f);
-            float halfW = Mathf.Max(1f, (max.x - min.x) * 0.55f);
+            float halfH = Mathf.Max(1f, (max.y - min.y) * 0.525f);
+            float halfW = Mathf.Max(1f, (max.x - min.x) * 0.525f);
             _cam.orthographicSize = Mathf.Max(halfH, halfW / Mathf.Max(0.1f, _cam.aspect));
         }
 
         private static Vector2 DisplayPosition(Vector2 logical)
         {
-            return new Vector2(logical.x,
-                OriginalRules.NativeStageHeight - logical.y / OriginalRules.WorldYScale);
+            return TakeoverCoordinates.LogicalToDisplay(logical);
         }
 
         private void BuildNodeViews()
@@ -172,8 +160,9 @@ namespace GameLogic.Takeover
                 go.transform.SetParent(_root, false);
                 go.transform.position = DisplayPosition(n.Pos);
                 var sr = go.AddComponent<SpriteRenderer>();
-                sr.sprite = _square;
-                float size = n.HasBuilding ? 22f : 10f;
+                sr.sprite = null;
+                sr.enabled = false;
+                float size = NativeSpriteScale;
                 go.transform.localScale = new Vector3(size, size, 1f);
                 sr.color = NodeColor(n);
                 sr.sortingOrder = n.HasBuilding ? 2 : 1;
@@ -202,8 +191,7 @@ namespace GameLogic.Takeover
 
             foreach (var pair in _nodeViews)
             {
-                if (pair.Key.Building == null || !_boundBuildingNodes.Add(pair.Key.Id)) continue;
-                TakeoverVisualCatalog.Bind(pair.Value, pair.Key);
+                BindNodeVisual(pair.Key, pair.Value);
             }
 
             if (_mapBackground != null && _sim.Nodes.Count > 0)
@@ -229,6 +217,26 @@ namespace GameLogic.Takeover
             }
             if (n.Kind == NodeKind.BuildSpot) return new Color(0.95f, 0.70f, 0.25f);
             return new Color(0.55f, 0.55f, 0.55f);
+        }
+
+        private void BindNodeVisual(MapNode node, SpriteRenderer renderer)
+        {
+            if (node.Kind == NodeKind.Empty)
+            {
+                _boundNodeVisuals.Remove(node.Id);
+                renderer.enabled = false;
+                return;
+            }
+            string location = TakeoverVisualCatalog.LocationFor(node);
+            if (string.IsNullOrEmpty(location)) return;
+            if (_boundNodeVisuals.TryGetValue(node.Id, out string previous)
+                && previous == location)
+                return;
+            if (TakeoverVisualCatalog.Bind(renderer, location))
+            {
+                _boundNodeVisuals[node.Id] = location;
+                renderer.enabled = true;
+            }
         }
 
         private void BuildEdgeViews()
@@ -280,6 +288,13 @@ namespace GameLogic.Takeover
 
             if (_toastTimer > 0f) _toastTimer -= Time.deltaTime;
 
+            if (_selectedSquad != null && (_selectedSquad.IsDead || _sim.IsOver))
+                _selectedSquad = null;
+            if (_sim.IsOver)
+            {
+                _selected = null;
+                return;
+            }
             HandleInput();
         }
 
@@ -292,18 +307,20 @@ namespace GameLogic.Takeover
                     var go = new GameObject($"squad_{s.Id}");
                     go.transform.SetParent(_root, false);
                     sr = go.AddComponent<SpriteRenderer>();
-                    sr.sprite = _square;
+                    sr.sprite = null;
+                    sr.enabled = false;
                     sr.sortingOrder = 5;
                     var animator = go.AddComponent<TakeoverUnitAnimator>();
                     animator.Initialize(sr, s.Def, s.Id);
                     _squadViews[s.Id] = sr;
                 }
                 sr.transform.position = DisplayPosition(s.Pos);
-                float k = Mathf.Lerp(6f, 12f, s.AliveSoldiers / (float)Mathf.Max(1, s.MaxSoldiers));
+                float k = Mathf.Lerp(85f, NativeSpriteScale,
+                    s.AliveSoldiers / (float)Mathf.Max(1, s.MaxSoldiers));
                 sr.transform.localScale = new Vector3(k, k, 1f);
                 bool picked = s == _selectedSquad;
                 sr.color = picked ? new Color(1f, 0.94f, 0.58f) : Color.white;
-                if (picked) sr.transform.localScale *= 1.35f;
+                if (picked) sr.transform.localScale *= 1.16f;
             }
             foreach (var id in _squadViews.Keys.ToList())
             {
@@ -320,13 +337,13 @@ namespace GameLogic.Takeover
             foreach (var kv in _nodeViews)
             {
                 var n = kv.Key;
-                kv.Value.color = n.Building != null
-                    ? (n == _selected ? new Color(1f, 0.94f, 0.58f) : Color.white)
-                    : NodeColor(n);
-                if (n.Building != null && _boundBuildingNodes.Add(n.Id))
-                    TakeoverVisualCatalog.Bind(kv.Value, n);
-                float baseSize = n.HasBuilding ? 22f : 10f;
-                float size = n == _selected ? baseSize * 1.3f : baseSize;
+                BindNodeVisual(n, kv.Value);
+                bool usesOriginalArt = kv.Value.enabled && _boundNodeVisuals.ContainsKey(n.Id);
+                kv.Value.color = n == _selected
+                    ? new Color(1f, 0.94f, 0.58f)
+                    : usesOriginalArt ? Color.white : NodeColor(n);
+                float baseSize = NativeSpriteScale;
+                float size = n == _selected ? baseSize * 1.12f : baseSize;
                 kv.Value.transform.localScale = new Vector3(size, size, 1f);
             }
         }
@@ -346,17 +363,18 @@ namespace GameLogic.Takeover
                 Toast($"小队 {_selectedSquad.Id} 撤退");
             }
 
+            if (Input.GetMouseButtonDown(1)) IssueOrderAtMouse();
+
             if (Input.GetMouseButtonDown(0))
             {
-                var world = _cam.ScreenToWorldPoint(Input.mousePosition);
-
                 // 先选小队
                 Squad pick = null;
-                float sd = 16f;
+                float sd = 24f;
                 foreach (var sq in _sim.Squads)
                 {
                     if (sq.IsDead || sq.Faction != HumanFaction) continue;
-                    float d = Vector2.Distance(DisplayPosition(sq.Pos), world);
+                    Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(sq.Pos));
+                    float d = Vector2.Distance(Input.mousePosition, screen);
                     if (d < sd) { sd = d; pick = sq; }
                 }
                 if (pick != null)
@@ -368,10 +386,11 @@ namespace GameLogic.Takeover
                 }
 
                 MapNode best = null;
-                float bestD = 18f;
+                float bestD = 30f;
                 foreach (var n in _sim.Nodes)
                 {
-                    float d = Vector2.Distance(DisplayPosition(n.Pos), world);
+                    Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(n.Pos));
+                    float d = Vector2.Distance(Input.mousePosition, screen);
                     if (d < bestD) { bestD = d; best = n; }
                 }
                 if (best != null)
@@ -404,12 +423,12 @@ namespace GameLogic.Takeover
 
         private void IssueOrderAtMouse()
         {
-            var world = _cam.ScreenToWorldPoint(Input.mousePosition);
             MapNode best = null;
-            float bestD = 22f;
+            float bestD = float.MaxValue;
             foreach (var n in _sim.Nodes)
             {
-                float d = Vector2.Distance(DisplayPosition(n.Pos), world);
+                Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(n.Pos));
+                float d = Vector2.Distance(Input.mousePosition, screen);
                 if (d < bestD) { bestD = d; best = n; }
             }
             if (best == null) return;
@@ -420,7 +439,7 @@ namespace GameLogic.Takeover
             }
             else
             {
-                foreach (var squad in _sim.Human.Squads.Where(s => !s.IsDead && !s.IsGarrison && s.Path == null))
+                foreach (var squad in _sim.Human.Squads.Where(s => !s.IsDead))
                     _sim.Enqueue(BattleCommand.Attack(squad.Id, best.Id));
                 Toast($"全军进攻 {best.Key}");
             }
@@ -453,7 +472,6 @@ namespace GameLogic.Takeover
                 _lastMouse = Input.mousePosition;
             }
 
-            if (Input.GetMouseButtonDown(1)) IssueOrderAtMouse();
         }
 
         private void Toast(string msg)

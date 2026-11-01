@@ -16,6 +16,7 @@ namespace GameLogic.Takeover
         public void Initialize(SpriteRenderer renderer, GameConfig.takeover.Unit unit, int squadId)
         {
             _renderer = renderer;
+            _renderer.enabled = false;
             _locations = TakeoverVisualCatalog.UnitAnimationLocations(unit);
             _frame = Mathf.Abs(squadId) % Mathf.Max(1, _locations.Length);
             _timer = 0.5f + FrameSeconds * (_frame + 1);
@@ -37,7 +38,10 @@ namespace GameLogic.Takeover
             {
                 string location = _locations[_frame];
                 if (GameModule.Resource.CheckLocationValid(location))
+                {
                     TakeoverSpriteCache.Apply(_renderer, location);
+                    _renderer.enabled = true;
+                }
             }
             catch (System.Exception)
             {
