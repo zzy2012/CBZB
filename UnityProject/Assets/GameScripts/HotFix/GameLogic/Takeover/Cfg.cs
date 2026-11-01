@@ -54,7 +54,7 @@ namespace GameLogic.Takeover
         public static Building BuildingByKind(int kind) => BuildingByKind((NodeKind)kind);
 
         public static IEnumerable<Unit> UnitsOf(Faction faction) =>
-            TbUnit.DataList.Where(u => u.Faction == (int)faction);
+            TbUnit.DataList.Where(u => OriginalRules.FromConfigFaction(u.Faction) == faction);
     }
 }
 

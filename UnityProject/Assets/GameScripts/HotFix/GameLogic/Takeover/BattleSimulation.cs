@@ -8,12 +8,11 @@ namespace GameLogic.Takeover
     public enum BattleCommandType
     {
         Move,
-        Attack,
-        Retreat,
         BuyUnit,
         Upgrade,
         Build,
         CastSpell,
+        GrantResources,
     }
 
     /// <summary>
@@ -25,17 +24,30 @@ namespace GameLogic.Takeover
     {
         public BattleCommandType Type;
         public int SquadId;
+        public int[] SquadIds;
         public int NodeId;
         public int ConfigId;
+        public int GoldDelta;
+        public int ManaDelta;
+        public Vector2 Position;
 
         public static BattleCommand Move(int squadId, int nodeId) =>
-            new BattleCommand { Type = BattleCommandType.Move, SquadId = squadId, NodeId = nodeId };
+            new BattleCommand
+            {
+                Type = BattleCommandType.Move,
+                SquadId = squadId,
+                SquadIds = new[] { squadId },
+                NodeId = nodeId,
+            };
 
-        public static BattleCommand Attack(int squadId, int nodeId) =>
-            new BattleCommand { Type = BattleCommandType.Attack, SquadId = squadId, NodeId = nodeId };
-
-        public static BattleCommand Retreat(int squadId) =>
-            new BattleCommand { Type = BattleCommandType.Retreat, SquadId = squadId };
+        public static BattleCommand Move(IEnumerable<int> squadIds, Vector2 position, int nodeId = 0) =>
+            new BattleCommand
+            {
+                Type = BattleCommandType.Move,
+                SquadIds = squadIds?.ToArray() ?? Array.Empty<int>(),
+                Position = position,
+                NodeId = nodeId,
+            };
 
         public static BattleCommand BuyUnit(int unitId, int nodeId) =>
             new BattleCommand { Type = BattleCommandType.BuyUnit, ConfigId = unitId, NodeId = nodeId };
@@ -48,6 +60,24 @@ namespace GameLogic.Takeover
 
         public static BattleCommand CastSpell(int spellId, int nodeId) =>
             new BattleCommand { Type = BattleCommandType.CastSpell, ConfigId = spellId, NodeId = nodeId };
+
+        public static BattleCommand CastSpell(int spellId, Vector2 position, int nodeId = 0) =>
+            new BattleCommand
+            {
+                Type = BattleCommandType.CastSpell,
+                ConfigId = spellId,
+                Position = position,
+                NodeId = nodeId,
+            };
+
+        /// <summary>Debug-only resource grant used by the in-game GM controls.</summary>
+        public static BattleCommand GrantResources(int goldDelta, int manaDelta) =>
+            new BattleCommand
+            {
+                Type = BattleCommandType.GrantResources,
+                GoldDelta = goldDelta,
+                ManaDelta = manaDelta,
+            };
     }
 
     [Serializable]
@@ -96,6 +126,46 @@ namespace GameLogic.Takeover
         public bool Retreating;
         public bool Frozen;
         public bool Poisoned;
+        public int Level;
+        public List<UnitSnapshot> Units = new List<UnitSnapshot>();
+    }
+
+    [Serializable]
+    public sealed class UnitSnapshot
+    {
+        public int Id;
+        public Vector2 Position;
+        public float Hp;
+        public float MaxHp;
+        public UnitAction Action;
+        public MoraleState Morale;
+        public bool Frozen;
+        public bool Poisoned;
+    }
+
+    [Serializable]
+    public sealed class PlayerSnapshot
+    {
+        public int Id;
+        public Faction Faction;
+        public bool IsHuman;
+        public float Gold;
+        public float Mana;
+        public float Ultimate;
+        public int SupplyUsed;
+        public int SupplyCap;
+        public List<int> AvailableSpellIds = new List<int>();
+    }
+
+    [Serializable]
+    public sealed class SpellSnapshot
+    {
+        public int SpellId;
+        public int CasterPlayerId;
+        public Faction Faction;
+        public Vector2 Position;
+        public float Remaining;
+        public SpellEffectKind Effect;
     }
 
     [Serializable]
@@ -124,6 +194,8 @@ namespace GameLogic.Takeover
         public int SupplyCap;
         public List<SquadSnapshot> Squads = new List<SquadSnapshot>();
         public List<BuildingSnapshot> Buildings = new List<BuildingSnapshot>();
+        public List<PlayerSnapshot> Players = new List<PlayerSnapshot>();
+        public List<SpellSnapshot> ActiveSpells = new List<SpellSnapshot>();
 
         public static BattleSnapshot From(BattleSim sim)
         {
@@ -151,14 +223,42 @@ namespace GameLogic.Takeover
                     AliveSoldiers = squad.AliveSoldiers,
                     MaxSoldiers = squad.MaxSoldiers,
                     Hp = squad.Hp,
-                    MaxHp = squad.HpPerSoldier * squad.MaxSoldiers,
+                    MaxHp = squad.Units.Sum(unit => unit.MaxHp),
                     Position = squad.Pos,
                     NodeId = squad.AtNode?.Id ?? 0,
                     TargetNodeId = squad.TargetNode?.Id ?? 0,
                     IsGarrison = squad.IsGarrison,
                     Retreating = squad.Retreating,
-                    Frozen = squad.FrozenSeconds > 0f,
-                    Poisoned = squad.PoisonSeconds > 0f,
+                    Frozen = squad.Units.Any(unit => unit.FrozenSeconds > 0f),
+                    Poisoned = squad.Units.Any(unit => unit.PoisonSeconds > 0f),
+                    Level = squad.LevelIndex,
+                    Units = squad.Units.Select(unit => new UnitSnapshot
+                    {
+                        Id = unit.Id,
+                        Position = unit.Pos,
+                        Hp = unit.Hp,
+                        MaxHp = unit.MaxHp,
+                        Action = unit.Action,
+                        Morale = unit.MoraleState,
+                        Frozen = unit.FrozenSeconds > 0f,
+                        Poisoned = unit.PoisonSeconds > 0f,
+                    }).ToList(),
+                });
+            }
+
+            foreach (PlayerState player in sim.Players)
+            {
+                snapshot.Players.Add(new PlayerSnapshot
+                {
+                    Id = player.Id,
+                    Faction = player.Faction,
+                    IsHuman = player.IsHuman,
+                    Gold = player.Gold,
+                    Mana = player.Mana,
+                    Ultimate = player.Ultimate,
+                    SupplyUsed = player.SupplyUsed,
+                    SupplyCap = player.SupplyCap,
+                    AvailableSpellIds = sim.AvailableSpells(player).Select(spell => spell.Id).ToList(),
                 });
             }
 
@@ -173,6 +273,19 @@ namespace GameLogic.Takeover
                     Hp = node.Building.Hp,
                     MaxHp = node.Building.MaxHp,
                     CaptureProgress = node.Building.CaptureProgress,
+                });
+            }
+
+            foreach (ActiveSpellEffect effect in sim.ActiveSpells)
+            {
+                snapshot.ActiveSpells.Add(new SpellSnapshot
+                {
+                    SpellId = effect.Def.Id,
+                    CasterPlayerId = effect.Owner?.Id ?? -1,
+                    Faction = effect.Faction,
+                    Position = effect.Center,
+                    Remaining = effect.Remaining,
+                    Effect = effect.Kind,
                 });
             }
 
@@ -194,6 +307,8 @@ namespace GameLogic.Takeover
         public BattleResult Result => BattleResult.From(State);
         public IReadOnlyList<MapNode> Nodes => State.Nodes;
         public IReadOnlyList<Squad> Squads => State.Squads;
+        public IReadOnlyList<PlayerState> Players => State.Players;
+        public IReadOnlyList<MapEdge> Edges => State.Edges;
         public PlayerState Human => State.Human;
         public PlayerState Enemy => State.Enemy;
         public bool IsOver => State.IsOver;

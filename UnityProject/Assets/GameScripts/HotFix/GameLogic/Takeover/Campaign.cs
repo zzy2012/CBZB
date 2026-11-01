@@ -20,16 +20,19 @@ namespace GameLogic.Takeover
 
         public static int StarsFor(float seconds) => seconds < 330f ? 3 : seconds < 540f ? 2 : 1;
 
-        public static void Complete(int assetId, float seconds, int xp)
+        public static int Complete(int assetId, float seconds, int xp)
         {
-            if (assetId < 1 || assetId > 8) return;
+            if (assetId < 1 || assetId > 8) return 0;
 
             var data = Data;
             var record = data.Record(assetId);
+            int awardedXp = record.BestStars > 0
+                ? UnityEngine.Mathf.RoundToInt(xp / 5f)
+                : xp;
             int stars = StarsFor(seconds);
             if (stars > record.BestStars) record.BestStars = stars;
             if (record.BestSeconds < 0f || seconds < record.BestSeconds) record.BestSeconds = seconds;
-            data.Xp += xp;
+            data.Xp += awardedXp;
             data.LastLevel = assetId;
 
             int index = System.Array.IndexOf(ChapterOneLevels, assetId);
@@ -40,6 +43,7 @@ namespace GameLogic.Takeover
             }
             data.Normalize(ChapterOneLevels);
             CampaignSaveService.Save(data);
+            return awardedXp;
         }
 
         public static bool IsUnlocked(int assetId) => assetId >= 1 && assetId <= 8 && Data.IsUnlocked(assetId);

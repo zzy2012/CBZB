@@ -19,6 +19,11 @@ namespace GameLogic.Takeover
         private readonly Dictionary<MapNode, SpriteRenderer> _nodeViews = new Dictionary<MapNode, SpriteRenderer>();
         private readonly Dictionary<int, SpriteRenderer> _squadViews = new Dictionary<int, SpriteRenderer>();
         private readonly Dictionary<int, string> _boundNodeVisuals = new Dictionary<int, string>();
+        private readonly Dictionary<MapNode, LineRenderer> _nodeClickableAreas =
+            new Dictionary<MapNode, LineRenderer>();
+        private readonly Dictionary<int, LineRenderer> _unitClickableAreas =
+            new Dictionary<int, LineRenderer>();
+        private readonly HashSet<Squad> _selectedSquads = new HashSet<Squad>();
         private SpriteRenderer _mapBackground;
         private MapNode _selected;
         private Squad _selectedSquad;
@@ -32,6 +37,13 @@ namespace GameLogic.Takeover
         private bool _levelSelectOpen = true;
         private GameConfig.takeover.Spell _pendingSpell;
         private TakeoverUIWindow _ui;
+        private Squad _dragSquad;
+        private Vector2 _selectionStart;
+        private Vector2 _selectionEnd;
+        private bool _selecting;
+        private LineRenderer _selectionBox;
+        private LineRenderer _orderPreview;
+        private Material _clickableAreaMaterial;
 
         public int LevelAssetId = 1;
         public Faction HumanFaction = Faction.Westaria;
@@ -61,6 +73,11 @@ namespace GameLogic.Takeover
         private void OnDestroy()
         {
             TakeoverSpriteCache.Clear();
+            if (_clickableAreaMaterial != null)
+            {
+                Destroy(_clickableAreaMaterial);
+                _clickableAreaMaterial = null;
+            }
         }
 
         public void NewGame()
@@ -75,6 +92,7 @@ namespace GameLogic.Takeover
             _paused = true;
             _selected = null;
             _selectedSquad = null;
+            _selectedSquads.Clear();
             _pendingSpell = null;
             if (_root != null) _root.gameObject.SetActive(false);
             _ui?.ShowLevelSelect();
@@ -96,30 +114,48 @@ namespace GameLogic.Takeover
             _nodeViews.Clear();
             _squadViews.Clear();
             _boundNodeVisuals.Clear();
+            _nodeClickableAreas.Clear();
+            _unitClickableAreas.Clear();
             _selected = null;
             _selectedSquad = null;
+            _selectedSquads.Clear();
             _paused = false;
             _reported = false;
             _pendingSpell = null;
 
-            // 关卡配置决定双方阵营：章节 0/1/2 对应 西利亚/卡若米森/艾斯得雷
+            // The editable tables kept the migration UI order. Convert once into
+            // the raw 1.0.4 faction indexes used by the simulation.
             var lv = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
             if (lv != null)
             {
-                HumanFaction = (Faction)lv.Chapter;
-                EnemyFaction = (Faction)lv.EnemyFaction;
+                HumanFaction = OriginalRules.FromConfigFaction(lv.Chapter);
+                EnemyFaction = OriginalRules.EnemyPlayers(LevelAssetId).FirstOrDefault()?.Faction ??
+                               OriginalRules.FromConfigFaction(lv.EnemyFaction);
             }
 
             _sim = new BattleSimulation(LevelAssetId, HumanFaction, EnemyFaction);
             PlayMusic("takeover_sfx_2910_musicGameplayClass_musicGameplayClass");
+            BuildSelectionVisuals();
             BuildNodeViews();
             BuildEdgeViews();
             BuildMapBackground();
             FocusCamera();
             StartCoroutine(BindLevelVisuals());
             _ui?.ShowBattle();
+            ShowScenarioHint();
 
             Debug.Log($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
+        }
+
+        private void ShowScenarioHint()
+        {
+            if (_ui == null) return;
+            if (LevelAssetId == 1)
+                _ui.ShowToast("点击己方城堡招募，再按住部队拖到目标；拖框可多选", 6f);
+            else if (LevelAssetId == 2)
+                _ui.ShowToast("先建造农场增加补给；左键拖动部队下令，拖框多选", 6f);
+            else
+                _ui.ShowToast("左键按住部队拖动下令；空地拖框多选；左键点击建筑打开面板", 6f);
         }
 
         public void RegisterUI(TakeoverUIWindow ui)
@@ -167,6 +203,18 @@ namespace GameLogic.Takeover
                 sr.color = NodeColor(n);
                 sr.sortingOrder = n.HasBuilding ? 2 : 1;
                 _nodeViews[n] = sr;
+            }
+
+            BuildNodeClickableAreas();
+        }
+
+        private void BuildNodeClickableAreas()
+        {
+            foreach (MapNode node in _sim.Nodes)
+            {
+                if (!IsNodeClickable(node)) continue;
+                _nodeClickableAreas[node] =
+                    CreateClickableArea($"clickable_{node.Key}", 1);
             }
         }
 
@@ -241,28 +289,62 @@ namespace GameLogic.Takeover
 
         private void BuildEdgeViews()
         {
-            var done = new HashSet<(int, int)>();
-            foreach (var n in _sim.Nodes)
+            foreach (MapEdge edge in _sim.Edges)
             {
-                foreach (var m in n.Neighbours)
-                {
-                    int a = Mathf.Min(n.Id, m.Id), b = Mathf.Max(n.Id, m.Id);
-                    if (!done.Add((a, b))) continue;
-                    var go = new GameObject("edge");
-                    go.transform.SetParent(_root, false);
-                    var lr = go.AddComponent<LineRenderer>();
-                    lr.useWorldSpace = true;
-                    lr.positionCount = 2;
-                    lr.SetPosition(0, DisplayPosition(n.Pos));
-                    lr.SetPosition(1, DisplayPosition(m.Pos));
-                    lr.startWidth = 2.5f;
-                    lr.endWidth = 2.5f;
-                    lr.material = new Material(Shader.Find("Sprites/Default"));
-                    lr.startColor = new Color(0.35f, 0.35f, 0.30f);
-                    lr.endColor = new Color(0.35f, 0.35f, 0.30f);
-                    lr.sortingOrder = 0;
-                }
+                var go = new GameObject($"edge_{edge.Id}");
+                go.transform.SetParent(_root, false);
+                var lr = go.AddComponent<LineRenderer>();
+                lr.useWorldSpace = true;
+                lr.positionCount = edge.Waypoints.Count;
+                for (int i = 0; i < edge.Waypoints.Count; i++)
+                    lr.SetPosition(i, DisplayPosition(edge.Waypoints[i]));
+                lr.startWidth = 1.5f;
+                lr.endWidth = 1.5f;
+                lr.material = new Material(Shader.Find("Sprites/Default"));
+                lr.startColor = new Color(0.35f, 0.35f, 0.30f, 0.35f);
+                lr.endColor = new Color(0.35f, 0.35f, 0.30f, 0.35f);
+                lr.sortingOrder = 0;
             }
+        }
+
+        private void BuildSelectionVisuals()
+        {
+            if (_clickableAreaMaterial != null)
+                Destroy(_clickableAreaMaterial);
+            _clickableAreaMaterial = new Material(Shader.Find("Sprites/Default"));
+            _selectionBox = CreateOverlayLine("SelectionBox", new Color(0.35f, 1f, 0.35f, 0.9f));
+            _selectionBox.loop = true;
+            _orderPreview = CreateOverlayLine("OrderPreview", new Color(1f, 0.85f, 0.35f, 0.9f));
+        }
+
+        private LineRenderer CreateClickableArea(string objectName, int sortingOrder)
+        {
+            var go = new GameObject(objectName);
+            go.transform.SetParent(_root, false);
+            var line = go.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.loop = true;
+            line.positionCount = 32;
+            line.material = _clickableAreaMaterial;
+            line.sortingOrder = sortingOrder;
+            return line;
+        }
+
+        private LineRenderer CreateOverlayLine(string objectName, Color color)
+        {
+            var go = new GameObject(objectName);
+            go.transform.SetParent(_root, false);
+            var line = go.AddComponent<LineRenderer>();
+            line.useWorldSpace = true;
+            line.positionCount = 0;
+            line.startWidth = 2f;
+            line.endWidth = 2f;
+            line.material = new Material(Shader.Find("Sprites/Default"));
+            line.startColor = color;
+            line.endColor = color;
+            line.sortingOrder = 20;
+            line.enabled = false;
+            return line;
         }
 
         private void Update()
@@ -273,13 +355,17 @@ namespace GameLogic.Takeover
             {
                 float dt = Mathf.Min(0.1f, Time.deltaTime) * _speed;
                 _sim.Tick(dt);
+                ProcessBattleEvents();
             }
 
-            if (_sim.IsOver && _sim.HumanVictory && !_reported)
+            if (_sim.IsOver && !_reported)
             {
                 _reported = true;
-                var lvCfg = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
-                Campaign.Complete(LevelAssetId, _sim.Time, lvCfg?.Xp ?? 0);
+                if (_sim.HumanVictory)
+                {
+                    var lvCfg = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
+                    Campaign.Complete(LevelAssetId, _sim.Time, lvCfg?.Xp ?? 0);
+                }
                 _ui?.ShowResult(_sim);
             }
 
@@ -288,47 +374,103 @@ namespace GameLogic.Takeover
 
             if (_toastTimer > 0f) _toastTimer -= Time.deltaTime;
 
-            if (_selectedSquad != null && (_selectedSquad.IsDead || _sim.IsOver))
-                _selectedSquad = null;
+            _selectedSquads.RemoveWhere(squad => squad == null || squad.IsDead);
+            if (_selectedSquad != null && (!_selectedSquads.Contains(_selectedSquad) || _selectedSquad.IsDead))
+                _selectedSquad = _selectedSquads.FirstOrDefault();
             if (_sim.IsOver)
             {
                 _selected = null;
+                _selectedSquads.Clear();
+                _selectedSquad = null;
                 return;
             }
             HandleInput();
         }
 
+        private void ProcessBattleEvents()
+        {
+            foreach (BattleEvent battleEvent in _sim.DrainEvents())
+            {
+                switch (battleEvent.Kind)
+                {
+                    case "SpellCast":
+                    case "UltimateCast":
+                        Toast(battleEvent.Kind == "UltimateCast" ? "终极技能发动" : "法术发动");
+                        break;
+                    case "BuildingCaptured":
+                        Toast("建筑已占领");
+                        break;
+                    case "ChestCollected":
+                        Toast("宝箱 +500 金币");
+                        break;
+                    case "OgreFightStarted":
+                        Toast("与食人魔交战，法术已解锁");
+                        break;
+                    case "OgreDefeated":
+                        Toast("食人魔已击败，敌方开始行动");
+                        break;
+                    case "TutorialEnemyReinforced":
+                        Toast("敌军得到增援");
+                        break;
+                    case "TutorialTownCaptured":
+                        Toast("已占领敌方城镇");
+                        break;
+                    case "UltimateUnlocked":
+                        Toast("占领魔法塔，终极技能已充满");
+                        break;
+                }
+            }
+        }
+
         private void SyncSquads()
         {
-            foreach (var s in _sim.Squads)
+            var liveUnitIds = new HashSet<int>();
+            foreach (Squad squad in _sim.Squads)
             {
-                if (!_squadViews.TryGetValue(s.Id, out var sr))
+                foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead))
                 {
-                    var go = new GameObject($"squad_{s.Id}");
-                    go.transform.SetParent(_root, false);
-                    sr = go.AddComponent<SpriteRenderer>();
-                    sr.sprite = null;
-                    sr.enabled = false;
-                    sr.sortingOrder = 5;
-                    var animator = go.AddComponent<TakeoverUnitAnimator>();
-                    animator.Initialize(sr, s.Def, s.Id);
-                    _squadViews[s.Id] = sr;
+                    liveUnitIds.Add(unit.Id);
+                    if (!_squadViews.TryGetValue(unit.Id, out SpriteRenderer renderer))
+                    {
+                        var go = new GameObject($"unit_{unit.Id}");
+                        go.transform.SetParent(_root, false);
+                        renderer = go.AddComponent<SpriteRenderer>();
+                        renderer.sprite = null;
+                        renderer.enabled = false;
+                        renderer.sortingOrder = 5;
+                        var animator = go.AddComponent<TakeoverUnitAnimator>();
+                        animator.Initialize(renderer, squad.Def, unit.Id);
+                        _squadViews[unit.Id] = renderer;
+                    }
+                    renderer.transform.position = DisplayPosition(unit.Pos);
+                    renderer.transform.localScale = new Vector3(NativeSpriteScale, NativeSpriteScale, 1f);
+                    bool picked = _selectedSquads.Contains(squad);
+                    renderer.color = unit.FrozenSeconds > 0f ? new Color(0.65f, 0.85f, 1f) :
+                        unit.PoisonSeconds > 0f ? new Color(0.70f, 1f, 0.55f) :
+                        picked ? new Color(1f, 0.94f, 0.58f) : Color.white;
+                    if (squad.Owner.IsHuman)
+                    {
+                        UpdateClickableArea(UnitClickableArea(unit.Id),
+                            unit.Pos, 24f,
+                            picked
+                                ? new Color(1f, 0.88f, 0.48f, 0.32f)
+                                : new Color(0.58f, 1f, 0.72f, 0.13f));
+                    }
                 }
-                sr.transform.position = DisplayPosition(s.Pos);
-                float k = Mathf.Lerp(85f, NativeSpriteScale,
-                    s.AliveSoldiers / (float)Mathf.Max(1, s.MaxSoldiers));
-                sr.transform.localScale = new Vector3(k, k, 1f);
-                bool picked = s == _selectedSquad;
-                sr.color = picked ? new Color(1f, 0.94f, 0.58f) : Color.white;
-                if (picked) sr.transform.localScale *= 1.16f;
             }
             foreach (var id in _squadViews.Keys.ToList())
             {
-                if (_sim.Squads.All(s => s.Id != id))
+                if (!liveUnitIds.Contains(id))
                 {
                     Destroy(_squadViews[id].gameObject);
                     _squadViews.Remove(id);
                 }
+            }
+            foreach (int id in _unitClickableAreas.Keys.ToList())
+            {
+                if (liveUnitIds.Contains(id)) continue;
+                Destroy(_unitClickableAreas[id].gameObject);
+                _unitClickableAreas.Remove(id);
             }
         }
 
@@ -345,7 +487,70 @@ namespace GameLogic.Takeover
                 float baseSize = NativeSpriteScale;
                 float size = n == _selected ? baseSize * 1.12f : baseSize;
                 kv.Value.transform.localScale = new Vector3(size, size, 1f);
+                if (_nodeClickableAreas.TryGetValue(n, out LineRenderer clickableArea))
+                {
+                    UpdateClickableArea(clickableArea, n.Pos, 30f, ClickableNodeColor(n));
+                }
             }
+        }
+
+        private LineRenderer UnitClickableArea(int unitId)
+        {
+            if (_unitClickableAreas.TryGetValue(unitId, out LineRenderer area))
+                return area;
+            area = CreateClickableArea($"clickable_unit_{unitId}", 4);
+            _unitClickableAreas[unitId] = area;
+            return area;
+        }
+
+        private static bool IsNodeClickable(MapNode node)
+        {
+            return node != null && (node.Building != null || node.Kind == NodeKind.BuildSpot);
+        }
+
+        private Color ClickableNodeColor(MapNode node)
+        {
+            if (node == _selected) return new Color(1f, 0.91f, 0.52f, 0.48f);
+            if (node.Building != null)
+            {
+                return node.Building.Owner == HumanFaction
+                    ? new Color(0.55f, 1f, 0.67f, 0.27f)
+                    : new Color(1f, 0.70f, 0.52f, 0.23f);
+            }
+            if (node.Kind == NodeKind.BuildSpot)
+            {
+                bool controlled = _sim != null &&
+                                  _sim.State.IsLocControlledBy(_sim.Human, node);
+                return controlled
+                    ? new Color(1f, 0.88f, 0.52f, 0.25f)
+                    : new Color(0.72f, 0.72f, 0.68f, 0.13f);
+            }
+            return Color.clear;
+        }
+
+        private void UpdateClickableArea(LineRenderer area, Vector2 logicalCenter,
+            float radiusPixels, Color color)
+        {
+            if (area == null) return;
+            Vector2 center = DisplayPosition(logicalCenter);
+            float radius = ScreenPixelsToWorld(radiusPixels);
+            for (int i = 0; i < area.positionCount; i++)
+            {
+                float angle = Mathf.PI * 2f * i / area.positionCount;
+                Vector2 point = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                area.SetPosition(i, new Vector3(point.x, point.y, 0f));
+            }
+            float width = Mathf.Max(0.6f, ScreenPixelsToWorld(1.2f));
+            area.startWidth = width;
+            area.endWidth = width;
+            area.startColor = color;
+            area.endColor = color;
+            area.enabled = color.a > 0f;
+        }
+
+        private float ScreenPixelsToWorld(float pixels)
+        {
+            return 2f * _cam.orthographicSize / Mathf.Max(1f, Screen.height) * pixels;
         }
 
         private void HandleInput()
@@ -353,96 +558,234 @@ namespace GameLogic.Takeover
             if (Input.GetKeyDown(KeyCode.Space)) _paused = !_paused;
             if (Input.GetKeyDown(KeyCode.R)) NewGame();
             if (Input.GetKeyDown(KeyCode.Escape)) ShowLevelSelect();
-            if (UnityEngine.EventSystems.EventSystem.current != null
-                && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null
+                                 && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+            if (pointerOverUI && _dragSquad == null && !_selecting)
                 return;
-
-            if (Input.GetKeyDown(KeyCode.H) && _selectedSquad != null)
-            {
-                _sim.Enqueue(BattleCommand.Retreat(_selectedSquad.Id));
-                Toast($"小队 {_selectedSquad.Id} 撤退");
-            }
-
-            if (Input.GetMouseButtonDown(1)) IssueOrderAtMouse();
 
             if (Input.GetMouseButtonDown(0))
             {
-                // 先选小队
-                Squad pick = null;
-                float sd = 24f;
-                foreach (var sq in _sim.Squads)
+                _selectionStart = Input.mousePosition;
+                _selectionEnd = _selectionStart;
+                _dragSquad = FindHumanSquadAtScreen(_selectionStart);
+                if (_dragSquad != null)
                 {
-                    if (sq.IsDead || sq.Faction != HumanFaction) continue;
-                    Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(sq.Pos));
-                    float d = Vector2.Distance(Input.mousePosition, screen);
-                    if (d < sd) { sd = d; pick = sq; }
-                }
-                if (pick != null)
-                {
-                    _selectedSquad = pick;
+                    if (_selectedSquads.Count == 0 || !_selectedSquads.Contains(_dragSquad))
+                    {
+                        _selectedSquads.Clear();
+                        _selectedSquads.Add(_dragSquad);
+                    }
+                    _selectedSquad = _dragSquad;
                     _selected = null;
-                    Toast($"选中 {pick.Def.CnName}  {pick.AliveSoldiers}/{pick.MaxSoldiers} 人");
-                    return;
+                    MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
+                    UpdateOrderPreview(DisplayPosition(_dragSquad.Pos),
+                        hover?.Pos ?? MouseWorldPosition(),
+                        hover?.Building != null && hover.Building.Owner != HumanFaction);
                 }
+                else
+                {
+                    _selecting = true;
+                    ClearSelection();
+                    UpdateSelectionBox();
+                }
+            }
 
-                MapNode best = null;
-                float bestD = 30f;
-                foreach (var n in _sim.Nodes)
+            if (Input.GetMouseButton(0))
+            {
+                _selectionEnd = Input.mousePosition;
+                if (_dragSquad != null)
                 {
-                    Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(n.Pos));
-                    float d = Vector2.Distance(Input.mousePosition, screen);
-                    if (d < bestD) { bestD = d; best = n; }
+                    MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
+                    UpdateOrderPreview(DisplayPosition(_dragSquad.Pos),
+                        hover?.Pos ?? MouseWorldPosition(),
+                        hover?.Building != null && hover.Building.Owner != HumanFaction);
                 }
-                if (best != null)
+                else if (_selecting)
                 {
-                    if (_pendingSpell != null)
-                    {
-                        bool cast = _sim.ExecuteNow(BattleCommand.CastSpell(_pendingSpell.Id, best.Id));
-                        Toast(cast ? $"已施放 {_pendingSpell.CnName}" : "法术施放失败");
-                        _pendingSpell = null;
-                        return;
-                    }
-                    if (best.Building != null && best.Building.Owner == HumanFaction)
-                    {
-                        _selected = best;
-                        Toast($"选中 {best.Building.Node.Key}，等级 {best.Building.Level}");
-                    }
-                    else if (best.Kind == NodeKind.BuildSpot && best.Building == null
-                             && _sim.State.IsLocControlledBy(_sim.Human, best))
-                    {
-                        _selected = best;
-                        Toast($"空地 {best.Key}：可以建造附属建筑");
-                    }
+                    UpdateSelectionBox();
+                    SelectSquadsInBox();
+                }
+            }
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                float dragDistance = Vector2.Distance(_selectionStart, Input.mousePosition);
+                if (_dragSquad != null)
+                {
+                    if (dragDistance >= 8f)
+                        IssueGroupOrderAtMouse();
                     else
-                    {
-                        Toast("右键下令进攻该节点");
-                    }
+                        Toast($"选中 {_dragSquad.Def.CnName}  {_dragSquad.AliveSoldiers}/{_dragSquad.MaxSoldiers} 人");
                 }
+                else if (_selecting && dragDistance < 8f)
+                {
+                    HandleLeftClickAtMouse();
+                }
+                _dragSquad = null;
+                _selecting = false;
+                if (_selectionBox != null) _selectionBox.enabled = false;
+                if (_orderPreview != null) _orderPreview.enabled = false;
             }
         }
 
-        private void IssueOrderAtMouse()
+        private void IssueGroupOrderAtMouse()
+        {
+            if (_selectedSquads.Count == 0) return;
+            MapNode node = FindNodeAtScreen(Input.mousePosition, 34f);
+            Vector2 target = node?.Pos ?? MouseWorldPosition();
+            int[] ids = _selectedSquads.Where(squad => !squad.IsDead).Select(squad => squad.Id).ToArray();
+            if (ids.Length == 0) return;
+            _sim.Enqueue(BattleCommand.Move(ids, target, node?.Id ?? 0));
+            if (node?.Building != null && node.Building.Owner != HumanFaction)
+                Toast($"部队前往 {node.Key}");
+            else
+                Toast($"已命令 {ids.Length} 支部队移动");
+        }
+
+        private void HandleLeftClickAtMouse()
+        {
+            Vector2 mouse = Input.mousePosition;
+            if (_pendingSpell != null)
+            {
+                MapNode spellNode = FindNodeAtScreen(mouse, 34f);
+                Vector2 target = spellNode?.Pos ?? MouseWorldPosition();
+                bool cast = _sim.ExecuteNow(BattleCommand.CastSpell(
+                    _pendingSpell.Id, target, spellNode?.Id ?? 0));
+                Toast(cast ? $"已施放 {_pendingSpell.CnName}" : "法术施放失败");
+                _pendingSpell = null;
+                return;
+            }
+
+            MapNode node = FindNodeAtScreen(mouse, 30f);
+            if (node?.Building != null)
+            {
+                _selected = node;
+                Toast(node.Building.Owner == HumanFaction
+                    ? $"选中 {node.Key}，等级 {node.Building.Level}"
+                    : $"{node.Key} 属于 {node.Building.Owner}");
+            }
+            else if (node?.Kind == NodeKind.BuildSpot && node.Building == null)
+            {
+                _selected = node;
+                Toast(_sim.State.IsLocControlledBy(_sim.Human, node)
+                    ? $"空地 {node.Key}：可以建造"
+                    : $"空地 {node.Key}：不在己方控制区");
+            }
+            _selectedSquads.Clear();
+            _selectedSquad = null;
+        }
+
+        private Squad FindHumanSquadAtScreen(Vector2 screen)
+        {
+            Squad best = null;
+            float bestDistance = 24f;
+            foreach (Squad squad in _sim.Human.Squads.Where(value => !value.IsDead))
+            {
+                foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead))
+                {
+                    Vector3 unitScreen = _cam.WorldToScreenPoint(DisplayPosition(unit.Pos));
+                    float distance = Vector2.Distance(screen, unitScreen);
+                    if (distance >= bestDistance) continue;
+                    bestDistance = distance;
+                    best = squad;
+                }
+            }
+            return best;
+        }
+
+        private MapNode FindNodeAtScreen(Vector2 screen, float maxDistance)
         {
             MapNode best = null;
-            float bestD = float.MaxValue;
-            foreach (var n in _sim.Nodes)
+            float bestDistance = maxDistance;
+            foreach (MapNode node in _sim.Nodes)
             {
-                Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(n.Pos));
-                float d = Vector2.Distance(Input.mousePosition, screen);
-                if (d < bestD) { bestD = d; best = n; }
+                Vector3 nodeScreen = _cam.WorldToScreenPoint(DisplayPosition(node.Pos));
+                float distance = Vector2.Distance(screen, nodeScreen);
+                if (distance >= bestDistance) continue;
+                bestDistance = distance;
+                best = node;
             }
-            if (best == null) return;
-            if (_selectedSquad != null && !_selectedSquad.IsDead)
+            return best;
+        }
+
+        private Vector2 MouseWorldPosition()
+        {
+            Vector3 world = _cam.ScreenToWorldPoint(Input.mousePosition);
+            return new Vector2(world.x, (OriginalRules.NativeStageHeight - world.y) * OriginalRules.WorldYScale);
+        }
+
+        private void ClearSelection()
+        {
+            _selectedSquads.Clear();
+            _selectedSquad = null;
+            _selected = null;
+        }
+
+        private void SelectSquadsInBox()
+        {
+            Rect rect = ScreenRect(_selectionStart, _selectionEnd);
+            _selectedSquads.Clear();
+            foreach (Squad squad in _sim.Human.Squads.Where(value => !value.IsDead))
             {
-                _sim.Enqueue(BattleCommand.Move(_selectedSquad.Id, best.Id));
-                Toast($"小队 {_selectedSquad.Id} → {best.Key}");
+                Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(squad.Pos));
+                if (rect.Contains(screen)) _selectedSquads.Add(squad);
             }
-            else
+            _selectedSquad = _selectedSquads.FirstOrDefault();
+        }
+
+        private void UpdateSelectionBox()
+        {
+            if (_selectionBox == null) return;
+            Vector2 a = ScreenToDisplayWorld(_selectionStart);
+            Vector2 b = ScreenToDisplayWorld(_selectionEnd);
+            Vector2 c = new Vector2(a.x, b.y);
+            Vector2 d = new Vector2(b.x, a.y);
+            _selectionBox.positionCount = 4;
+            _selectionBox.SetPositions(new[]
             {
-                foreach (var squad in _sim.Human.Squads.Where(s => !s.IsDead))
-                    _sim.Enqueue(BattleCommand.Attack(squad.Id, best.Id));
-                Toast($"全军进攻 {best.Key}");
+                new Vector3(a.x, a.y, 0f),
+                new Vector3(c.x, c.y, 0f),
+                new Vector3(b.x, b.y, 0f),
+                new Vector3(d.x, d.y, 0f),
+            });
+            _selectionBox.enabled = Vector2.Distance(_selectionStart, _selectionEnd) >= 3f;
+        }
+
+        private void UpdateOrderPreview(Vector2 from, Vector2 to, bool attack)
+        {
+            if (_orderPreview == null) return;
+            Vector2 start = DisplayPosition(from);
+            Vector2 end = DisplayPosition(to);
+            Vector2 control = (start + end) * 0.5f +
+                              Vector2.up * (Vector2.Distance(start, end) * 0.7f);
+            const int segments = 16;
+            _orderPreview.positionCount = segments + 1;
+            for (int i = 0; i <= segments; i++)
+            {
+                float t = i / (float)segments;
+                Vector2 point = (1f - t) * (1f - t) * start +
+                                2f * (1f - t) * t * control +
+                                t * t * end;
+                _orderPreview.SetPosition(i, new Vector3(point.x, point.y, 0f));
             }
+            Color color = attack
+                ? new Color(1f, 0.25f, 0.20f, 0.95f)
+                : new Color(0.35f, 1f, 0.40f, 0.95f);
+            _orderPreview.startColor = color;
+            _orderPreview.endColor = color;
+            _orderPreview.enabled = true;
+        }
+
+        private Vector2 ScreenToDisplayWorld(Vector2 screen)
+        {
+            Vector3 world = _cam.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -_cam.transform.position.z));
+            return new Vector2(world.x, world.y);
+        }
+
+        private static Rect ScreenRect(Vector2 a, Vector2 b)
+        {
+            return new Rect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y),
+                Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
         }
 
         private void UpdateCamera()
@@ -508,12 +851,24 @@ namespace GameLogic.Takeover
         public BattleSimulation Simulation => _sim;
         public MapNode SelectedNode => _selected;
         public Squad SelectedSquad => _selectedSquad;
+        public IReadOnlyCollection<Squad> SelectedSquads => _selectedSquads;
         public bool Paused => _paused;
         public float Speed => _speed;
         public bool LevelSelectOpen => _levelSelectOpen;
 
         public void TogglePause() => _paused = !_paused;
-        public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, 1f, 2f);
+        public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, 1f, 8f);
+
+        public void GrantResources(int gold, int mana)
+        {
+            if (_sim == null) return;
+            float oldGold = _sim.Human.Gold;
+            float oldMana = _sim.Human.Mana;
+            bool ok = _sim.ExecuteNow(BattleCommand.GrantResources(gold, mana));
+            if (!ok) return;
+            Toast($"GM：金币 +{_sim.Human.Gold - oldGold:F0}    " +
+                  $"法力 +{_sim.Human.Mana - oldMana:F0}");
+        }
 
         public bool CanBuy(GameConfig.takeover.Unit unit, MapNode node)
         {
@@ -524,7 +879,8 @@ namespace GameLogic.Takeover
         {
             if (_sim == null || node?.Building == null) return new List<GameConfig.takeover.Unit>();
             return Cfg.TbUnit.DataList
-                .Where(u => u.Faction == (int)HumanFaction && BattleSim.AllowedAt(_sim.Human, node.Building, u))
+                .Where(u => OriginalRules.FromConfigFaction(u.Faction) == HumanFaction &&
+                            BattleSim.AllowedAt(_sim.Human, node.Building, u))
                 .OrderBy(u => u.UnitType).ThenBy(u => u.Tier).ToList();
         }
 
@@ -546,15 +902,14 @@ namespace GameLogic.Takeover
         public void Build(MapNode node, int buildingId)
         {
             if (_sim == null) return;
+            _sim.State.CanPlace(_sim.Human, node, buildingId, out string reason);
             bool ok = _sim.ExecuteNow(BattleCommand.Build(buildingId, node.Id));
-            _ui?.ShowToast(ok ? "建造完成" : "建造失败");
+            _ui?.ShowToast(ok ? "建造完成" : reason ?? "建造失败");
         }
 
-        public void RetreatSelected()
+        public bool CanBuild(MapNode node, int buildingId)
         {
-            if (_sim == null || _selectedSquad == null) return;
-            _sim.Enqueue(BattleCommand.Retreat(_selectedSquad.Id));
-            _ui?.ShowToast("小队开始撤退");
+            return _sim != null && _sim.State.CanPlace(_sim.Human, node, buildingId, out _);
         }
 
         public void BeginSpellTarget(GameConfig.takeover.Spell spell)

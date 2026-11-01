@@ -35,7 +35,10 @@ namespace GameLogic.Takeover
         private Transform _inspectorActions;
         private readonly List<Button> _levelButtons = new List<Button>();
         private readonly List<Text> _levelLabels = new List<Text>();
+        private readonly List<Text> _gmSpeedLabels = new List<Text>();
+        private static readonly float[] GmSpeeds = { 1f, 2f, 4f, 8f };
         private string _lastInspectorKey;
+        private string _lastSpellState;
         private float _toastUntil;
         private bool _resetArmed;
         private Font _originalFont;
@@ -96,7 +99,18 @@ namespace GameLogic.Takeover
                 return;
             }
             if (_hud.activeSelf && _runner.Simulation != null)
+            {
                 RefreshHud();
+                string spellState =
+                    $"{_runner.Simulation.Human.SpellsEnabled}|{_runner.Simulation.Human.Mana:F0}|" +
+                    $"{_runner.Simulation.Human.Ultimate:F0}|" +
+                    $"{_runner.Simulation.State.AvailableSpells(_runner.Simulation.Human).Count}";
+                if (spellState != _lastSpellState)
+                {
+                    _lastSpellState = spellState;
+                    RefreshSpellBar();
+                }
+            }
             RefreshInspector();
             if (_toastPanel != null && Time.unscaledTime >= _toastUntil && _toastPanel.activeSelf)
                 _toastPanel.SetActive(false);
@@ -123,6 +137,7 @@ namespace GameLogic.Takeover
             _inspector?.SetActive(false);
             _spellBar?.SetActive(true);
             _lastInspectorKey = null;
+            _lastSpellState = null;
             RefreshSpellBar();
         }
 
@@ -256,17 +271,13 @@ namespace GameLogic.Takeover
                 new Vector2(-12f, -78f), new Vector2(150f, 20f));
 
             var controls = MakePanel("Controls", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(494f, 44f),
+                new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(330f, 44f),
                 new Color(0.035f, 0.055f, 0.045f, 0.50f));
-            CreateButton("Pause", controls, new Vector2(-202f, 0f), new Vector2(84f, 30f), "暂停",
+            CreateButton("Pause", controls, new Vector2(-118f, 0f), new Vector2(84f, 30f), "暂停",
                 delegate { _runner?.TogglePause(); });
-            CreateButton("Speed1", controls, new Vector2(-108f, 0f), new Vector2(58f, 30f), "×1",
-                delegate { _runner?.SetSpeed(1f); });
-            CreateButton("Speed2", controls, new Vector2(-40f, 0f), new Vector2(58f, 30f), "×2",
-                delegate { _runner?.SetSpeed(2f); });
-            CreateButton("Restart", controls, new Vector2(38f, 0f), new Vector2(84f, 30f), "重开",
+            CreateButton("Restart", controls, new Vector2(-18f, 0f), new Vector2(84f, 30f), "重开",
                 delegate { _runner?.NewGame(); });
-            CreateButton("Levels", controls, new Vector2(136f, 0f), new Vector2(84f, 30f), "关卡",
+            CreateButton("Levels", controls, new Vector2(82f, 0f), new Vector2(84f, 30f), "关卡",
                 delegate { _runner?.ShowLevelSelect(); });
 
             _inspector = MakePanel("Inspector", root, new Vector2(1f, 1f), new Vector2(1f, 1f),
@@ -286,6 +297,26 @@ namespace GameLogic.Takeover
             _spellBar = MakePanel("Spells", root, new Vector2(0f, 0f), new Vector2(0f, 0f),
                 new Vector2(0f, 0f), new Vector2(16f, 64f), new Vector2(354f, 56f),
                 new Color(0.035f, 0.055f, 0.045f, 0.48f)).gameObject;
+
+            var gm = MakePanel("GmControls", root, new Vector2(0f, 0f), new Vector2(0f, 0f),
+                new Vector2(0f, 0f), new Vector2(16f, 126f), new Vector2(250f, 66f),
+                new Color(0.025f, 0.035f, 0.030f, 0.68f));
+            CreateButton("GmGold", gm, new Vector2(-60f, 22f), new Vector2(112f, 24f),
+                "金币 +1000", delegate { _runner?.GrantResources(1000, 0); })
+                .GetComponentInChildren<Text>().fontSize = 12;
+            CreateButton("GmMana", gm, new Vector2(60f, 22f), new Vector2(112f, 24f),
+                "法力 +500", delegate { _runner?.GrantResources(0, 500); })
+                .GetComponentInChildren<Text>().fontSize = 12;
+            for (int i = 0; i < GmSpeeds.Length; i++)
+            {
+                float speed = GmSpeeds[i];
+                var button = CreateButton($"GmSpeed{speed:0}", gm,
+                    new Vector2(-87f + i * 58f, -18f), new Vector2(52f, 24f),
+                    $"×{speed:0}", delegate { _runner?.SetSpeed(speed); });
+                var label = button.GetComponentInChildren<Text>();
+                label.fontSize = 12;
+                _gmSpeedLabels.Add(label);
+            }
         }
 
         private void BuildResult(Transform root)
@@ -337,8 +368,15 @@ namespace GameLogic.Takeover
                 $"法力 {Mathf.FloorToInt(player.Mana)}/500\n" +
                 $"补给 {player.SupplyUsed}/{player.SupplyCap}   " +
                 $"部队 {player.Squads.Count(s => !s.IsDead)}   " +
-                $"敌城 {sim.Enemy.OwnedNodes.Count}";
+                $"敌城 {sim.Players.Where(p => !p.IsHuman).Sum(p => p.OwnedNodes.Count(n => BattleSim.IsKeyBuilding(n.Building)))}";
             _clock.text = $"{FormatTime(sim.Time)}  ·  三星 < {FormatTime(330f)}";
+            for (int i = 0; i < _gmSpeedLabels.Count; i++)
+            {
+                string speed = $"×{GmSpeeds[i]:0}";
+                _gmSpeedLabels[i].text = Mathf.Approximately(_runner.Speed, GmSpeeds[i])
+                    ? $"{speed}*"
+                    : speed;
+            }
         }
 
         private void RefreshInspector()
@@ -361,11 +399,10 @@ namespace GameLogic.Takeover
                 _inspectorTitle.text = $"{squad.Def.CnName}  {squad.AliveSoldiers}/{squad.MaxSoldiers}";
                 _inspectorBody.text =
                     $"HP {squad.Hp:F0}/{squad.HpPerSoldier * squad.MaxSoldiers:F0}\n" +
-                    $"伤害 {squad.Def.DmgMin}-{squad.Def.DmgMax} × {squad.AliveSoldiers}\n" +
-                    $"射程 {squad.Def.Range}   移速 {squad.Speed:F0}\n" +
+                    $"等级 {squad.LevelIndex}   经验 {squad.Xp:F0}\n" +
+                    $"伤害基础 {squad.Def.DmgMin}-{squad.Def.DmgMax} × {squad.AliveSoldiers}\n" +
+                    $"射程 {squad.Def.Range}   移速 {squad.Speed:F1}\n" +
                     $"{(squad.TargetNode != null ? $"目标 {squad.TargetNode.Key}" : "待命")}";
-                CreateButton("Retreat", _inspectorActions, new Vector2(0f, -20f), new Vector2(150f, 40f),
-                    "撤退回城", delegate { _runner.RetreatSelected(); });
                 return;
             }
 
@@ -377,7 +414,8 @@ namespace GameLogic.Takeover
             }
 
             _inspector.SetActive(true);
-            if (node.Building != null && node.Building.Owner == _runner.HumanFaction)
+            if (node.Building != null && node.Building.Owner == _runner.HumanFaction &&
+                BattleSim.IsKeyBuilding(node.Building))
             {
                 var building = node.Building;
                 _inspectorTitle.text = $"{node.Key}  等级 {building.Level}/2";
@@ -395,25 +433,41 @@ namespace GameLogic.Takeover
                         delegate { _runner.Buy(unit, node); });
                     button.interactable = canBuy;
                 }
+                var buildingDef = Cfg.BuildingById(building.Kind);
+                int upgradeCost = building.Level == 0
+                    ? buildingDef?.UpgradeCost1 ?? 350
+                    : buildingDef?.UpgradeCost2 ?? 500;
                 var upgrade = CreateButton("Upgrade", _inspectorActions,
                     new Vector2(0f, -46f - units.Count * 40f), new Vector2(250f, 32f),
-                    building.Level >= 2 ? "已满级" : $"升级 { (building.Level == 0 ? 350 : 500) } 金",
+                    building.Level >= 2 ? "已满级" : $"升级 {upgradeCost} 金",
                     delegate { _runner.Upgrade(node); });
-                upgrade.interactable = building.Level < 2;
+                upgrade.interactable = building.Level < 2 &&
+                                       _runner.Simulation.Human.Gold >= upgradeCost;
+            }
+            else if (node.Building != null)
+            {
+                _inspectorTitle.text = $"{node.Building.Node.Key}  {node.Building.Owner}";
+                _inspectorBody.text =
+                    $"HP {node.Building.Hp}/{node.Building.MaxHp}\n" +
+                    $"等级 {node.Building.Level}/2\n" +
+                    "拖动己方部队到此处进行攻击";
             }
             else if (node.Kind == NodeKind.BuildSpot && node.Building == null)
             {
                 _inspectorTitle.text = $"空地 {node.Key}";
-                _inspectorBody.text = "在己方控制区段建造附属建筑";
+                bool controlled = _runner.Simulation.State.IsLocControlledBy(_runner.Simulation.Human, node);
+                _inspectorBody.text = controlled ? "在己方控制区段建造附属建筑" : "不在己方控制区";
+                if (!controlled) return;
                 for (int i = 0; i < BattleSim.SupplyBuildingIds.Length; i++)
                 {
                     int id = BattleSim.SupplyBuildingIds[i];
                     var def = Cfg.BuildingById(id);
                     if (def == null) continue;
                     string effect = def.Supply > 0 ? "补给 +1" : def.Gold > 0 ? "金币 +1/s" : "法力 +1/s";
-                    CreateButton($"Build{id}", _inspectorActions, new Vector2(0f, -40f - i * 44f),
+                    var button = CreateButton($"Build{id}", _inspectorActions, new Vector2(0f, -40f - i * 44f),
                         new Vector2(250f, 32f), $"{def.CnName}  {def.BuildCost}金  {effect}",
                         delegate { _runner.Build(node, id); });
+                    button.interactable = _runner.CanBuild(node, id);
                 }
             }
             else
@@ -427,9 +481,7 @@ namespace GameLogic.Takeover
             if (_spellBar == null || _runner == null) return;
             ClearChildren(_spellBar.transform);
             if (_runner.Simulation == null) return;
-            var spells = Cfg.TbSpell.DataList
-                .Where(s => s.Faction == (int)_runner.HumanFaction)
-                .OrderBy(s => s.SpellType).ThenBy(s => s.Id).ToList();
+            var spells = _runner.Simulation.State.AvailableSpells(_runner.Simulation.Human);
             for (int i = 0; i < spells.Count; i++)
             {
                 var spell = spells[i];
@@ -438,6 +490,10 @@ namespace GameLogic.Takeover
                     $"{spell.CnName}\n{(spell.SpellType == 2 ? "终极" : spell.Cost.ToString())}",
                     delegate { _runner.BeginSpellTarget(spell); });
                 button.GetComponentInChildren<Text>().fontSize = 11;
+                button.interactable = spell.SpellType == 2
+                    ? _runner.Simulation.Human.Ultimate + 0.0001f >= _runner.Simulation.Human.UltimateMax
+                    : _runner.Simulation.Human.Mana >=
+                      Mathf.RoundToInt(spell.Cost * _runner.Simulation.Human.ModMul(35));
             }
         }
 

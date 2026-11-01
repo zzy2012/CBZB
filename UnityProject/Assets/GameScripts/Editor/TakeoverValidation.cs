@@ -56,7 +56,10 @@ public static class TakeoverValidation
         foreach (var result in results)
         {
             Debug.Log($"[TakeoverSoak] L{result.LevelId} over={result.IsOver} win={result.HumanVictory} " +
-                      $"time={result.ElapsedSeconds:F1}s player={result.HumanSquads} enemy={result.EnemySquads}");
+                      $"time={result.ElapsedSeconds:F1}s player={result.HumanSquads} enemy={result.EnemySquads} " +
+                      $"playerPos={result.HumanPosition} enemyPos={result.EnemyPosition} " +
+                      $"playerHp={result.HumanHp:F0} enemyHp={result.EnemyHp:F0} " +
+                      $"moving={result.HumanMoving} inBounds={result.UnitsInBounds}");
         }
     }
 
@@ -65,11 +68,14 @@ public static class TakeoverValidation
         try
         {
             var results = RunScenarioSoak();
-            bool pass = results.Count == 8 && results.All(r => r.ElapsedSeconds > 0f);
+            bool pass = results.Count == 8 && results.All(r => r.ElapsedSeconds > 0f && r.UnitsInBounds);
             foreach (var result in results)
             {
                 Debug.Log($"[TakeoverSoak] L{result.LevelId} over={result.IsOver} win={result.HumanVictory} " +
-                          $"time={result.ElapsedSeconds:F1}s player={result.HumanSquads} enemy={result.EnemySquads}");
+                          $"time={result.ElapsedSeconds:F1}s player={result.HumanSquads} enemy={result.EnemySquads} " +
+                          $"playerPos={result.HumanPosition} enemyPos={result.EnemyPosition} " +
+                          $"playerHp={result.HumanHp:F0} enemyHp={result.EnemyHp:F0} " +
+                          $"moving={result.HumanMoving} inBounds={result.UnitsInBounds}");
             }
             Debug.Log(pass ? "[TakeoverValidation] SOAK COMPLETE" : "[TakeoverValidation] SOAK FAIL");
             if (Application.isBatchMode) EditorApplication.Exit(pass ? 0 : 1);
@@ -77,6 +83,21 @@ public static class TakeoverValidation
         catch (Exception exception)
         {
             Debug.LogError("[TakeoverValidation] SOAK FAIL: " + exception);
+            if (Application.isBatchMode) EditorApplication.Exit(1);
+        }
+    }
+
+    public static void RunMovementDiagnosticBatch()
+    {
+        try
+        {
+            var tables = new Tables(Load);
+            Debug.Log("[TakeoverMovement]\n" + TakeoverSelfCheck.DebugMovement(tables, 1, 30f));
+            if (Application.isBatchMode) EditorApplication.Exit(0);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError("[TakeoverMovement] FAIL: " + exception);
             if (Application.isBatchMode) EditorApplication.Exit(1);
         }
     }

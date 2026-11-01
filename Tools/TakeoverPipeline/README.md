@@ -21,6 +21,13 @@
 - 将地图、建筑、单位、HUD、图标、音频和字体导入 `Assets/AssetRaw`。
 - `import_chapter_assets.py` 会把地图 Sprite 从导出边界居中裁切为原版 800×600，避免背景缩放后与逻辑坐标错位。
 - 以原版 SWF 舞台尺寸设置场景和 CanvasScaler，并保留原版 Y 轴 `×2` 等距比例。
+- `generate_map_waypoints.py` 从 `Level1-8GraphMarkersClass` 的嵌套显示对象矩阵恢复原版道路中间点：
+
+  ```bash
+  python3 Tools/TakeoverPipeline/generate_map_waypoints.py \
+    --swf-xml GameData/extracted/takeover104/takeover.xml \
+    --output UnityProject/Assets/GameScripts/HotFix/GameLogic/Takeover/Fidelity/OriginalMapWaypoints.cs
+  ```
 - 对照 `Docs/城邦争霸数值/` 和反编译源码核对规则，未确认项不得用近似值替代。
 
 ## 2. 生成配置并构建 Windows x64
