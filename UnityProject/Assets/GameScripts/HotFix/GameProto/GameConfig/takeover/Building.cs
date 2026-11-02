@@ -28,6 +28,7 @@ public sealed partial class Building : Luban.BeanBase
         UpgradeCost1 = _buf.ReadInt();
         UpgradeCost2 = _buf.ReadInt();
         BuildCost = _buf.ReadInt();
+        Sprite = _buf.ReadString();
     }
 
     public static Building DeserializeBuilding(ByteBuf _buf)
@@ -83,6 +84,10 @@ public sealed partial class Building : Luban.BeanBase
     /// 建造价（附属建筑）
     /// </summary>
     public readonly int BuildCost;
+    /// <summary>
+    /// 建筑默认贴图（location，不带扩展名；各阵营共用，用颜色区分）
+    /// </summary>
+    public readonly string Sprite;
    
     public const int __ID__ = -2131428985;
     public override int GetTypeId() => __ID__;
@@ -106,6 +111,7 @@ public sealed partial class Building : Luban.BeanBase
         + "upgradeCost1:" + UpgradeCost1 + ","
         + "upgradeCost2:" + UpgradeCost2 + ","
         + "buildCost:" + BuildCost + ","
+        + "sprite:" + Sprite + ","
         + "}";
     }
 }

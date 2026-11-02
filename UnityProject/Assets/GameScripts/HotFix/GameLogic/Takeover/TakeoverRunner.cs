@@ -14,6 +14,10 @@ namespace GameLogic.Takeover
     public sealed class TakeoverRunner : MonoBehaviour
     {
         private const float NativeSpriteScale = 100f;
+
+        /// <summary>建筑底图按阵营染色的强度（0 = 原图，1 = 完全用阵营色）。</summary>
+        private const float FactionTintBlend = 0.55f;
+
         private BattleSimulation _sim;
         private Camera _cam;
         private Transform _root;
@@ -286,6 +290,16 @@ namespace GameLogic.Takeover
             return new Color(0.55f, 0.55f, 0.55f);
         }
 
+        /// <summary>
+        /// 建筑贴图各阵营共用一张底图（building.xlsx 的 sprite 列），
+        /// 用 SpriteRenderer.color 把底图朝所属阵营色叠加，靠颜色区分国家。
+        /// </summary>
+        private static Color FactionTint(MapNode node)
+        {
+            if (node.Building == null) return Color.white;
+            return Color.Lerp(Color.white, NodeColor(node), FactionTintBlend);
+        }
+
         private void BindNodeVisual(MapNode node, SpriteRenderer renderer)
         {
             if (node.Kind == NodeKind.Empty)
@@ -502,7 +516,7 @@ namespace GameLogic.Takeover
                 bool usesOriginalArt = kv.Value.enabled && _boundNodeVisuals.ContainsKey(n.Id);
                 kv.Value.color = n == _selected
                     ? new Color(1f, 0.94f, 0.58f)
-                    : usesOriginalArt ? Color.white : NodeColor(n);
+                    : usesOriginalArt ? FactionTint(n) : NodeColor(n);
                 float baseSize = NativeSpriteScale;
                 float size = n == _selected ? baseSize * 1.12f : baseSize;
                 kv.Value.transform.localScale = new Vector3(size, size, 1f);
@@ -597,7 +611,9 @@ namespace GameLogic.Takeover
                     _selectedSquad = _dragSquad;
                     _selected = null;
                     MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
-                    UpdateOrderPreview(DisplayPosition(_dragSquad.Pos),
+                    // UpdateOrderPreview 内部自己做 逻辑->显示 转换，这里必须传逻辑坐标，
+                    // 否则起点会被转换两次（第二次是 600-y/2 的镜像折叠），曲线从错误的位置画出去。
+                    UpdateOrderPreview(_dragSquad.Pos,
                         hover?.Pos ?? MouseWorldPosition(),
                         hover?.Building != null && hover.Building.Owner != HumanFaction);
                 }
@@ -615,7 +631,7 @@ namespace GameLogic.Takeover
                 if (_dragSquad != null)
                 {
                     MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
-                    UpdateOrderPreview(DisplayPosition(_dragSquad.Pos),
+                    UpdateOrderPreview(_dragSquad.Pos,
                         hover?.Pos ?? MouseWorldPosition(),
                         hover?.Building != null && hover.Building.Owner != HumanFaction);
                 }
@@ -770,6 +786,7 @@ namespace GameLogic.Takeover
             _selectionBox.enabled = Vector2.Distance(_selectionStart, _selectionEnd) >= 3f;
         }
 
+        /// <summary>绘制拖拽下令的预览曲线。from / to 都是模拟逻辑坐标（不是显示坐标）。</summary>
         private void UpdateOrderPreview(Vector2 from, Vector2 to, bool attack)
         {
             if (_orderPreview == null) return;
@@ -887,6 +904,18 @@ namespace GameLogic.Takeover
             if (!ok) return;
             Toast($"GM：金币 +{_sim.Human.Gold - oldGold:F0}    " +
                   $"法力 +{_sim.Human.Mana - oldMana:F0}");
+        }
+
+        /// <summary>
+        /// GM：强制结束本局。victory=true 走正常胜利结算（会解锁下一关），
+        /// false 走战败结算；结算流程复用 Update 里 IsOver 分支，不另开代码路径。
+        /// </summary>
+        public void GmEndBattle(bool victory)
+        {
+            if (_sim == null || _sim.IsOver) return;
+            _sim.State.IsOver = true;
+            _sim.State.HumanVictory = victory;
+            Toast(victory ? "GM：判定本关胜利" : "GM：判定本关失败");
         }
 
         public bool CanBuy(GameConfig.takeover.Unit unit, MapNode node)

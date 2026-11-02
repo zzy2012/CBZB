@@ -30,6 +30,11 @@ namespace GameLogic.Takeover
         private Text _clock;
         private Text _toast;
         private GameObject _toastPanel;
+        private RectTransform _toastRect;
+        private GameObject _gmPanel;
+        private RectTransform _gmPanelRect;
+        private Button _gmToggle;
+        private bool _gmExpanded;
         private Text _resultTitle;
         private Text _resultBody;
         private Text _inspectorTitle;
@@ -40,7 +45,17 @@ namespace GameLogic.Takeover
         private readonly List<Text> _levelLabels = new List<Text>();
         private readonly List<Text> _gmSpeedLabels = new List<Text>();
         private static readonly float[] GmSpeeds = { 1f, 2f, 4f, 8f };
+        private readonly List<ActionPlan> _inspectorPlan = new List<ActionPlan>();
+        private readonly List<ActionPlan> _spellPlan = new List<ActionPlan>();
+        private readonly List<Button> _inspectorButtons = new List<Button>();
+        private readonly List<Func<bool>> _inspectorRules = new List<Func<bool>>();
+        private readonly List<Button> _spellButtons = new List<Button>();
+        private readonly List<Func<bool>> _spellRules = new List<Func<bool>>();
+        private static readonly System.Text.StringBuilder PlanSignatureBuilder =
+            new System.Text.StringBuilder(256);
         private string _lastInspectorKey;
+        private string _lastInspectorSignature;
+        private string _lastSpellSignature;
         private string _lastSpellState;
         private float _toastUntil;
         private bool _resetArmed;
@@ -100,6 +115,8 @@ namespace GameLogic.Takeover
                 _actionButtonTemplate.GetComponentInChildren<Text>(true) == null)
                 throw new InvalidOperationException($"UI 列表项预制体缺少 Button 或 Text：{ActionButtonPrefabLocation}");
             _actionButtonTemplate.SetActive(false);
+
+            BuildGmPanel();
 
             _runner?.RegisterUI(this);
         }
@@ -167,8 +184,12 @@ namespace GameLogic.Takeover
             _result?.SetActive(false);
             _inspector?.SetActive(false);
             _spellBar?.SetActive(true);
+            _gmToggle?.gameObject.SetActive(true);
+            SetGmExpanded(false);
             _lastInspectorKey = null;
+            _lastInspectorSignature = null;
             _lastSpellState = null;
+            _lastSpellSignature = null;
             RefreshSpellBar();
         }
 
@@ -197,9 +218,140 @@ namespace GameLogic.Takeover
         {
             if (_toast == null || _toastPanel == null || string.IsNullOrEmpty(message)) return;
             _toast.text = message;
+            FitToastToText();
             _toastPanel.SetActive(true);
             _toastPanel.transform.SetAsLastSibling();
             _toastUntil = Time.unscaledTime + seconds;
+        }
+
+        /// <summary>
+        /// 提示条背景按文字自适应。预制体里 ToastPanel 是固定 700×52 的深色底，
+        /// 短提示（比如“选中 057，等级 0”）会横着压住左下角的 GM 按钮和底部操作栏。
+        /// </summary>
+        private void FitToastToText()
+        {
+            if (_toastRect == null || _toast == null) return;
+            const float maxWidth = 700f;
+            const float horizontalPadding = 40f;
+
+            // 先按“不换行”量出真实文字宽度，再决定面板宽度
+            _toast.horizontalOverflow = HorizontalWrapMode.Overflow;
+            float contentWidth = _toast.preferredWidth;
+            float width = Mathf.Clamp(contentWidth + horizontalPadding, 220f, maxWidth);
+
+            // 超过上限才允许换行，并按最终宽度重新量高度
+            bool needsWrap = contentWidth + horizontalPadding > maxWidth;
+            _toast.horizontalOverflow = needsWrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+            _toastRect.sizeDelta = new Vector2(width, 52f);
+            float height = Mathf.Clamp(_toast.preferredHeight + 14f, 34f, 120f);
+            _toastRect.sizeDelta = new Vector2(width, height);
+        }
+
+        /// <summary>
+        /// 把预制体里原来那条 250×66 的 GM 工具条改造成“左侧中间按钮控制、默认折叠”的
+        /// 左半屏 GM 面板：布局都在这里集中定义，方便后续微调。
+        /// </summary>
+        private void BuildGmPanel()
+        {
+            if (_gmPanel == null || _gmPanelRect == null || _hud == null) return;
+
+            // 面板铺满左半屏
+            _gmPanelRect.anchorMin = new Vector2(0f, 0f);
+            _gmPanelRect.anchorMax = new Vector2(0.5f, 1f);
+            _gmPanelRect.pivot = new Vector2(0.5f, 0.5f);
+            _gmPanelRect.sizeDelta = Vector2.zero;
+            _gmPanelRect.anchoredPosition = Vector2.zero;
+            // 画在 HUD 最上层：GM 按钮/文字浮在资源栏、法术栏、底部操作栏之上
+            _gmPanelRect.SetAsLastSibling();
+
+            var background = _gmPanel.GetComponent<Image>();
+            if (background != null)
+            {
+                // 背景全透明，只留按钮；不接收点击，空白处仍然可以操作地图
+                background.color = new Color(0f, 0f, 0f, 0f);
+                background.raycastTarget = false;
+            }
+
+            CreateLabel("GmTitle", _gmPanelRect, "GM 面板",
+                new Vector2(20f, 145f), new Vector2(320f, 28f), 17,
+                new Color(0.95f, 0.93f, 0.80f));
+
+            ArrangeGmButton("TakeoverRuntimeUI/BattleHUD/GmControls/GmGold",
+                new Vector2(-65f, 100f), new Vector2(150f, 34f));
+            ArrangeGmButton("TakeoverRuntimeUI/BattleHUD/GmControls/GmMana",
+                new Vector2(105f, 100f), new Vector2(150f, 34f));
+
+            float[] speedX = { -104f, -40f, 24f, 88f };
+            for (int i = 0; i < GmSpeeds.Length && i < speedX.Length; i++)
+            {
+                ArrangeGmButton($"TakeoverRuntimeUI/BattleHUD/GmControls/GmSpeed{GmSpeeds[i]:0}",
+                    new Vector2(speedX[i], 50f), new Vector2(56f, 30f));
+            }
+
+            InstantiateActionButton("GmWin", _gmPanelRect,
+                new Vector2(-65f, -10f), new Vector2(150f, 34f),
+                "胜利", delegate { _runner?.GmEndBattle(true); });
+            InstantiateActionButton("GmLose", _gmPanelRect,
+                new Vector2(105f, -10f), new Vector2(150f, 34f),
+                "失败", delegate { _runner?.GmEndBattle(false); });
+            CreateLabel("GmHint", _gmPanelRect, "胜利 / 失败会直接进入结算，本面板默认折叠",
+                new Vector2(20f, -70f), new Vector2(320f, 22f), 12,
+                new Color(0.72f, 0.76f, 0.68f));
+
+            // 左侧中间的折叠/展开按钮：始终在 HUD 最上层，展开时压在面板左边
+            _gmToggle = InstantiateActionButton("GmToggle", _hud.transform, Vector2.zero,
+                new Vector2(36f, 104f), "GM", delegate { SetGmExpanded(!_gmExpanded); });
+            var toggleRect = _gmToggle.transform as RectTransform;
+            if (toggleRect != null)
+            {
+                toggleRect.anchorMin = new Vector2(0f, 0.5f);
+                toggleRect.anchorMax = new Vector2(0f, 0.5f);
+                toggleRect.pivot = new Vector2(0f, 0.5f);
+                toggleRect.anchoredPosition = Vector2.zero;
+            }
+            _gmToggle.transform.SetAsLastSibling();
+
+            SetGmExpanded(false);
+        }
+
+        private void ArrangeGmButton(string path, Vector2 position, Vector2 size)
+        {
+            var button = FindRequired<Button>(path);
+            var rect = button.transform as RectTransform;
+            if (rect == null) return;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        private Text CreateLabel(string name, Transform parent, string content,
+            Vector2 position, Vector2 size, int fontSize, Color color)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+            var rect = (RectTransform)go.transform;
+            rect.SetParent(parent, false);
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+
+            var text = go.GetComponent<Text>();
+            text.font = _font;
+            text.fontSize = fontSize;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = color;
+            text.raycastTarget = false;
+            text.text = content;
+            return text;
+        }
+
+        private void SetGmExpanded(bool expanded)
+        {
+            _gmExpanded = expanded;
+            if (_gmPanel != null) _gmPanel.SetActive(expanded);
         }
 
         private void BindStaticUi()
@@ -209,7 +361,10 @@ namespace GameLogic.Takeover
             _result = FindRequired<RectTransform>("TakeoverRuntimeUI/Result").gameObject;
             _inspector = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Inspector").gameObject;
             _spellBar = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Spells").gameObject;
+            _gmPanel = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/GmControls").gameObject;
+            _gmPanelRect = (RectTransform)_gmPanel.transform;
             _toastPanel = FindRequired<RectTransform>("TakeoverRuntimeUI/ToastPanel").gameObject;
+            _toastRect = _toastPanel.GetComponent<RectTransform>();
             _toast = FindRequired<Text>("TakeoverRuntimeUI/ToastPanel/ToastText");
             _resources = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Top/Resources");
             _clock = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Top/Clock");
@@ -334,20 +489,45 @@ namespace GameLogic.Takeover
         private void RefreshInspector()
         {
             if (_runner == null || _runner.Simulation == null || _runner.LevelSelectOpen) return;
+            var human = _runner.Simulation.Human;
             string targetKey = _runner.SelectedSquad != null
                 ? $"squad:{_runner.SelectedSquad.Id}"
                 : _runner.SelectedNode != null ? $"node:{_runner.SelectedNode.Id}" : "none";
-            string inspectorKey = $"{targetKey}|{Mathf.FloorToInt(_runner.Simulation.Human.Gold)}|" +
-                                  $"{_runner.Simulation.Human.FreeSupply}|" +
+            string inspectorKey = $"{targetKey}|{Mathf.FloorToInt(human.Gold)}|{human.FreeSupply}|" +
                                   $"{(_runner.SelectedNode?.Building?.Level ?? -1)}";
             if (inspectorKey == _lastInspectorKey) return;
             _lastInspectorKey = inspectorKey;
-            ClearChildren(_inspectorActions);
 
+            _inspectorPlan.Clear();
+            bool visible = BuildInspectorPlan();
+            if (_inspector.activeSelf != visible) _inspector.SetActive(visible);
+            if (!visible) return;
+
+            // 结构签名只包含“按钮集合 + 文案”，金币/补给的整数变化不会让它变化，
+            // 因此每秒进账只刷新 interactable，不再销毁重建按钮（原来的闪烁来源）。
+            string signature = targetKey + "#" + BuildPlanSignature(_inspectorPlan);
+            if (signature != _lastInspectorSignature)
+            {
+                _lastInspectorSignature = signature;
+                ClearButtons(_inspectorActions, _inspectorButtons, _inspectorRules);
+                foreach (var plan in _inspectorPlan)
+                {
+                    var button = InstantiateActionButton(plan.Name, _inspectorActions,
+                        plan.Position, plan.Size, plan.Label, plan.Click);
+                    if (plan.FontSize > 0) button.GetComponentInChildren<Text>().fontSize = plan.FontSize;
+                    _inspectorButtons.Add(button);
+                    _inspectorRules.Add(plan.Enabled);
+                }
+            }
+            ApplyRules(_inspectorButtons, _inspectorRules);
+        }
+
+        /// <summary>刷新检查器文案并生成按钮计划；返回检查器是否应显示。</summary>
+        private bool BuildInspectorPlan()
+        {
             if (_runner.SelectedSquad != null)
             {
                 var squad = _runner.SelectedSquad;
-                _inspector.SetActive(true);
                 _inspectorTitle.text = $"{squad.Def.CnName}  {squad.AliveSoldiers}/{squad.MaxSoldiers}";
                 _inspectorBody.text =
                     $"HP {squad.Hp:F0}/{squad.HpPerSoldier * squad.MaxSoldiers:F0}\n" +
@@ -355,17 +535,12 @@ namespace GameLogic.Takeover
                     $"伤害基础 {squad.Def.DmgMin}-{squad.Def.DmgMax} × {squad.AliveSoldiers}\n" +
                     $"射程 {squad.Def.Range}   移速 {squad.Speed:F1}\n" +
                     $"{(squad.TargetNode != null ? $"目标 {squad.TargetNode.Key}" : "待命")}";
-                return;
+                return true;
             }
 
             var node = _runner.SelectedNode;
-            if (node == null)
-            {
-                _inspector.SetActive(false);
-                return;
-            }
+            if (node == null) return false;
 
-            _inspector.SetActive(true);
             if (node.Building != null && node.Building.Owner == _runner.HumanFaction &&
                 BattleSim.IsKeyBuilding(node.Building))
             {
@@ -378,75 +553,153 @@ namespace GameLogic.Takeover
                 for (int i = 0; i < units.Count; i++)
                 {
                     var unit = units[i];
-                    bool canBuy = _runner.CanBuy(unit, node);
-                    var button = InstantiateActionButton($"Buy{unit.Id}", _inspectorActions,
+                    AddPlan($"Buy{unit.Id}", $"{unit.CnName}  {unit.Cost}金  补给{unit.Upkeep}",
                         new Vector2(0f, -34f - i * 40f), new Vector2(250f, 32f),
-                        $"{unit.CnName}  {unit.Cost}金  补给{unit.Upkeep}",
-                        delegate { _runner.Buy(unit, node); });
-                    button.interactable = canBuy;
+                        delegate { _runner.Buy(unit, node); },
+                        () => _runner.CanBuy(unit, node));
                 }
                 var buildingDef = Cfg.BuildingById(building.Kind);
                 int upgradeCost = building.Level == 0
                     ? buildingDef?.UpgradeCost1 ?? 350
                     : buildingDef?.UpgradeCost2 ?? 500;
-                var upgrade = InstantiateActionButton("Upgrade", _inspectorActions,
+                AddPlan("Upgrade", building.Level >= 2 ? "已满级" : $"升级 {upgradeCost} 金",
                     new Vector2(0f, -46f - units.Count * 40f), new Vector2(250f, 32f),
-                    building.Level >= 2 ? "已满级" : $"升级 {upgradeCost} 金",
-                    delegate { _runner.Upgrade(node); });
-                upgrade.interactable = building.Level < 2 &&
-                                       _runner.Simulation.Human.Gold >= upgradeCost;
+                    delegate { _runner.Upgrade(node); },
+                    () => building.Level < 2 && _runner.Simulation.Human.Gold >= upgradeCost);
+                return true;
             }
-            else if (node.Building != null)
+
+            if (node.Building != null)
             {
                 _inspectorTitle.text = $"{node.Building.Node.Key}  {node.Building.Owner}";
                 _inspectorBody.text =
                     $"HP {node.Building.Hp}/{node.Building.MaxHp}\n" +
                     $"等级 {node.Building.Level}/2\n" +
                     "拖动己方部队到此处进行攻击";
+                return true;
             }
-            else if (node.Kind == NodeKind.BuildSpot && node.Building == null)
+
+            if (node.Kind == NodeKind.BuildSpot && node.Building == null)
             {
                 _inspectorTitle.text = $"空地 {node.Key}";
                 bool controlled = _runner.Simulation.State.IsLocControlledBy(_runner.Simulation.Human, node);
                 _inspectorBody.text = controlled ? "在己方控制区段建造附属建筑" : "不在己方控制区";
-                if (!controlled) return;
+                if (!controlled) return true;
                 for (int i = 0; i < BattleSim.SupplyBuildingIds.Length; i++)
                 {
                     int id = BattleSim.SupplyBuildingIds[i];
                     var def = Cfg.BuildingById(id);
                     if (def == null) continue;
                     string effect = def.Supply > 0 ? "补给 +1" : def.Gold > 0 ? "金币 +1/s" : "法力 +1/s";
-                    var button = InstantiateActionButton($"Build{id}", _inspectorActions,
-                        new Vector2(0f, -40f - i * 44f),
-                        new Vector2(250f, 32f), $"{def.CnName}  {def.BuildCost}金  {effect}",
-                        delegate { _runner.Build(node, id); });
-                    button.interactable = _runner.CanBuild(node, id);
+                    AddPlan($"Build{id}", $"{def.CnName}  {def.BuildCost}金  {effect}",
+                        new Vector2(0f, -40f - i * 44f), new Vector2(250f, 32f),
+                        delegate { _runner.Build(node, id); },
+                        () => _runner.CanBuild(node, id));
                 }
+                return true;
             }
-            else
-            {
-                _inspector.SetActive(false);
-            }
+
+            return false;
         }
 
         private void RefreshSpellBar()
         {
-            if (_spellBar == null || _runner == null) return;
-            ClearChildren(_spellBar.transform);
-            if (_runner.Simulation == null) return;
-            var spells = _runner.Simulation.State.AvailableSpells(_runner.Simulation.Human);
+            if (_spellBar == null || _runner == null || _runner.Simulation == null) return;
+            var human = _runner.Simulation.Human;
+            var spells = _runner.Simulation.State.AvailableSpells(human);
+            _spellPlan.Clear();
             for (int i = 0; i < spells.Count; i++)
             {
                 var spell = spells[i];
-                var button = InstantiateActionButton($"Spell{spell.Id}", _spellBar.transform,
-                    new Vector2(-126f + i * 82f, 0f), new Vector2(76f, 40f),
+                AddPlanTo(_spellPlan, $"Spell{spell.Id}",
                     $"{spell.CnName}\n{(spell.SpellType == 2 ? "终极" : spell.Cost.ToString())}",
-                    delegate { _runner.BeginSpellTarget(spell); });
-                button.GetComponentInChildren<Text>().fontSize = 11;
-                button.interactable = spell.SpellType == 2
-                    ? _runner.Simulation.Human.Ultimate + 0.0001f >= _runner.Simulation.Human.UltimateMax
-                    : _runner.Simulation.Human.Mana >=
-                      Mathf.RoundToInt(spell.Cost * _runner.Simulation.Human.ModMul(35));
+                    new Vector2(-126f + i * 82f, 0f), new Vector2(76f, 40f),
+                    delegate { _runner.BeginSpellTarget(spell); },
+                    () => spell.SpellType == 2
+                        ? _runner.Simulation.Human.Ultimate + 0.0001f >= _runner.Simulation.Human.UltimateMax
+                        : _runner.Simulation.Human.Mana >=
+                          Mathf.RoundToInt(spell.Cost * _runner.Simulation.Human.ModMul(35)),
+                    fontSize: 11);
+            }
+
+            string signature = BuildPlanSignature(_spellPlan);
+            if (signature != _lastSpellSignature)
+            {
+                _lastSpellSignature = signature;
+                ClearButtons(_spellBar.transform, _spellButtons, _spellRules);
+                for (int i = 0; i < _spellPlan.Count; i++)
+                {
+                    var plan = _spellPlan[i];
+                    var button = InstantiateActionButton(plan.Name, _spellBar.transform,
+                        plan.Position, plan.Size, plan.Label, plan.Click);
+                    if (plan.FontSize > 0) button.GetComponentInChildren<Text>().fontSize = plan.FontSize;
+                    _spellButtons.Add(button);
+                    _spellRules.Add(plan.Enabled);
+                }
+            }
+            ApplyRules(_spellButtons, _spellRules);
+        }
+
+        private struct ActionPlan
+        {
+            public string Name;
+            public string Label;
+            public Vector2 Position;
+            public Vector2 Size;
+            public int FontSize;
+            public UnityEngine.Events.UnityAction Click;
+            public Func<bool> Enabled;
+        }
+
+        private void AddPlan(string name, string label, Vector2 position, Vector2 size,
+            UnityEngine.Events.UnityAction click, Func<bool> enabled, int fontSize = 0)
+        {
+            AddPlanTo(_inspectorPlan, name, label, position, size, click, enabled, fontSize);
+        }
+
+        private static void AddPlanTo(List<ActionPlan> plan, string name, string label,
+            Vector2 position, Vector2 size, UnityEngine.Events.UnityAction click,
+            Func<bool> enabled, int fontSize = 0)
+        {
+            plan.Add(new ActionPlan
+            {
+                Name = name,
+                Label = label,
+                Position = position,
+                Size = size,
+                FontSize = fontSize,
+                Click = click,
+                Enabled = enabled,
+            });
+        }
+
+        private static string BuildPlanSignature(List<ActionPlan> plan)
+        {
+            PlanSignatureBuilder.Clear();
+            for (int i = 0; i < plan.Count; i++)
+            {
+                PlanSignatureBuilder.Append(plan[i].Name).Append('|')
+                    .Append(plan[i].Label).Append('|')
+                    .Append(plan[i].Position.x).Append(',').Append(plan[i].Position.y).Append('|')
+                    .Append(plan[i].Enabled == null ? '0' : '1').Append(';');
+            }
+            return PlanSignatureBuilder.ToString();
+        }
+
+        private static void ClearButtons(Transform parent, List<Button> buttons, List<Func<bool>> rules)
+        {
+            ClearChildren(parent);
+            buttons.Clear();
+            rules.Clear();
+        }
+
+        private static void ApplyRules(List<Button> buttons, List<Func<bool>> rules)
+        {
+            int count = Mathf.Min(buttons.Count, rules.Count);
+            for (int i = 0; i < count; i++)
+            {
+                if (buttons[i] == null) continue;
+                buttons[i].interactable = rules[i] == null || rules[i]();
             }
         }
 
@@ -485,7 +738,12 @@ namespace GameLogic.Takeover
         {
             if (parent == null) return;
             for (int i = parent.childCount - 1; i >= 0; i--)
-                Object.Destroy(parent.GetChild(i).gameObject);
+            {
+                var child = parent.GetChild(i).gameObject;
+                // Destroy 要到帧末才真正生效，先隐藏，避免新按钮和旧按钮同帧叠在一起的闪烁。
+                child.SetActive(false);
+                Object.Destroy(child);
+            }
         }
     }
 }

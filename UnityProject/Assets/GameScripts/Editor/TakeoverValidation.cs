@@ -7,6 +7,7 @@ using Luban;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.UI;
 
 public static class TakeoverValidation
 {
@@ -185,6 +186,7 @@ public static class TakeoverValidation
             var tables = new Tables(Load);
             var failures = TakeoverSelfCheck.Run(tables).ToList();
             CheckAssetCounts(failures);
+            CheckUiTextPlaceholders(failures);
             return failures.ToArray();
         }
         catch (Exception exception)
@@ -213,6 +215,33 @@ public static class TakeoverValidation
                 var path = Path.Combine(spriteRoot,
                     $"takeover_building_{buildingId}_{color}.png");
                 if (!File.Exists(path)) failures.Add($"缺少建筑资源: {path}");
+            }
+        }
+    }
+
+    private static readonly string[] UiPrefabs =
+    {
+        "Assets/AssetRaw/UI/TakeoverUIWindow.prefab",
+        "Assets/AssetRaw/UI/TakeoverUIActionButton.prefab",
+    };
+
+    /// <summary>预制体里的中文文案一旦被非 UTF-8 工具改写就会退化成问号占位符，
+    /// 这里做静态校验，避免再次出现整屏 "?" 的界面。</summary>
+    private static void CheckUiTextPlaceholders(System.Collections.Generic.ICollection<string> failures)
+    {
+        foreach (string path in UiPrefabs)
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null)
+            {
+                failures.Add($"UI 预制体缺失: {path}");
+                continue;
+            }
+
+            foreach (var text in prefab.GetComponentsInChildren<Text>(true))
+            {
+                if (text.text.IndexOf('?') < 0) continue;
+                failures.Add($"UI 文案仍是问号占位符: {path} -> {text.name} = \"{text.text}\"");
             }
         }
     }

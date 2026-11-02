@@ -16,6 +16,7 @@
 提取后必须完成：
 
 - 先运行 `python Tools/TakeoverPipeline/import_chapter_assets.py`，从 SymbolClass 和首章数据生成本机使用的原版资源。
+- 紧接着运行 `python Tools/TakeoverPipeline/clean_building_baseplates.py`：`NodeTown/NodeCastle/NodeCamp/NodeMageTower` 四个符号的第 0 帧带着原版的红色底座占位图与蓝色类型字母（T / C / TOWE），不清掉的话游戏里建筑正面会一直压着一块红板。该脚本可重复执行，已清理的贴图会被跳过。
 - 运行 `python Tools/TakeoverPipeline/generate_asset_manifest.py` 生成固定 location 清单。
 - 按原版 SymbolClass / 类名建立 `original_symbol -> Unity location` 映射。
 - 将地图、建筑、单位、HUD、图标、音频和字体导入 `Assets/AssetRaw`。

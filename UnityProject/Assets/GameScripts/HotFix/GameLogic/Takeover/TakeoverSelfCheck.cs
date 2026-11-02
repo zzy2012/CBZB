@@ -228,6 +228,16 @@ namespace GameLogic.Takeover
                             $"单位 {unit.Id} {unit.CnName} 缺少动画帧 {frame}", failures);
                     }
                 }
+
+                // 建筑贴图来自 building.xlsx 的 sprite 列（默认底图），列空或文件缺失都会让建筑不显示
+                foreach (var building in tables.TbBuilding.DataList)
+                {
+                    Check(!string.IsNullOrEmpty(building.Sprite),
+                        $"建筑 {building.Id} {building.CnName} 未配置 sprite 列", failures);
+                    if (string.IsNullOrEmpty(building.Sprite)) continue;
+                    Check(File.Exists(Path.Combine(assetRoot, building.Sprite + ".png")),
+                        $"建筑 {building.Id} {building.CnName} 的贴图不存在: {building.Sprite}.png", failures);
+                }
             }
             finally
             {

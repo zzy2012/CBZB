@@ -6,37 +6,17 @@ namespace GameLogic.Takeover
 {
     /// <summary>
     /// 管理与外部 SWF 资源提取流程共用的 YooAsset 资源地址。
-    /// 原始资源缺失时保留当前回退精灵，以便在导入原始图集前仍可验证加载流程。
+    /// 建筑贴图来自 Luban 表 building.xlsx 的 sprite 列（默认底图，各阵营共用），
+    /// 阵营差异由 TakeoverRunner 的颜色叠加区分；其余类别仍按命名约定拼地址。
     /// </summary>
     public static class TakeoverVisualCatalog
     {
         public static string UnitLocation(GameConfig.takeover.Unit unit) =>
             $"takeover_unit_{unit.Id}_" + Slug(unit.Name);
 
-        public static string BuildingLocation(int buildingId)
-            => BuildingLocation(buildingId, Faction.Westaria);
-
-        public static string BuildingLocation(int buildingId, Faction owner)
-        {
-            if (buildingId < 1 || buildingId > 7) return string.Empty;
-
-            string color = ColorName(owner);
-            string factionLocation = $"takeover_building_{buildingId}_{color}";
-            if (GameModule.Resource.CheckLocationValid(factionLocation))
-                return factionLocation;
-
-            switch (buildingId)
-            {
-                case 1: return "takeover_building_town";
-                case 2: return "takeover_building_castle";
-                case 3: return "takeover_building_camp";
-                case 4: return "takeover_building_magetower";
-                case 5: return "takeover_building_farm";
-                case 6: return "takeover_building_mine";
-                case 7: return "takeover_building_obelisk";
-                default: return string.Empty;
-            }
-        }
+        /// <summary>建筑默认贴图：读 building.xlsx 的 sprite 列，空串表示该建筑没有配置贴图。</summary>
+        public static string BuildingLocation(int buildingId) =>
+            Cfg.BuildingById(buildingId)?.Sprite ?? string.Empty;
 
         public static string NodeLocation(NodeKind kind)
         {
@@ -64,7 +44,7 @@ namespace GameLogic.Takeover
         {
             if (node == null) return string.Empty;
             return node.Building != null
-                ? BuildingLocation(node.Building.Kind, node.Building.Owner)
+                ? BuildingLocation(node.Building.Kind)
                 : NodeLocation(node.Kind);
         }
 
@@ -95,18 +75,6 @@ namespace GameLogic.Takeover
         {
             string root = UnitLocation(unit);
             return new[] { root + "_f0", root + "_f1", root + "_f2" };
-        }
-
-        private static string ColorName(Faction faction)
-        {
-            switch (faction)
-            {
-                case Faction.Westaria: return "green";
-                case Faction.Khaganate: return "red";
-                case Faction.Cult: return "blue";
-                case Faction.Empire: return "purple";
-                default: return "gray";
-            }
         }
 
         private static string Slug(string value)
