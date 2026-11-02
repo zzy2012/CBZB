@@ -5,9 +5,8 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// Stable YooAsset locations shared with the external SWF extraction job.
-    /// A missing original asset keeps the current fallback sprite, allowing the
-    /// code path to be exercised before the original atlas is imported.
+    /// 管理与外部 SWF 资源提取流程共用的 YooAsset 资源地址。
+    /// 原始资源缺失时保留当前回退精灵，以便在导入原始图集前仍可验证加载流程。
     /// </summary>
     public static class TakeoverVisualCatalog
     {
@@ -19,29 +18,12 @@ namespace GameLogic.Takeover
 
         public static string BuildingLocation(int buildingId, Faction owner)
         {
-            string kind;
-            switch (buildingId)
-            {
-                case 1: kind = "town"; break;
-                case 2: kind = "castle"; break;
-                case 3: kind = "camp"; break;
-                case 4: kind = "magetower"; break;
-                case 5: kind = "farm"; break;
-                case 6: kind = "mine"; break;
-                case 7: kind = "obelisk"; break;
-                default: return string.Empty;
-            }
+            if (buildingId < 1 || buildingId > 7) return string.Empty;
+
             string color = ColorName(owner);
             string factionLocation = $"takeover_building_{buildingId}_{color}";
-            try
-            {
-                if (GameModule.Resource.CheckLocationValid(factionLocation))
-                    return factionLocation;
-            }
-            catch (System.Exception)
-            {
-                // Fall through to the generic asset.
-            }
+            if (GameModule.Resource.CheckLocationValid(factionLocation))
+                return factionLocation;
 
             switch (buildingId)
             {
@@ -89,38 +71,24 @@ namespace GameLogic.Takeover
         public static bool Bind(SpriteRenderer renderer, string location)
         {
             if (renderer == null || string.IsNullOrEmpty(location)) return false;
-            try
-            {
-                if (!GameModule.Resource.CheckLocationValid(location)) return false;
-                TakeoverSpriteCache.Apply(renderer, location);
-                return true;
-            }
-            catch (System.Exception)
-            {
-                return false;
-            }
+            if (!GameModule.Resource.CheckLocationValid(location)) return false;
+            TakeoverSpriteCache.Apply(renderer, location);
+            return true;
         }
 
         public static void BindMapBackground(SpriteRenderer renderer, int levelId, Vector2 targetSize)
         {
             if (renderer == null) return;
             string location = $"takeover_map_{levelId}";
-            try
+            if (!GameModule.Resource.CheckLocationValid(location)) return;
+            TakeoverSpriteCache.Apply(renderer, location, spriteRenderer =>
             {
-                if (!GameModule.Resource.CheckLocationValid(location)) return;
-                TakeoverSpriteCache.Apply(renderer, location, spriteRenderer =>
-                {
-                    if (spriteRenderer.sprite == null) return;
-                    Vector2 source = spriteRenderer.sprite.bounds.size;
-                    if (source.x <= 0f || source.y <= 0f) return;
-                    spriteRenderer.transform.localScale = new Vector3(
-                        targetSize.x / source.x, targetSize.y / source.y, 1f);
-                });
-            }
-            catch (System.Exception)
-            {
-                // Keep the plain camera background until original maps are imported.
-            }
+                if (spriteRenderer.sprite == null) return;
+                Vector2 source = spriteRenderer.sprite.bounds.size;
+                if (source.x <= 0f || source.y <= 0f) return;
+                spriteRenderer.transform.localScale = new Vector3(
+                    targetSize.x / source.x, targetSize.y / source.y, 1f);
+            });
         }
 
         public static string[] UnitAnimationLocations(GameConfig.takeover.Unit unit)

@@ -3,8 +3,7 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
-    /// <summary>Small original-sheet animator used until the SWF timeline is
-    /// reconstructed as a full Animator Controller.</summary>
+    /// <summary>用于播放原始精灵序列的简易动画器，在 SWF 时间轴还原为完整 Animator Controller 前使用。</summary>
     public sealed class TakeoverUnitAnimator : MonoBehaviour
     {
         private const float FrameSeconds = 0.14f;
@@ -34,19 +33,10 @@ namespace GameLogic.Takeover
 
         private void Apply()
         {
-            try
-            {
-                string location = _locations[_frame];
-                if (GameModule.Resource.CheckLocationValid(location))
-                {
-                    TakeoverSpriteCache.Apply(_renderer, location);
-                    _renderer.enabled = true;
-                }
-            }
-            catch (System.Exception)
-            {
-                enabled = false;
-            }
+            string location = _locations[_frame];
+            if (!GameModule.Resource.CheckLocationValid(location)) return;
+            TakeoverSpriteCache.Apply(_renderer, location);
+            _renderer.enabled = true;
         }
     }
 }

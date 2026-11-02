@@ -244,7 +244,7 @@ namespace GameLogic
             _drawGizmosSelecteds.Clear();
 #endif
             DeInit();
-            Resources.UnloadUnusedAssets();
+            GameModule.Resource.UnloadUnusedAssets();
         }
 
         public static GameObject GetGameObject(string name)
@@ -276,6 +276,7 @@ namespace GameLogic
             }
 
             Release();
+            // The bootstrap scene is a build-settings scene, not a YooAsset location.
             SceneManager.LoadScene(0);
         }
 
@@ -305,7 +306,7 @@ namespace GameLogic
             
             _isInit = true;
 
-            _updateDriver ??= ModuleSystem.GetModule<IUpdateDriver>();
+            _updateDriver ??= GameModule.UpdateDriver;
             _updateDriver.AddUpdateListener(OnUpdate);
             _updateDriver.AddFixedUpdateListener(OnFixedUpdate);
             _updateDriver.AddLateUpdateListener(OnLateUpdate);
@@ -324,7 +325,7 @@ namespace GameLogic
 
             _isInit = false;
 
-            _updateDriver ??= ModuleSystem.GetModule<IUpdateDriver>();
+            _updateDriver ??= GameModule.UpdateDriver;
             _updateDriver.RemoveUpdateListener(OnUpdate);
             _updateDriver.RemoveFixedUpdateListener(OnFixedUpdate);
             _updateDriver.RemoveLateUpdateListener(OnLateUpdate);

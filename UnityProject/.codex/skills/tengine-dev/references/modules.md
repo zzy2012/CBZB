@@ -9,6 +9,7 @@
 ```csharp
 GameModule.Base          // RootModule          — 根模块（框架初始化入口）
 GameModule.Debugger      // IDebuggerModule     — 调试器（`~` 键呼出）
+GameModule.UpdateDriver  // IUpdateDriver       — Unity 帧驱动回调
 GameModule.Fsm           // IFsmModule          — 有限状态机
 GameModule.Procedure     // IProcedureModule    — 流程
 GameModule.Resource      // IResourceModule     — 资源加载

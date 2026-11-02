@@ -3,8 +3,8 @@ using System.Collections.Generic;
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// First-chapter progress backed by the versioned local save file.
-    /// Edicts are intentionally disabled in this build.
+    /// 首章进度数据由带版本号的本地存档持久化。
+    /// 当前版本暂不启用教令系统。
     /// </summary>
     public static class Campaign
     {

@@ -7,8 +7,10 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>校验战役配置、地图构建和战斗模拟关键规则的编辑器自检工具。</summary>
     public static class TakeoverSelfCheck
     {
+        /// <summary>记录单个章节关卡压力测试的战斗结果和边界状态。</summary>
         public sealed class ChapterScenarioResult
         {
             public int LevelId;
@@ -235,8 +237,7 @@ namespace GameLogic.Takeover
             return failures;
         }
 
-        /// <summary>Deterministic, intentionally simple player bot used to catch
-        /// initialization and soft-lock failures in every first-chapter map.</summary>
+        /// <summary>确定性的简易玩家代理，用于检查首章各地图的初始化和战斗卡死问题。</summary>
         public static IReadOnlyList<ChapterScenarioResult> RunChapterSoak(Tables tables, float maxSeconds = 900f)
         {
             var results = new List<ChapterScenarioResult>();

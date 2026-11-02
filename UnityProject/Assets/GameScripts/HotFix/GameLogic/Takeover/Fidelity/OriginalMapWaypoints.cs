@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
-    /// <summary>Generated from FFDec takeover.xml Level1-8GraphMarkersClass.</summary>
+    /// <summary>由 FFDec 提取的 takeover.xml 中 Level1-8GraphMarkersClass 数据生成。</summary>
     public static class OriginalMapWaypoints
     {
         private static readonly Dictionary<string, Vector2[]> Entries =

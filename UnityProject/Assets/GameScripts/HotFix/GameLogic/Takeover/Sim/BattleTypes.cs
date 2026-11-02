@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
-    /// <summary>Raw 1.0.4 faction indexes. Do not reorder.</summary>
+    /// <summary>原版 1.0.4 阵营索引，禁止调整顺序。</summary>
     public enum Faction
     {
         Empire = 0,
@@ -15,6 +15,7 @@ namespace GameLogic.Takeover
         Bandits = 4,
     }
 
+    /// <summary>兵种的战斗分类，用于匹配单位属性与战斗规则。</summary>
     public enum UnitKind
     {
         Infantry = 0,
@@ -24,6 +25,7 @@ namespace GameLogic.Takeover
         Magic = 4,
     }
 
+    /// <summary>战场地图节点的地形或建筑点类型。</summary>
     public enum NodeKind
     {
         Empty = 0,
@@ -36,6 +38,7 @@ namespace GameLogic.Takeover
         MageTower = 7,
     }
 
+    /// <summary>战斗单位当前执行的行动状态。</summary>
     public enum UnitAction
     {
         Stand,
@@ -47,6 +50,7 @@ namespace GameLogic.Takeover
         Repairing,
     }
 
+    /// <summary>战斗单位的士气等级。</summary>
     public enum MoraleState
     {
         Feared = -1,
@@ -56,6 +60,7 @@ namespace GameLogic.Takeover
         Low = 3,
     }
 
+    /// <summary>单位或小队拥有的原版战斗能力标记，可按位组合。</summary>
     [Flags]
     public enum AbilityMask
     {
@@ -79,6 +84,7 @@ namespace GameLogic.Takeover
         FreezeBlast = 1 << 16,
     }
 
+    /// <summary>连接两个地图节点并保存行军路径点的道路。</summary>
     public sealed class MapEdge
     {
         public int Id;
@@ -98,6 +104,7 @@ namespace GameLogic.Takeover
         }
     }
 
+    /// <summary>战役地图上的节点及其邻接关系、占领状态和建筑状态。</summary>
     public sealed class MapNode
     {
         public int Id;
@@ -115,6 +122,7 @@ namespace GameLogic.Takeover
         public bool IsOwnedBy(Faction faction) => Building != null && Building.Owner == faction;
     }
 
+    /// <summary>地图节点上建筑的所有权、耐久、生产和占领进度。</summary>
     public sealed class BuildingState
     {
         public const int MaxLevel = 2;
@@ -140,6 +148,7 @@ namespace GameLogic.Takeover
         public bool IsActive => Hp > 0;
     }
 
+    /// <summary>参与战斗的单个士兵及其生命、目标、状态效果和攻击数据。</summary>
     public sealed class CombatUnit
     {
         public int Id;
@@ -184,6 +193,7 @@ namespace GameLogic.Takeover
         public float HpRatio => MaxHp <= 0f ? 0f : Hp / MaxHp;
     }
 
+    /// <summary>由同类士兵组成的部队，负责承载编队、移动、归属和成长状态。</summary>
     public sealed class Squad
     {
         public int Id;
@@ -255,6 +265,7 @@ namespace GameLogic.Takeover
         public float Speed => Mathf.Max(1f, Def.Speed * Owner.ModMul(Def.UnitType == (int)UnitKind.Siege ? 27 : 19) * 0.5f);
     }
 
+    /// <summary>战斗参与方的资源、阵营、领地、部队和战斗加成状态。</summary>
     public sealed class PlayerState
     {
         public int Id;
@@ -301,6 +312,7 @@ namespace GameLogic.Takeover
         }
     }
 
+    /// <summary>法术效果的运行时类别。</summary>
     public enum SpellEffectKind
     {
         Consecration,
@@ -314,6 +326,7 @@ namespace GameLogic.Takeover
         Cataclysm,
     }
 
+    /// <summary>战场上持续生效的法术实例及其范围、剩余时间和触发状态。</summary>
     public sealed class ActiveSpellEffect
     {
         public GameConfig.takeover.Spell Def;
@@ -327,6 +340,7 @@ namespace GameLogic.Takeover
         public int ImpactIndex;
     }
 
+    /// <summary>关卡中敌方参与者的阵营、初始资源、AI 开关和修正项配置。</summary>
     public sealed class EnemyPlayerSetup
     {
         public Faction Faction;
@@ -336,6 +350,7 @@ namespace GameLogic.Takeover
         public readonly List<ModifierValue> Modifiers = new List<ModifierValue>();
     }
 
+    /// <summary>单位动画、移动、投射物表现及战斗能力参数。</summary>
     public sealed class UnitCombatProfile
     {
         public float AnimationSpeed;

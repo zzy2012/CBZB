@@ -6,9 +6,8 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// Deterministic simulation of the 1.0.4 first campaign. The migration
-    /// scaffolding is intentionally ignored; constants and state transitions
-    /// below are derived from the decompiled level, squad, unit and spell code.
+    /// 对原版 1.0.4 首章战役进行确定性模拟。
+    /// 不采用迁移阶段的临时逻辑；常量和状态变化根据反编译的关卡、部队、单位及法术代码还原。
     /// </summary>
     public sealed class BattleSim
     {
@@ -865,7 +864,7 @@ namespace GameLogic.Takeover
 
             if (target == null && def.UnitType != (int)UnitKind.Siege)
             {
-                // Buildings use the same per-unit roll; siege modifiers are applied above.
+                // 建筑沿用单位的逐个判定方式；攻城修正已在上方应用。
             }
             return Mathf.Max(1f, roll);
         }

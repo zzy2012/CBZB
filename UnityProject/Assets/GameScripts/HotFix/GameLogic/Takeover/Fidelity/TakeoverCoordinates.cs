@@ -3,8 +3,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// Conversion between the doubled Flash simulation Y axis and Unity's
-    /// bottom-left display space.
+    /// 在 Flash 模拟中加倍的 Y 轴坐标与 Unity 左下原点显示坐标之间进行转换。
     /// </summary>
     public static class TakeoverCoordinates
     {

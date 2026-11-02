@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TEngine;
 using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>单个关卡的最佳星级和最快通关时间记录。</summary>
     [Serializable]
     public sealed class LevelRecord
     {
@@ -14,6 +16,7 @@ namespace GameLogic.Takeover
         public float BestSeconds = -1f;
     }
 
+    /// <summary>首章战役进度存档，包括解锁关卡、经验和关卡成绩。</summary>
     [Serializable]
     public sealed class CampaignSave
     {
@@ -65,6 +68,7 @@ namespace GameLogic.Takeover
         }
     }
 
+    /// <summary>负责战役进度存档的读取、规范化、备份、写入和删除。</summary>
     public static class CampaignSaveService
     {
         private const string FileName = "takeover-campaign.json";
@@ -89,7 +93,7 @@ namespace GameLogic.Takeover
                 }
                 catch
                 {
-                    // The caller receives the original diagnostic below.
+                    // 下方会向调用方返回原始错误诊断信息。
                 }
 
                 LastLoadWarning = $"存档损坏，已恢复默认进度：{primaryError.Message}";
@@ -130,7 +134,7 @@ namespace GameLogic.Takeover
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[Takeover] 保存战役进度失败: {exception}");
+                Log.Error($"[Takeover] 保存战役进度失败: {exception}");
             }
         }
 
@@ -144,7 +148,7 @@ namespace GameLogic.Takeover
                 }
                 catch (Exception exception)
                 {
-                    Debug.LogWarning($"[Takeover] 删除存档失败 {path}: {exception.Message}");
+                    Log.Warning($"[Takeover] 删除存档失败 {path}: {exception.Message}");
                 }
             }
         }

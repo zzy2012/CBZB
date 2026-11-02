@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>一个原版关卡或参与方修正项的索引和值。</summary>
     public readonly struct ModifierValue
     {
         public readonly int Id;
@@ -18,9 +19,8 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>
-    /// Values recovered from LevelInfo.§_-5S§ in Takeover 1.0.4. These are
-    /// deliberately kept separate from editable edict data. The first-chapter
-    /// build applies only the original baseline edict and per-level AI bonuses.
+    /// 从 Takeover 1.0.4 的 LevelInfo.§_-5S§ 还原的规则数据。
+    /// 这些数据与可编辑教令配置分开保存；首章版本仅应用原版基础教令和各关卡 AI 加成。
     /// </summary>
     public static class OriginalRules
     {
@@ -64,7 +64,7 @@ namespace GameLogic.Takeover
                 : Array.Empty<EnemyPlayerSetup>();
         }
 
-        /// <summary>Config tables during the asset migration used UI order 0=Westaria..3=Empire.</summary>
+        /// <summary>资源迁移期间配置表使用界面顺序：0=Westaria，1=Khaganate，2=Cult，3=Empire。</summary>
         public static Faction FromConfigFaction(int value)
         {
             switch (value)
@@ -229,10 +229,10 @@ namespace GameLogic.Takeover
             return false;
         }
 
-        /// <summary>The editable migration table uses 1-based IDs; raw code uses IDs 0..15.</summary>
+        /// <summary>可编辑迁移配置使用从 1 开始的编号，原始代码使用 0 到 15 的编号。</summary>
         public static int OriginalSpellIndex(int configSpellId) => Mathf.Clamp(configSpellId - 1, 0, 15);
 
-        /// <summary>Returns false for malformed tokens and leaves value at zero.</summary>
+        /// <summary>遇到格式错误的标记时返回 false，并将 value 保持为零。</summary>
         public static bool TryAbility(string abilities, string abilityName, out int value)
         {
             value = 0;

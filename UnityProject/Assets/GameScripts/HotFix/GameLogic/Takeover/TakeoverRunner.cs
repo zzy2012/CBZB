@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Collections;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TEngine;
 using UnityEngine;
 
@@ -44,6 +45,7 @@ namespace GameLogic.Takeover
         private LineRenderer _selectionBox;
         private LineRenderer _orderPreview;
         private Material _clickableAreaMaterial;
+        private CancellationTokenSource _visualBindingCancellationTokenSource;
 
         public int LevelAssetId = 1;
         public Faction HumanFaction = Faction.Westaria;
@@ -53,7 +55,8 @@ namespace GameLogic.Takeover
         {
             Application.targetFrameRate = 60;
             // 关掉 TEngine 自带的 DEBUGGER 面板，避免遮住玩法 HUD
-            try { GameModule.Debugger.ActiveWindow = false; } catch { }
+            if (GameModule.Debugger != null)
+                GameModule.Debugger.ActiveWindow = false;
             _cam = Camera.main;
             if (_cam == null)
             {
@@ -67,12 +70,12 @@ namespace GameLogic.Takeover
 
             _root = new GameObject("TakeoverWorld").transform;
             _root.gameObject.SetActive(false);
-            GameModule.UI.ShowUI<TakeoverUIWindow>(this);
+            GameModule.UI.ShowUIAsync<TakeoverUIWindow>(this);
         }
 
         private void OnDestroy()
         {
-            TakeoverSpriteCache.Clear();
+            CancelVisualBinding();
             if (_clickableAreaMaterial != null)
             {
                 Destroy(_clickableAreaMaterial);
@@ -106,6 +109,7 @@ namespace GameLogic.Takeover
                 return;
             }
 
+            CancelVisualBinding();
             LevelAssetId = levelAssetId;
             Campaign.SetLastLevel(levelAssetId);
             _levelSelectOpen = false;
@@ -123,8 +127,7 @@ namespace GameLogic.Takeover
             _reported = false;
             _pendingSpell = null;
 
-            // The editable tables kept the migration UI order. Convert once into
-            // the raw 1.0.4 faction indexes used by the simulation.
+            // 可编辑配置表沿用迁移期间的界面阵营顺序，此处转换为模拟器使用的原版 1.0.4 阵营索引。
             var lv = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
             if (lv != null)
             {
@@ -140,11 +143,11 @@ namespace GameLogic.Takeover
             BuildEdgeViews();
             BuildMapBackground();
             FocusCamera();
-            StartCoroutine(BindLevelVisuals());
+            BindLevelVisuals();
             _ui?.ShowBattle();
             ShowScenarioHint();
 
-            Debug.Log($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
+            Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
         }
 
         private void ShowScenarioHint()
@@ -230,12 +233,20 @@ namespace GameLogic.Takeover
             _mapBackground.sortingOrder = -10;
         }
 
-        private IEnumerator BindLevelVisuals()
+        private void BindLevelVisuals()
         {
-            // ResourceExtComponent creates its sprite cache after its first frame.
-            yield return null;
-            yield return new WaitForEndOfFrame();
-            if (_sim == null) yield break;
+            _visualBindingCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
+                this.GetCancellationTokenOnDestroy());
+            BindLevelVisualsAsync(_visualBindingCancellationTokenSource.Token).Forget();
+        }
+
+        private async UniTask BindLevelVisualsAsync(CancellationToken cancellationToken)
+        {
+            // ResourceExtComponent 会在首帧之后创建精灵缓存。
+            await UniTask.Yield(cancellationToken);
+            await UniTask.WaitForEndOfFrame(this, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (_sim == null) return;
 
             foreach (var pair in _nodeViews)
             {
@@ -248,6 +259,14 @@ namespace GameLogic.Takeover
                     _mapBackground, LevelAssetId,
                     new Vector2(OriginalRules.NativeStageWidth, OriginalRules.NativeStageHeight));
             }
+        }
+
+        private void CancelVisualBinding()
+        {
+            if (_visualBindingCancellationTokenSource == null) return;
+            _visualBindingCancellationTokenSource.Cancel();
+            _visualBindingCancellationTokenSource.Dispose();
+            _visualBindingCancellationTokenSource = null;
         }
 
         private static Color NodeColor(MapNode n)
@@ -838,13 +857,13 @@ namespace GameLogic.Takeover
                 }
                 if (resolved != null)
                 {
-                    Debug.Log($"[Takeover] 播放原版音乐 {resolved}");
+                    Log.Info($"[Takeover] 播放原版音乐 {resolved}");
                     GameModule.Audio.Play(TEngine.AudioType.Music, resolved, bLoop: true, bAsync: true);
                 }
             }
             catch (System.Exception)
             {
-                // Audio is optional in headless validation.
+                // 无头验证时音频不是必需项。
             }
         }
 
@@ -919,9 +938,6 @@ namespace GameLogic.Takeover
         }
     }
 }
-
-
-
 
 
 

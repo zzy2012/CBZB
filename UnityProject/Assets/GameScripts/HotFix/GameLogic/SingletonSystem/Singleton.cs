@@ -34,7 +34,7 @@ namespace GameLogic
             // using const string to compare simply
             if (!st.Contains("GameLogic.Singleton`1[T].get_Instance"))
             {
-                UnityEngine.Debug.LogError($"请必须通过Instance方法来实例化{typeof(T).FullName}类");
+                TEngine.Log.Error($"请必须通过Instance方法来实例化{typeof(T).FullName}类");
             }
 #endif
         }

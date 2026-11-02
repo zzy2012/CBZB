@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using TEngine;
 using UnityEngine;
 using UnityEngine.Events;
@@ -9,10 +11,9 @@ using UnityEngine.UI;
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// Runtime UGUI shell for the first-chapter build. The existing
-    /// BattleMainUI prefab supplies the framework Canvas and font; all nodes are
-    /// rebuilt here so this remains functional until the extracted SWF atlas and
-    /// prefabs are supplied by the external asset pipeline.
+    /// 首章版本的运行时 UGUI 界面。
+    /// 使用现有 BattleMainUI 预制体提供框架画布和字体，并在运行时重建界面节点；
+    /// 在外部资源流程提供提取后的 SWF 图集和预制体之前，界面可独立运行。
     /// </summary>
     [Window(UILayer.UI, location: "BattleMainUI", fullScreen: true)]
     public sealed class TakeoverUIWindow : UIWindow
@@ -43,20 +44,38 @@ namespace GameLogic.Takeover
         private bool _resetArmed;
         private Font _originalFont;
 
-        protected override async void OnCreate()
+        protected override void OnCreate()
         {
             _runner = UserData as TakeoverRunner;
+            InitializeAsync(gameObject.GetCancellationTokenOnDestroy()).Forget();
+        }
+
+        private async UniTask InitializeAsync(CancellationToken cancellationToken)
+        {
             var templateText = gameObject.GetComponentInChildren<Text>(true);
             var fallbackFont = templateText != null ? templateText.font : null;
+            Font loadedFont = null;
             try
             {
-                _originalFont = await GameModule.Resource.LoadAssetAsync<Font>(
-                    "takeover_font_328_Chaparral_Pro");
+                loadedFont = await GameModule.Resource.LoadAssetAsync<Font>(
+                    "takeover_font_328_Chaparral_Pro", cancellationToken);
             }
-            catch (System.Exception)
+            catch (OperationCanceledException)
             {
-                _originalFont = null;
+                return;
             }
+            catch (Exception exception)
+            {
+                Log.Warning($"[Takeover] 字体加载失败，使用界面默认字体: {exception.Message}");
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                if (loadedFont != null) GameModule.Resource.UnloadAsset(loadedFont);
+                return;
+            }
+
+            _originalFont = loadedFont;
             _font = _originalFont != null ? _originalFont : fallbackFont;
             var scaler = gameObject.GetComponentInParent<CanvasScaler>();
             if (scaler != null)

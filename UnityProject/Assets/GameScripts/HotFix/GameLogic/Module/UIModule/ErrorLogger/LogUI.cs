@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace GameLogic
 {
-    [Window(UILayer.System, fromResources: true)]
+    [Window(UILayer.System, location: "LogUI")]
     class LogUI : UIWindow
     {
         private readonly Stack<string> _errorTextString = new Stack<string>();

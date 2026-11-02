@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>玩家可提交给战斗模拟器处理的操作类型。</summary>
     public enum BattleCommandType
     {
         Move,
@@ -16,8 +17,7 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>
-    /// Input accepted by the simulation. View code must submit commands instead of
-    /// mutating BattleSim state directly.
+    /// 模拟器接收的输入命令。表现层必须提交命令，不得直接修改 BattleSim 状态。
     /// </summary>
     [Serializable]
     public struct BattleCommand
@@ -70,7 +70,7 @@ namespace GameLogic.Takeover
                 NodeId = nodeId,
             };
 
-        /// <summary>Debug-only resource grant used by the in-game GM controls.</summary>
+        /// <summary>仅供游戏内 GM 控制使用的调试资源发放命令。</summary>
         public static BattleCommand GrantResources(int goldDelta, int manaDelta) =>
             new BattleCommand
             {
@@ -80,6 +80,7 @@ namespace GameLogic.Takeover
             };
     }
 
+    /// <summary>一次战斗结束后的结算结果。</summary>
     [Serializable]
     public struct BattleResult
     {
@@ -98,6 +99,7 @@ namespace GameLogic.Takeover
             };
     }
 
+    /// <summary>模拟器向表现层发布的战斗事件数据。</summary>
     [Serializable]
     public struct BattleEvent
     {
@@ -108,6 +110,7 @@ namespace GameLogic.Takeover
         public Vector2 Position;
     }
 
+    /// <summary>供表现层读取的部队状态快照，不暴露模拟器内部对象。</summary>
     [Serializable]
     public sealed class SquadSnapshot
     {
@@ -130,6 +133,7 @@ namespace GameLogic.Takeover
         public List<UnitSnapshot> Units = new List<UnitSnapshot>();
     }
 
+    /// <summary>供表现层读取的单个士兵状态快照。</summary>
     [Serializable]
     public sealed class UnitSnapshot
     {
@@ -143,6 +147,7 @@ namespace GameLogic.Takeover
         public bool Poisoned;
     }
 
+    /// <summary>供表现层读取的参与方资源、阵营和可用法术快照。</summary>
     [Serializable]
     public sealed class PlayerSnapshot
     {
@@ -157,6 +162,7 @@ namespace GameLogic.Takeover
         public List<int> AvailableSpellIds = new List<int>();
     }
 
+    /// <summary>供表现层读取的战场法术实例快照。</summary>
     [Serializable]
     public sealed class SpellSnapshot
     {
@@ -168,6 +174,7 @@ namespace GameLogic.Takeover
         public SpellEffectKind Effect;
     }
 
+    /// <summary>供表现层读取的建筑占领、等级和耐久快照。</summary>
     [Serializable]
     public sealed class BuildingSnapshot
     {
@@ -180,6 +187,7 @@ namespace GameLogic.Takeover
         public float CaptureProgress;
     }
 
+    /// <summary>战斗完整只读视图数据，聚合双方资源、部队、建筑和法术快照。</summary>
     [Serializable]
     public sealed class BattleSnapshot
     {
@@ -294,8 +302,8 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>
-    /// Fixed-step simulation facade used by the Unity view. Rendering samples
-    /// snapshots and never advances combat directly.
+    /// 供 Unity 表现层使用的定步长模拟器门面。
+    /// 表现层通过读取快照渲染，不直接推进战斗逻辑。
     /// </summary>
     public sealed class BattleSimulation
     {

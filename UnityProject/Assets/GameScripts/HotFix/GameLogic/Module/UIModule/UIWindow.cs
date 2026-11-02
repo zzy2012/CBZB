@@ -70,11 +70,6 @@ namespace GameLogic
         public virtual bool FullScreen { private set; get; } = false;
 
         /// <summary>
-        /// 是内部资源无需AB加载。
-        /// </summary>
-        public bool FromResources { private set; get; }
-        
-        /// <summary>
         /// 隐藏窗口关闭时间。
         /// </summary>
         public int HideTimeToClose { get; set; }
@@ -234,13 +229,12 @@ namespace GameLogic
 
         #endregion
 
-        public void Init(string name, int layer, bool fullScreen, string assetName, bool fromResources, int hideTimeToClose)
+        public void Init(string name, int layer, bool fullScreen, string assetName, int hideTimeToClose)
         {
             WindowName = name;
             WindowLayer = layer;
             FullScreen = fullScreen;
             AssetName = assetName;
-            FromResources = fromResources;
             HideTimeToClose = hideTimeToClose;
         }
 
@@ -315,23 +309,15 @@ namespace GameLogic
         {
             _prepareCallback = prepareCallback;
             this._userDatas = userDatas;
-            if (!FromResources)
+            if (isAsync)
             {
-                if (isAsync)
-                {
-                    var uiInstance = await UIModule.Resource.LoadGameObjectAsync(location, parent: UIModule.UIRoot);
-                    Handle_Completed(uiInstance);
-                }
-                else
-                {
-                    var uiInstance = UIModule.Resource.LoadGameObject(location, parent: UIModule.UIRoot);
-                    Handle_Completed(uiInstance);
-                }
+                var uiInstance = await UIModule.Resource.LoadGameObjectAsync(location, parent: UIModule.UIRoot);
+                Handle_Completed(uiInstance);
             }
             else
             {
-                GameObject panel = Object.Instantiate(Resources.Load<GameObject>(location), UIModule.UIRoot);
-                Handle_Completed(panel);
+                var uiInstance = UIModule.Resource.LoadGameObject(location, parent: UIModule.UIRoot);
+                Handle_Completed(uiInstance);
             }
         }
 
@@ -516,7 +502,7 @@ namespace GameLogic
             IsHide = false;
             if (HideTimerId > 0)
             {
-                ModuleSystem.GetModule<ITimerModule>().RemoveTimer(HideTimerId);
+                GameModule.Timer.RemoveTimer(HideTimerId);
                 HideTimerId = 0;
             }
         }

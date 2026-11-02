@@ -30,6 +30,13 @@ public class GameModule
     private static IDebuggerModule _debugger;
 
     /// <summary>
+    /// 获取帧驱动模块。
+    /// </summary>
+    public static IUpdateDriver UpdateDriver => _updateDriver ??= Get<IUpdateDriver>();
+
+    private static IUpdateDriver _updateDriver;
+
+    /// <summary>
     /// 获取有限状态机模块。
     /// </summary>
     public static IFsmModule Fsm => _fsm ??= Get<IFsmModule>();
@@ -106,6 +113,7 @@ public class GameModule
             
         _base = null;
         _debugger = null;
+        _updateDriver = null;
         _fsm = null;
         _procedure = null;
         _resource = null;

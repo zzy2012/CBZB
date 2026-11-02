@@ -527,11 +527,11 @@ namespace GameLogic
             if (attribute != null)
             {
                 string assetName = string.IsNullOrEmpty(attribute.Location) ? type.Name : attribute.Location;
-                window.Init(type.FullName, attribute.WindowLayer, attribute.FullScreen, assetName, attribute.FromResources, attribute.HideTimeToClose);
+                window.Init(type.FullName, attribute.WindowLayer, attribute.FullScreen, assetName, attribute.HideTimeToClose);
             }
             else
             {
-                window.Init(type.FullName, (int)UILayer.UI, fullScreen: window.FullScreen, assetName: type.Name, fromResources: false, hideTimeToClose: 10);
+                window.Init(type.FullName, (int)UILayer.UI, fullScreen: window.FullScreen, assetName: type.Name, hideTimeToClose: 10);
             }
 
             return window;
@@ -548,11 +548,11 @@ namespace GameLogic
             if (attribute != null)
             {
                 string assetName = string.IsNullOrEmpty(attribute.Location) ? type.Name : attribute.Location;
-                window.Init(type.FullName, attribute.WindowLayer, attribute.FullScreen, assetName, attribute.FromResources, attribute.HideTimeToClose);
+                window.Init(type.FullName, attribute.WindowLayer, attribute.FullScreen, assetName, attribute.HideTimeToClose);
             }
             else
             {
-                window.Init(type.FullName, (int)UILayer.UI, fullScreen: window.FullScreen, assetName: type.Name, fromResources: false, hideTimeToClose: 10);
+                window.Init(type.FullName, (int)UILayer.UI, fullScreen: window.FullScreen, assetName: type.Name, hideTimeToClose: 10);
             }
 
             return window;
