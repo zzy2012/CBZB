@@ -80,25 +80,6 @@ namespace GameLogic.Takeover
             };
     }
 
-    /// <summary>一次战斗结束后的结算结果。</summary>
-    [Serializable]
-    public struct BattleResult
-    {
-        public bool IsOver;
-        public bool HumanVictory;
-        public float ElapsedSeconds;
-        public int Stars;
-
-        public static BattleResult From(BattleSim sim) =>
-            new BattleResult
-            {
-                IsOver = sim.IsOver,
-                HumanVictory = sim.HumanVictory,
-                ElapsedSeconds = sim.Time,
-                Stars = sim.Stars,
-            };
-    }
-
     /// <summary>模拟器向表现层发布的战斗事件数据。</summary>
     [Serializable]
     public struct BattleEvent
@@ -126,7 +107,6 @@ namespace GameLogic.Takeover
         public int NodeId;
         public int TargetNodeId;
         public bool IsGarrison;
-        public bool Retreating;
         public bool Frozen;
         public bool Poisoned;
         public int Level;
@@ -236,7 +216,6 @@ namespace GameLogic.Takeover
                     NodeId = squad.AtNode?.Id ?? 0,
                     TargetNodeId = squad.TargetNode?.Id ?? 0,
                     IsGarrison = squad.IsGarrison,
-                    Retreating = squad.Retreating,
                     Frozen = squad.Units.Any(unit => unit.FrozenSeconds > 0f),
                     Poisoned = squad.Units.Any(unit => unit.PoisonSeconds > 0f),
                     Level = squad.LevelIndex,
@@ -312,13 +291,11 @@ namespace GameLogic.Takeover
         private float _accumulator;
 
         public BattleSim State { get; }
-        public BattleResult Result => BattleResult.From(State);
         public IReadOnlyList<MapNode> Nodes => State.Nodes;
         public IReadOnlyList<Squad> Squads => State.Squads;
         public IReadOnlyList<PlayerState> Players => State.Players;
         public IReadOnlyList<MapEdge> Edges => State.Edges;
         public PlayerState Human => State.Human;
-        public PlayerState Enemy => State.Enemy;
         public bool IsOver => State.IsOver;
         public bool HumanVictory => State.HumanVictory;
         public float Time => State.Time;
@@ -350,8 +327,6 @@ namespace GameLogic.Takeover
                 _accumulator -= FixedStep;
             }
         }
-
-        public BattleSnapshot Snapshot() => BattleSnapshot.From(State);
 
         public IReadOnlyList<BattleEvent> DrainEvents() => State.DrainEvents();
     }

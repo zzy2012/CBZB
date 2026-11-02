@@ -15,7 +15,6 @@ namespace GameLogic.Takeover
         public static CampaignSave Data => _save ?? (_save = CampaignSaveService.Load());
         public static IReadOnlyList<int> Unlocked => Data.Unlocked;
         public static int Xp => Data.Xp;
-        public static int EdictPoints => 0;
         public static string LastLoadWarning => CampaignSaveService.LastLoadWarning;
 
         public static int StarsFor(float seconds) => seconds < 330f ? 3 : seconds < 540f ? 2 : 1;

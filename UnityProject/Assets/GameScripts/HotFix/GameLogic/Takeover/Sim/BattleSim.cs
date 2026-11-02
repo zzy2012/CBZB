@@ -1904,7 +1904,6 @@ namespace GameLogic.Takeover
             if (LevelAssetId == 2 && node.Building.Kind == 4 && !_l2MagicTowerCaptured)
             {
                 _l2MagicTowerCaptured = true;
-                Human.UltimateForced = true;
                 Human.Ultimate = Human.UltimateMax;
                 _events.Add(new BattleEvent
                 {

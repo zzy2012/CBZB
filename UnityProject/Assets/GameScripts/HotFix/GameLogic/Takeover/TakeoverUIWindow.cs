@@ -5,21 +5,22 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TEngine;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// 首章版本的运行时 UGUI 界面。
-    /// 使用现有 BattleMainUI 预制体提供框架画布和字体，并在运行时重建界面节点；
-    /// 在外部资源流程提供提取后的 SWF 图集和预制体之前，界面可独立运行。
+    /// 首章战斗窗口，通过同名预制体绑定界面节点。
     /// </summary>
-    [Window(UILayer.UI, location: "BattleMainUI", fullScreen: true)]
+    [Window(UILayer.UI, location: "TakeoverUIWindow", fullScreen: true)]
     public sealed class TakeoverUIWindow : UIWindow
     {
+        private const string ActionButtonPrefabLocation = "TakeoverUIActionButton";
+
         private TakeoverRunner _runner;
         private Font _font;
+        private GameObject _actionButtonTemplate;
         private GameObject _menu;
         private GameObject _hud;
         private GameObject _result;
@@ -33,6 +34,7 @@ namespace GameLogic.Takeover
         private Text _resultBody;
         private Text _inspectorTitle;
         private Text _inspectorBody;
+        private Text _resetLabel;
         private Transform _inspectorActions;
         private readonly List<Button> _levelButtons = new List<Button>();
         private readonly List<Text> _levelLabels = new List<Text>();
@@ -85,10 +87,20 @@ namespace GameLogic.Takeover
                 scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
                 scaler.matchWidthOrHeight = 0.5f;
             }
-            for (int i = 0; i < transform.childCount; i++)
-                transform.GetChild(i).gameObject.SetActive(false);
 
-            BuildStaticShell();
+            foreach (var text in gameObject.GetComponentsInChildren<Text>(true))
+                text.font = _font;
+
+            BindStaticUi();
+            _actionButtonTemplate = GameModule.Resource.LoadGameObject(ActionButtonPrefabLocation, transform);
+            if (_actionButtonTemplate == null)
+                throw new InvalidOperationException($"未能加载 UI 列表项预制体：{ActionButtonPrefabLocation}");
+            _actionButtonTemplate.name = "ActionButtonTemplate";
+            if (_actionButtonTemplate.GetComponent<Button>() == null ||
+                _actionButtonTemplate.GetComponentInChildren<Text>(true) == null)
+                throw new InvalidOperationException($"UI 列表项预制体缺少 Button 或 Text：{ActionButtonPrefabLocation}");
+            _actionButtonTemplate.SetActive(false);
+
             _runner?.RegisterUI(this);
         }
 
@@ -190,176 +202,97 @@ namespace GameLogic.Takeover
             _toastUntil = Time.unscaledTime + seconds;
         }
 
-        private void BuildStaticShell()
+        private void BindStaticUi()
         {
-            var root = CreateRect("TakeoverRuntimeUI", transform, Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, Vector2.zero);
-            root.SetAsLastSibling();
-
-            _menu = CreateRect("LevelSelect", root, Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, Vector2.zero).gameObject;
-            AddImage(_menu, new Color(0.055f, 0.07f, 0.065f, 1f));
-            BuildMenu(_menu.transform);
-
-            _hud = CreateRect("BattleHUD", root, Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, Vector2.zero).gameObject;
-            BuildHud(_hud.transform);
-
-            _result = CreateRect("Result", root, Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, Vector2.zero).gameObject;
-            AddImage(_result, new Color(0f, 0f, 0f, 0.62f));
-            BuildResult(_result.transform);
-
-            _toastPanel = MakePanel("ToastPanel", root,
-                new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                new Vector2(0f, 112f), new Vector2(700f, 52f),
-                new Color(0.02f, 0.025f, 0.02f, 0.88f)).gameObject;
-            _toast = CreateText("ToastText", _toastPanel.transform, 19, TextAnchor.MiddleCenter,
-                Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f),
-                new Vector2(14f, 3f), new Vector2(-28f, -6f));
-            _toast.color = new Color(1f, 0.95f, 0.72f);
-            _toast.fontStyle = FontStyle.Bold;
-            var shadow = _toast.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.95f);
-            shadow.effectDistance = new Vector2(2f, -2f);
-            var outline = _toast.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.95f);
-            outline.effectDistance = new Vector2(1.2f, -1.2f);
-            _toastPanel.SetActive(false);
-        }
-
-        private void BuildMenu(Transform root)
-        {
-            var box = MakePanel("ChapterPanel", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 470f),
-                new Color(0.12f, 0.15f, 0.13f, 0.98f));
-            var title = CreateText("Title", box, 34, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                new Vector2(0f, -60f), new Vector2(840f, 56f));
-            title.text = "城邦争霸 · 西利亚公国";
-            title.color = new Color(0.96f, 0.84f, 0.48f);
-
-            var hint = CreateText("Hint", box, 17, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                new Vector2(0f, -105f), new Vector2(840f, 34f));
-            hint.text = "第一章 · 仅显示已解锁关卡";
-            hint.color = new Color(0.74f, 0.78f, 0.72f);
+            _menu = FindRequired<RectTransform>("TakeoverRuntimeUI/LevelSelect").gameObject;
+            _hud = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD").gameObject;
+            _result = FindRequired<RectTransform>("TakeoverRuntimeUI/Result").gameObject;
+            _inspector = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Inspector").gameObject;
+            _spellBar = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Spells").gameObject;
+            _toastPanel = FindRequired<RectTransform>("TakeoverRuntimeUI/ToastPanel").gameObject;
+            _toast = FindRequired<Text>("TakeoverRuntimeUI/ToastPanel/ToastText");
+            _resources = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Top/Resources");
+            _clock = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Top/Clock");
+            _inspectorTitle = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Inspector/InspectorTitle");
+            _inspectorBody = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Inspector/InspectorBody");
+            _inspectorActions = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Inspector/Actions");
+            _resultTitle = FindRequired<Text>("TakeoverRuntimeUI/Result/ResultPanel/Title");
+            _resultBody = FindRequired<Text>("TakeoverRuntimeUI/Result/ResultPanel/Body");
 
             for (int i = 0; i < 8; i++)
             {
                 int levelId = i + 1;
-                float x = -330f + (i % 4) * 220f;
-                float y = 55f - (i / 4) * 130f;
-                var button = CreateButton($"Level{levelId}", box, new Vector2(x, y), new Vector2(190f, 92f),
-                    $"L{levelId}", delegate { _runner?.StartLevel(levelId); });
+                var button = FindRequired<Button>(
+                    $"TakeoverRuntimeUI/LevelSelect/ChapterPanel/Level{levelId}");
                 _levelButtons.Add(button);
-                _levelLabels.Add(button.GetComponentInChildren<Text>());
+                _levelLabels.Add(FindRequired<Text>(
+                    $"TakeoverRuntimeUI/LevelSelect/ChapterPanel/Level{levelId}/Label"));
+                button.onClick.AddListener(delegate { _runner?.StartLevel(levelId); });
             }
 
-            var reset = CreateButton("ResetSave", box, new Vector2(335f, -170f), new Vector2(150f, 44f),
-                "清除进度", delegate { });
-            reset.onClick.AddListener(delegate
-                {
-                    var label = reset.GetComponentInChildren<Text>();
-                    if (!_resetArmed)
-                    {
-                        _resetArmed = true;
-                        label.text = "再次点击确认";
-                        ShowToast("再次点击将清除全部首章进度", 4f);
-                        return;
-                    }
-                    Campaign.Reset();
-                    _resetArmed = false;
-                    label.text = "清除进度";
-                    RefreshLevelButtons();
-                    ShowToast("进度已重置");
-                });
-            reset.GetComponentInChildren<Text>().fontSize = 16;
-        }
+            var resetButton = FindRequired<Button>(
+                "TakeoverRuntimeUI/LevelSelect/ChapterPanel/ResetSave");
+            _resetLabel = FindRequired<Text>(
+                "TakeoverRuntimeUI/LevelSelect/ChapterPanel/ResetSave/Label");
+            resetButton.onClick.AddListener(HandleResetSave);
 
-        private void BuildHud(Transform root)
-        {
-            var top = MakePanel("Top", root, new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(0f, 1f), new Vector2(16f, -12f), new Vector2(356f, 104f),
-                new Color(0.035f, 0.055f, 0.045f, 0.52f));
-            _resources = CreateText("Resources", top, 15, TextAnchor.UpperLeft,
-                new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
-                new Vector2(12f, -8f), new Vector2(-24f, 82f));
-            _clock = CreateText("Clock", top, 12, TextAnchor.UpperRight,
-                new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(1f, 1f),
-                new Vector2(-12f, -78f), new Vector2(150f, 20f));
+            FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/Controls/Pause")
+                .onClick.AddListener(delegate { _runner?.TogglePause(); });
+            FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/Controls/Restart")
+                .onClick.AddListener(delegate { _runner?.NewGame(); });
+            FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/Controls/Levels")
+                .onClick.AddListener(delegate { _runner?.ShowLevelSelect(); });
+            FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/GmControls/GmGold")
+                .onClick.AddListener(delegate { _runner?.GrantResources(1000, 0); });
+            FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/GmControls/GmMana")
+                .onClick.AddListener(delegate { _runner?.GrantResources(0, 500); });
 
-            var controls = MakePanel("Controls", root, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f),
-                new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(330f, 44f),
-                new Color(0.035f, 0.055f, 0.045f, 0.50f));
-            CreateButton("Pause", controls, new Vector2(-118f, 0f), new Vector2(84f, 30f), "暂停",
-                delegate { _runner?.TogglePause(); });
-            CreateButton("Restart", controls, new Vector2(-18f, 0f), new Vector2(84f, 30f), "重开",
-                delegate { _runner?.NewGame(); });
-            CreateButton("Levels", controls, new Vector2(82f, 0f), new Vector2(84f, 30f), "关卡",
-                delegate { _runner?.ShowLevelSelect(); });
-
-            _inspector = MakePanel("Inspector", root, new Vector2(1f, 1f), new Vector2(1f, 1f),
-                new Vector2(1f, 1f), new Vector2(-12f, -12f), new Vector2(274f, 356f),
-                new Color(0.035f, 0.055f, 0.045f, 0.54f)).gameObject;
-            _inspectorTitle = CreateText("InspectorTitle", _inspector.transform, 17, TextAnchor.UpperLeft,
-                new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
-                new Vector2(12f, -10f), new Vector2(-24f, 30f));
-            _inspectorBody = CreateText("InspectorBody", _inspector.transform, 13, TextAnchor.UpperLeft,
-                new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, 1f),
-                new Vector2(12f, -44f), new Vector2(-24f, 78f));
-            var actions = CreateRect("Actions", _inspector.transform, new Vector2(0f, 1f), new Vector2(1f, 1f),
-                new Vector2(0f, 1f), new Vector2(12f, -126f), new Vector2(-24f, 220f));
-            _inspectorActions = actions;
-            _inspector.SetActive(false);
-
-            _spellBar = MakePanel("Spells", root, new Vector2(0f, 0f), new Vector2(0f, 0f),
-                new Vector2(0f, 0f), new Vector2(16f, 64f), new Vector2(354f, 56f),
-                new Color(0.035f, 0.055f, 0.045f, 0.48f)).gameObject;
-
-            var gm = MakePanel("GmControls", root, new Vector2(0f, 0f), new Vector2(0f, 0f),
-                new Vector2(0f, 0f), new Vector2(16f, 126f), new Vector2(250f, 66f),
-                new Color(0.025f, 0.035f, 0.030f, 0.68f));
-            CreateButton("GmGold", gm, new Vector2(-60f, 22f), new Vector2(112f, 24f),
-                "金币 +1000", delegate { _runner?.GrantResources(1000, 0); })
-                .GetComponentInChildren<Text>().fontSize = 12;
-            CreateButton("GmMana", gm, new Vector2(60f, 22f), new Vector2(112f, 24f),
-                "法力 +500", delegate { _runner?.GrantResources(0, 500); })
-                .GetComponentInChildren<Text>().fontSize = 12;
+            _gmSpeedLabels.Clear();
             for (int i = 0; i < GmSpeeds.Length; i++)
             {
                 float speed = GmSpeeds[i];
-                var button = CreateButton($"GmSpeed{speed:0}", gm,
-                    new Vector2(-87f + i * 58f, -18f), new Vector2(52f, 24f),
-                    $"×{speed:0}", delegate { _runner?.SetSpeed(speed); });
-                var label = button.GetComponentInChildren<Text>();
-                label.fontSize = 12;
-                _gmSpeedLabels.Add(label);
+                var button = FindRequired<Button>(
+                    $"TakeoverRuntimeUI/BattleHUD/GmControls/GmSpeed{speed:0}");
+                _gmSpeedLabels.Add(FindRequired<Text>(
+                    $"TakeoverRuntimeUI/BattleHUD/GmControls/GmSpeed{speed:0}/Label"));
+                button.onClick.AddListener(delegate { _runner?.SetSpeed(speed); });
             }
-        }
 
-        private void BuildResult(Transform root)
-        {
-            var box = MakePanel("ResultPanel", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(520f, 300f),
-                new Color(0.10f, 0.13f, 0.11f, 0.98f));
-            _resultTitle = CreateText("Title", box, 34, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
-                new Vector2(0f, -54f), new Vector2(460f, 50f));
-            _resultBody = CreateText("Body", box, 20, TextAnchor.MiddleCenter,
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0f, 15f), new Vector2(460f, 100f));
-            CreateButton("Replay", box, new Vector2(-130f, -105f), new Vector2(150f, 44f), "重玩本关",
-                delegate { _runner?.NewGame(); });
-            CreateButton("Next", box, new Vector2(130f, -105f), new Vector2(150f, 44f), "下一关",
-                delegate
+            FindRequired<Button>("TakeoverRuntimeUI/Result/ResultPanel/Replay")
+                .onClick.AddListener(delegate { _runner?.NewGame(); });
+            FindRequired<Button>("TakeoverRuntimeUI/Result/ResultPanel/Next")
+                .onClick.AddListener(delegate
                 {
                     if (_runner == null) return;
                     _runner.StartLevel(Campaign.NextLevel(_runner.LevelAssetId));
                 });
-            CreateButton("Menu", box, new Vector2(0f, -105f), new Vector2(90f, 44f), "关卡",
-                delegate { _runner?.ShowLevelSelect(); });
-            _result.SetActive(false);
+            FindRequired<Button>("TakeoverRuntimeUI/Result/ResultPanel/Menu")
+                .onClick.AddListener(delegate { _runner?.ShowLevelSelect(); });
+        }
+
+        private T FindRequired<T>(string path) where T : Component
+        {
+            var component = FindChildComponent<T>(path);
+            if (component == null)
+                throw new InvalidOperationException($"TakeoverUIWindow 预制体缺少节点或组件：{path}");
+            return component;
+        }
+
+        private void HandleResetSave()
+        {
+            if (!_resetArmed)
+            {
+                _resetArmed = true;
+                _resetLabel.text = "再次点击确认";
+                ShowToast("再次点击将清除全部首章进度", 4f);
+                return;
+            }
+
+            Campaign.Reset();
+            _resetArmed = false;
+            _resetLabel.text = "清除进度";
+            RefreshLevelButtons();
+            ShowToast("进度已重置");
         }
 
         private void RefreshLevelButtons()
@@ -446,7 +379,7 @@ namespace GameLogic.Takeover
                 {
                     var unit = units[i];
                     bool canBuy = _runner.CanBuy(unit, node);
-                    var button = CreateButton($"Buy{unit.Id}", _inspectorActions,
+                    var button = InstantiateActionButton($"Buy{unit.Id}", _inspectorActions,
                         new Vector2(0f, -34f - i * 40f), new Vector2(250f, 32f),
                         $"{unit.CnName}  {unit.Cost}金  补给{unit.Upkeep}",
                         delegate { _runner.Buy(unit, node); });
@@ -456,7 +389,7 @@ namespace GameLogic.Takeover
                 int upgradeCost = building.Level == 0
                     ? buildingDef?.UpgradeCost1 ?? 350
                     : buildingDef?.UpgradeCost2 ?? 500;
-                var upgrade = CreateButton("Upgrade", _inspectorActions,
+                var upgrade = InstantiateActionButton("Upgrade", _inspectorActions,
                     new Vector2(0f, -46f - units.Count * 40f), new Vector2(250f, 32f),
                     building.Level >= 2 ? "已满级" : $"升级 {upgradeCost} 金",
                     delegate { _runner.Upgrade(node); });
@@ -483,7 +416,8 @@ namespace GameLogic.Takeover
                     var def = Cfg.BuildingById(id);
                     if (def == null) continue;
                     string effect = def.Supply > 0 ? "补给 +1" : def.Gold > 0 ? "金币 +1/s" : "法力 +1/s";
-                    var button = CreateButton($"Build{id}", _inspectorActions, new Vector2(0f, -40f - i * 44f),
+                    var button = InstantiateActionButton($"Build{id}", _inspectorActions,
+                        new Vector2(0f, -40f - i * 44f),
                         new Vector2(250f, 32f), $"{def.CnName}  {def.BuildCost}金  {effect}",
                         delegate { _runner.Build(node, id); });
                     button.interactable = _runner.CanBuild(node, id);
@@ -504,7 +438,7 @@ namespace GameLogic.Takeover
             for (int i = 0; i < spells.Count; i++)
             {
                 var spell = spells[i];
-                var button = CreateButton($"Spell{spell.Id}", _spellBar.transform,
+                var button = InstantiateActionButton($"Spell{spell.Id}", _spellBar.transform,
                     new Vector2(-126f + i * 82f, 0f), new Vector2(76f, 40f),
                     $"{spell.CnName}\n{(spell.SpellType == 2 ? "终极" : spell.Cost.ToString())}",
                     delegate { _runner.BeginSpellTarget(spell); });
@@ -522,80 +456,36 @@ namespace GameLogic.Takeover
             return $"{total / 60:00}:{total % 60:00}";
         }
 
-        private RectTransform MakePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax,
-            Vector2 pivot, Vector2 position, Vector2 size, Color color)
+        private Button InstantiateActionButton(string name, Transform parent, Vector2 position, Vector2 size,
+            string label, UnityEngine.Events.UnityAction action)
         {
-            var rect = CreateRect(name, parent, anchorMin, anchorMax, pivot, position, size);
-            AddImage(rect.gameObject, color);
-            return rect;
-        }
-
-        private RectTransform CreateRect(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax,
-            Vector2 pivot, Vector2 position, Vector2 size)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.layer = 5;
-            var rect = go.GetComponent<RectTransform>();
-            rect.SetParent(parent, false);
-            rect.anchorMin = anchorMin;
-            rect.anchorMax = anchorMax;
-            rect.pivot = pivot;
+            var instance = Object.Instantiate(_actionButtonTemplate, parent, false);
+            instance.name = name;
+            var rect = instance.transform as RectTransform;
+            if (rect == null)
+                throw new InvalidOperationException($"UI 列表项预制体根节点缺少 RectTransform：{ActionButtonPrefabLocation}");
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
-            return rect;
-        }
 
-        private Text CreateText(string name, Transform parent, int size, TextAnchor alignment,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 position, Vector2 dimensions)
-        {
-            var rect = CreateRect(name, parent, anchorMin, anchorMax, pivot, position, dimensions);
-            var text = rect.gameObject.AddComponent<Text>();
-            text.font = _font;
-            text.fontSize = size;
-            text.alignment = alignment;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Overflow;
-            text.color = Color.white;
-            text.raycastTarget = false;
-            return text;
-        }
-
-        private Button CreateButton(string name, Transform parent, Vector2 position, Vector2 size,
-            string label, UnityAction action)
-        {
-            var rect = CreateRect(name, parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(0.5f, 0.5f), position, size);
-            var image = rect.gameObject.AddComponent<Image>();
-            image.color = new Color(0.15f, 0.20f, 0.16f, 0.84f);
-            var button = rect.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.onClick.AddListener(action);
-            var colors = button.colors;
-            colors.normalColor = Color.white;
-            colors.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-            colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
-            colors.disabledColor = new Color(0.42f, 0.42f, 0.42f, 0.65f);
-            button.colors = colors;
-
-            var text = CreateText("Label", rect, 14, TextAnchor.MiddleCenter,
-                Vector2.zero, Vector2.one, new Vector2(0.5f, 0.5f), Vector2.zero, Vector2.zero);
+            var button = instance.GetComponent<Button>();
+            var text = instance.GetComponentInChildren<Text>(true);
+            if (button == null || text == null)
+                throw new InvalidOperationException($"UI 列表项预制体缺少 Button 或 Text：{ActionButtonPrefabLocation}");
+            instance.SetActive(true);
             text.text = label;
-            text.color = new Color(0.96f, 0.93f, 0.81f);
+            text.font = _font;
+            button.onClick.AddListener(action);
             return button;
-        }
-
-        private static void AddImage(GameObject go, Color color)
-        {
-            var image = go.AddComponent<Image>();
-            image.color = color;
-            image.raycastTarget = false;
         }
 
         private static void ClearChildren(Transform parent)
         {
             if (parent == null) return;
             for (int i = parent.childCount - 1; i >= 0; i--)
-                UnityEngine.Object.Destroy(parent.GetChild(i).gameObject);
+                Object.Destroy(parent.GetChild(i).gameObject);
         }
     }
 }

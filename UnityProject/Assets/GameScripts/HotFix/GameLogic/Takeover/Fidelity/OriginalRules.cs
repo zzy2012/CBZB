@@ -255,11 +255,6 @@ namespace GameLogic.Takeover
             return false;
         }
 
-        public static bool HasAbility(string abilities, string abilityName)
-        {
-            return TryAbility(abilities, abilityName, out _);
-        }
-
         private static EnemyPlayerSetup[] E(params EnemyPlayerSetup[] values)
         {
             return values;

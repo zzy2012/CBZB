@@ -213,9 +213,7 @@ namespace GameLogic.Takeover
         public bool HasMoveOrder;
         public float MoveDelaySeconds;
         public bool IsGarrison => HomeNode?.Building != null && HomeNode.Building.Owner == Faction;
-        public bool Retreating => false;
         public readonly List<CombatUnit> Units = new List<CombatUnit>();
-        public List<CombatUnit> SoldierUnits => Units;
 
         public Faction Faction => Owner.Faction;
         public int MaxSoldiers => Units.Count;
@@ -228,11 +226,6 @@ namespace GameLogic.Takeover
                     if (!Units[i].IsDead) count++;
                 return count;
             }
-        }
-        public int Soldiers
-        {
-            get => AliveSoldiers;
-            set { }
         }
         public float Hp
         {
@@ -274,7 +267,6 @@ namespace GameLogic.Takeover
         public bool IsHuman;
         public bool AiEnabled = true;
         public bool SpellsEnabled = true;
-        public bool UltimateForced;
         public int UnitTypeLimit = 4;
         public float Gold;
         public float Mana;
