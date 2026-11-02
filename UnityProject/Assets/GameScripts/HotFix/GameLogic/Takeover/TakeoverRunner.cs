@@ -4,6 +4,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using TEngine;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GameLogic.Takeover
 {
@@ -47,9 +48,38 @@ namespace GameLogic.Takeover
         private Material _clickableAreaMaterial;
         private CancellationTokenSource _visualBindingCancellationTokenSource;
 
+        private GameObject _squadBadgeTemplate;
+        private bool _squadBadgeTemplateMissing;
+        private bool _badgeProbeLogged;
+        private readonly Dictionary<int, SquadBadge> _squadBadges = new Dictionary<int, SquadBadge>();
+
+        /// <summary>头顶徽标：一支 squad 一份，节点来自 HUD 预制体里的 SquadBadgePrototype。</summary>
+        private sealed class SquadBadge
+        {
+            public RectTransform Rect;
+            public Image Ring;
+            public Image Portrait;
+            public Image HpFill;
+            public Text Count;
+        }
+
+        private const float BadgeWorldOffsetY = 34f;
+        private const float BadgeHpFillWidth = 58f;
+        private const float BadgeHpFillLeft = -5f;
+        private const float BadgeHpFillY = 4f;
+        private static readonly Color BadgeHpHigh = new Color(0.84f, 0.72f, 0.25f, 1f);
+        private static readonly Color BadgeHpMid = new Color(0.88f, 0.60f, 0.25f, 1f);
+        private static readonly Color BadgeHpLow = new Color(0.85f, 0.32f, 0.26f, 1f);
+        private static readonly Color BadgeRingHuman = new Color(0.35f, 0.75f, 0.40f, 0.95f);
+        private static readonly Color BadgeRingEnemy = new Color(0.85f, 0.35f, 0.32f, 0.95f);
+        private static readonly Color BadgeRingSelected = new Color(1f, 0.85f, 0.35f, 0.98f);
+
         public int LevelAssetId = 1;
         public Faction HumanFaction = Faction.Westaria;
         public Faction EnemyFaction = Faction.Empire;
+
+        /// <summary>调试开关：关掉后不再创建 squad 头顶徽标（排查卡顿/不显示时用）。</summary>
+        public bool ShowSquadBadges = true;
 
         private void Awake()
         {
@@ -96,6 +126,7 @@ namespace GameLogic.Takeover
             _selected = null;
             _selectedSquad = null;
             _pendingSpell = null;
+            ClearSquadBadges();
             if (_root != null) _root.gameObject.SetActive(false);
             _ui?.ShowLevelSelect();
         }
@@ -119,6 +150,7 @@ namespace GameLogic.Takeover
             _boundNodeVisuals.Clear();
             _nodeClickableAreas.Clear();
             _unitClickableAreas.Clear();
+            ClearSquadBadges();
             _selected = null;
             _selectedSquad = null;
             _paused = false;
@@ -497,6 +529,159 @@ namespace GameLogic.Takeover
                 Destroy(_unitClickableAreas[id].gameObject);
                 _unitClickableAreas.Remove(id);
             }
+            SyncSquadBadges();
+        }
+
+        /// <summary>头顶徽标：位置按屏幕坐标换算到 HUD 画布，尺寸不随镜头缩放（和原版一致）。</summary>
+        private void SyncSquadBadges()
+        {
+            if (!ShowSquadBadges)
+            {
+                if (_squadBadges.Count > 0) ClearSquadBadges();
+                return;
+            }
+            if (_ui == null || _sim == null || _cam == null) return;
+            RectTransform layer = _ui.SquadBadgeLayer;
+            if (layer == null) return;
+            if (_squadBadgeTemplate == null)
+            {
+                // 原型节点就在 HUD 预制体里（隐藏），不按地址加载独立资源。
+                RectTransform prototype = _ui.SquadBadgePrototype;
+                _squadBadgeTemplate = prototype != null ? prototype.gameObject : null;
+                if (_squadBadgeTemplate == null)
+                {
+                    if (!_squadBadgeTemplateMissing)
+                    {
+                        _squadBadgeTemplateMissing = true;
+                        Log.Error("[Takeover] HUD 预制体里缺少 SquadBadgePrototype，头顶 UI 不显示");
+                    }
+                    return;
+                }
+            }
+
+            // TEngine 的 UICanvas 是 Screen Space - Camera（带 UICamera），
+            // 用 null 相机换算会把徽标全推到画布角落，所以这里按根画布的实际渲染模式取相机。
+            Canvas canvas = layer.GetComponentInParent<Canvas>();
+            Canvas rootCanvas = canvas != null ? canvas.rootCanvas : null;
+            Camera uiCamera = rootCanvas != null &&
+                              rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? rootCanvas.worldCamera
+                : null;
+            float badgeScale = ResolveBadgeScale(rootCanvas);
+            if (!_badgeProbeLogged)
+            {
+                _badgeProbeLogged = true;
+                Log.Info($"[Takeover] 头顶 UI: squads={_sim.Squads.Count} " +
+                         $"renderMode={rootCanvas?.renderMode} " +
+                         $"scaleFactor={rootCanvas?.scaleFactor:F2} badgeScale={badgeScale:F2} " +
+                         $"camera={(uiCamera != null ? uiCamera.name : "null")}");
+            }
+
+            var live = new HashSet<int>();
+            foreach (Squad squad in _sim.Squads)
+            {
+                if (squad.IsDead) continue;
+                live.Add(squad.Id);
+                if (!_squadBadges.TryGetValue(squad.Id, out SquadBadge badge))
+                {
+                    badge = CreateSquadBadge(layer);
+                    if (badge == null) continue;
+                    _squadBadges[squad.Id] = badge;
+                    BindSquadBadgePortrait(badge, squad);
+                }
+
+                Vector3 screen = _cam.WorldToScreenPoint(
+                    DisplayPosition(squad.Pos) + new Vector2(0f, BadgeWorldOffsetY));
+                Vector2 local;
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(layer, screen, uiCamera, out local))
+                    continue;
+                badge.Rect.anchoredPosition = local;
+
+                float maxHp = squad.HpPerSoldier * squad.MaxSoldiers;
+                float ratio = maxHp <= 0f ? 0f : Mathf.Clamp01(squad.Hp / maxHp);
+                RectTransform fill = badge.HpFill.rectTransform;
+                fill.sizeDelta = new Vector2(BadgeHpFillWidth * ratio, fill.sizeDelta.y);
+                // 原版布局：数字在左、头像居中、血条向右延伸，所以按左边缘对齐后按比例收窄
+                fill.anchoredPosition = new Vector2(
+                    BadgeHpFillLeft + BadgeHpFillWidth * ratio * 0.5f, BadgeHpFillY);
+                badge.HpFill.color = ratio > 0.6f ? BadgeHpHigh : ratio > 0.3f ? BadgeHpMid : BadgeHpLow;
+
+                badge.Count.text = $"{squad.AliveSoldiers}/{squad.MaxSoldiers}";
+                bool selected = squad == _selectedSquad;
+                badge.Ring.color = selected
+                    ? BadgeRingSelected
+                    : squad.Owner.IsHuman ? BadgeRingHuman : BadgeRingEnemy;
+                float scale = badgeScale * (selected ? 1.12f : 1f);
+                badge.Rect.localScale = new Vector3(scale, scale, 1f);
+            }
+
+            foreach (int id in _squadBadges.Keys.ToList())
+            {
+                if (live.Contains(id)) continue;
+                DestroySquadBadge(id);
+            }
+        }
+
+        /// <summary>让徽标的 1 个画布单位等于 1 个舞台像素（画布参考分辨率和舞台不同，需要换算）。</summary>
+        private float ResolveBadgeScale(Canvas canvas)
+        {
+            if (canvas == null || canvas.scaleFactor <= 0.0001f) return 1f;
+            float pixelsPerStagePixel = Mathf.Abs(
+                _cam.WorldToScreenPoint(new Vector3(0f, 1f, 0f)).y -
+                _cam.WorldToScreenPoint(Vector3.zero).y);
+            if (pixelsPerStagePixel <= 0.0001f) return 1f;
+            return pixelsPerStagePixel / canvas.scaleFactor;
+        }
+
+        private SquadBadge CreateSquadBadge(RectTransform layer)
+        {
+            GameObject instance = Instantiate(_squadBadgeTemplate, layer, false);
+            instance.name = "SquadBadge";
+            instance.SetActive(true);
+            var rect = instance.transform as RectTransform;
+            var badge = rect == null ? null : new SquadBadge
+            {
+                Rect = rect,
+                Ring = BadgePart<Image>(rect, "Ring"),
+                Portrait = BadgePart<Image>(rect, "Portrait"),
+                HpFill = BadgePart<Image>(rect, "HpFill"),
+                Count = BadgePart<Text>(rect, "Count"),
+            };
+            if (badge == null || badge.Ring == null || badge.Portrait == null ||
+                badge.HpFill == null || badge.Count == null)
+            {
+                Destroy(instance);
+                return null;
+            }
+            return badge;
+        }
+
+        private static T BadgePart<T>(Transform root, string name) where T : Component
+        {
+            Transform child = root.Find(name);
+            return child == null ? null : child.GetComponent<T>();
+        }
+
+        private static void BindSquadBadgePortrait(SquadBadge badge, Squad squad)
+        {
+            if (badge.Portrait == null) return;
+            string location = TakeoverVisualCatalog.UnitLocation(squad.Def);
+            if (string.IsNullOrEmpty(location)) return;
+            badge.Portrait.SetSprite(location, false, null,
+                badge.Portrait.GetCancellationTokenOnDestroy());
+        }
+
+        private void DestroySquadBadge(int squadId)
+        {
+            if (!_squadBadges.TryGetValue(squadId, out SquadBadge badge)) return;
+            if (badge.Rect != null) Destroy(badge.Rect.gameObject);
+            _squadBadges.Remove(squadId);
+        }
+
+        private void ClearSquadBadges()
+        {
+            foreach (int id in _squadBadges.Keys.ToList()) DestroySquadBadge(id);
+            _squadBadges.Clear();
         }
 
         private void SyncNodes()

@@ -45,6 +45,15 @@ namespace GameLogic.Takeover
         private readonly List<Button> _levelButtons = new List<Button>();
         private readonly List<Text> _levelLabels = new List<Text>();
         private readonly List<Text> _gmSpeedLabels = new List<Text>();
+        private RectTransform _badgeLayer;
+        private RectTransform _badgePrototype;
+
+        /// <summary>底栏的常驻调速按钮（原版右上角三个圆钮的位置改到底栏右侧）。</summary>
+        private static readonly float[] BottomSpeeds = { 1f, 2f, 4f };
+        private readonly List<Button> _bottomSpeedButtons = new List<Button>();
+        private readonly List<Text> _bottomSpeedLabels = new List<Text>();
+        private static readonly Color SpeedIdleColor = new Color(0.18f, 0.15f, 0.10f, 0.95f);
+        private static readonly Color SpeedActiveColor = new Color(0.38f, 0.31f, 0.15f, 0.98f);
         private static readonly float[] GmSpeeds = { 1f, 2f, 4f, 8f };
 
         /// <summary>检查器动作按钮的排版：从 Actions 容器顶部（+110）往下排，避免垂到面板外。</summary>
@@ -172,6 +181,12 @@ namespace GameLogic.Takeover
             if (_toastPanel != null && Time.unscaledTime >= _toastUntil && _toastPanel.activeSelf)
                 _toastPanel.SetActive(false);
         }
+
+        /// <summary>头顶徽标的父节点（BattleHUD/SquadBadgeLayer），由 TakeoverRunner 写入 squad 位置。</summary>
+        public RectTransform SquadBadgeLayer => _badgeLayer;
+
+        /// <summary>徽标原型（预制体里的隐藏节点），运行时复制它，不按地址加载资源。</summary>
+        public RectTransform SquadBadgePrototype => _badgePrototype;
 
         public void ShowLevelSelect()
         {
@@ -376,8 +391,11 @@ namespace GameLogic.Takeover
             _toastPanel = FindRequired<RectTransform>("TakeoverRuntimeUI/ToastPanel").gameObject;
             _toastRect = _toastPanel.GetComponent<RectTransform>();
             _toast = FindRequired<Text>("TakeoverRuntimeUI/ToastPanel/ToastText");
-            _resources = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Top/Resources");
-            _clock = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Top/Clock");
+            _resources = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/BottomBar/Top/Resources");
+            _clock = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/BottomBar/Top/Clock");
+            _badgeLayer = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/SquadBadgeLayer");
+            _badgePrototype = FindRequired<RectTransform>(
+                "TakeoverRuntimeUI/BattleHUD/SquadBadgeLayer/SquadBadgePrototype");
             _inspectorTitle = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Inspector/InspectorTitle");
             _inspectorBody = FindRequired<Text>("TakeoverRuntimeUI/BattleHUD/Inspector/InspectorBody");
             _inspectorActions = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Inspector/Actions");
@@ -421,6 +439,20 @@ namespace GameLogic.Takeover
                 _gmSpeedLabels.Add(FindRequired<Text>(
                     $"TakeoverRuntimeUI/BattleHUD/GmControls/GmSpeed{speed:0}/Label"));
                 button.onClick.AddListener(delegate { _runner?.SetSpeed(speed); });
+            }
+
+            FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/BottomBar/Settings")
+                .onClick.AddListener(delegate { SetGmExpanded(true); });
+            _bottomSpeedButtons.Clear();
+            _bottomSpeedLabels.Clear();
+            for (int i = 0; i < BottomSpeeds.Length; i++)
+            {
+                float speed = BottomSpeeds[i];
+                string node = $"TakeoverRuntimeUI/BattleHUD/SpeedControls/Speed{speed:0}";
+                var button = FindRequired<Button>(node);
+                button.onClick.AddListener(delegate { _runner?.SetSpeed(speed); });
+                _bottomSpeedButtons.Add(button);
+                _bottomSpeedLabels.Add(FindRequired<Text>(node + "/Label"));
             }
 
             FindRequired<Button>("TakeoverRuntimeUI/Result/ResultPanel/Replay")
@@ -493,6 +525,14 @@ namespace GameLogic.Takeover
                 _gmSpeedLabels[i].text = Mathf.Approximately(_runner.Speed, GmSpeeds[i])
                     ? $"{speed}*"
                     : speed;
+            }
+            for (int i = 0; i < _bottomSpeedButtons.Count; i++)
+            {
+                bool active = Mathf.Approximately(_runner.Speed, BottomSpeeds[i]);
+                if (i < _bottomSpeedLabels.Count && _bottomSpeedLabels[i] != null)
+                    _bottomSpeedLabels[i].text = active ? $"×{BottomSpeeds[i]:0}*" : $"×{BottomSpeeds[i]:0}";
+                var graphic = _bottomSpeedButtons[i] != null ? _bottomSpeedButtons[i].targetGraphic : null;
+                if (graphic != null) graphic.color = active ? SpeedActiveColor : SpeedIdleColor;
             }
         }
 

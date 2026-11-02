@@ -187,6 +187,7 @@ public static class TakeoverValidation
             var failures = TakeoverSelfCheck.Run(tables).ToList();
             CheckAssetCounts(failures);
             CheckUiTextPlaceholders(failures);
+            CheckUiPrefabStructure(failures);
             return failures.ToArray();
         }
         catch (Exception exception)
@@ -224,6 +225,54 @@ public static class TakeoverValidation
         "Assets/AssetRaw/UI/TakeoverUIWindow.prefab",
         "Assets/AssetRaw/UI/TakeoverUIActionButton.prefab",
     };
+
+    private static readonly string[] BattleHudPaths =
+    {
+        "BattleHUD/SquadBadgeLayer",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Ring",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Portrait",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/HpBack",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/HpFill",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Count",
+        "BattleHUD/BottomBar",
+        "BattleHUD/BottomBar/PortraitFrame",
+        "BattleHUD/BottomBar/Top/Resources",
+        "BattleHUD/BottomBar/Top/Clock",
+        "BattleHUD/BottomBar/Settings",
+        "BattleHUD/SpeedControls",
+        "BattleHUD/SpeedControls/Speed1/Label",
+        "BattleHUD/SpeedControls/Speed2/Label",
+        "BattleHUD/SpeedControls/Speed4/Label",
+    };
+
+    /// <summary>战斗 HUD 与头顶徽标全部来自预制体；节点被误删时这里要报出来。</summary>
+    private static void CheckUiPrefabStructure(System.Collections.Generic.ICollection<string> failures)
+    {
+        var window = AssetDatabase.LoadAssetAtPath<GameObject>(UiPrefabs[0]);
+        if (window == null)
+        {
+            failures.Add($"UI 预制体缺失: {UiPrefabs[0]}");
+            return;
+        }
+        foreach (string path in BattleHudPaths)
+        {
+            if (FindChild(window.transform, path) == null)
+                failures.Add($"UI 预制体缺少节点: {UiPrefabs[0]} -> {path}");
+        }
+    }
+
+    private static Transform FindChild(Transform root, string path)
+    {
+        if (root == null) return null;
+        Transform current = root;
+        foreach (string segment in path.Split('/'))
+        {
+            current = current.Find(segment);
+            if (current == null) return null;
+        }
+        return current;
+    }
 
     /// <summary>预制体里的中文文案一旦被非 UTF-8 工具改写就会退化成问号占位符，
     /// 这里做静态校验，避免再次出现整屏 "?" 的界面。</summary>
