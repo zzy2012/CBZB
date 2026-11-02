@@ -30,3 +30,6 @@ Build/
 UnityProject/Build/
 .DS_Store
 logs/
+
+# Office/WPS 打开表格时生成的临时锁文件
+~$*
