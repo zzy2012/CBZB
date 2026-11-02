@@ -25,6 +25,8 @@ public sealed partial class Level : Luban.BeanBase
         Xp = _buf.ReadInt();
         EnemyFaction = _buf.ReadInt();
         EnemyModCount = _buf.ReadInt();
+        MapOffsetX = _buf.ReadInt();
+        MapOffsetY = _buf.ReadInt();
     }
 
     public static Level DeserializeLevel(ByteBuf _buf)
@@ -68,6 +70,14 @@ public sealed partial class Level : Luban.BeanBase
     /// 敌方加成项数
     /// </summary>
     public readonly int EnemyModCount;
+    /// <summary>
+    /// 地图贴图 X 修正
+    /// </summary>
+    public readonly int MapOffsetX;
+    /// <summary>
+    /// 地图贴图 Y 修正
+    /// </summary>
+    public readonly int MapOffsetY;
    
     public const int __ID__ = -834839151;
     public override int GetTypeId() => __ID__;
@@ -88,6 +98,8 @@ public sealed partial class Level : Luban.BeanBase
         + "xp:" + Xp + ","
         + "enemyFaction:" + EnemyFaction + ","
         + "enemyModCount:" + EnemyModCount + ","
+        + "mapOffsetX:" + MapOffsetX + ","
+        + "mapOffsetY:" + MapOffsetY + ","
         + "}";
     }
 }

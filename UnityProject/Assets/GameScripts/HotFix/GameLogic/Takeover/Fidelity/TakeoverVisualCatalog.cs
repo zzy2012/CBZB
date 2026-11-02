@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using TEngine;
 using UnityEngine;
@@ -75,6 +76,18 @@ namespace GameLogic.Takeover
         {
             string root = UnitLocation(unit);
             return new[] { root + "_f0", root + "_f1", root + "_f2" };
+        }
+
+        /// <summary>
+        /// 地图贴图相对舞台坐标的修正量（level.xlsx 的 map_offset_x/y）。
+        /// 地图 PNG 是从导出位图居中裁切来的，和舞台坐标差一个固定平移；
+        /// 这个值表示“舞台坐标 + 偏移 = 贴图像素”，所以渲染时要对 x 取反、y 同号。
+        /// </summary>
+        public static Vector2 MapOffset(int levelAssetId)
+        {
+            GameConfig.takeover.Level level =
+                Cfg.TbLevel.DataList.FirstOrDefault(value => value.AssetId == levelAssetId);
+            return level == null ? Vector2.zero : new Vector2(level.MapOffsetX, level.MapOffsetY);
         }
 
         private static string Slug(string value)

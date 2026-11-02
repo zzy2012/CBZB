@@ -25,6 +25,7 @@ namespace GameLogic.Takeover
         private GameObject _hud;
         private GameObject _result;
         private GameObject _inspector;
+        private RectTransform _inspectorRect;
         private GameObject _spellBar;
         private Text _resources;
         private Text _clock;
@@ -45,6 +46,14 @@ namespace GameLogic.Takeover
         private readonly List<Text> _levelLabels = new List<Text>();
         private readonly List<Text> _gmSpeedLabels = new List<Text>();
         private static readonly float[] GmSpeeds = { 1f, 2f, 4f, 8f };
+
+        /// <summary>检查器动作按钮的排版：从 Actions 容器顶部（+110）往下排，避免垂到面板外。</summary>
+        private const float InspectorActionTopY = 90f;
+        private const float InspectorActionSpacing = 38f;
+
+        /// <summary>检查器面板高度：无动作按钮时只包住标题+正文，有按钮时随按钮数增长。</summary>
+        private const float InspectorInfoOnlyHeight = 134f;
+        private const float InspectorActionBaseHeight = 174f;
         private readonly List<ActionPlan> _inspectorPlan = new List<ActionPlan>();
         private readonly List<ActionPlan> _spellPlan = new List<ActionPlan>();
         private readonly List<Button> _inspectorButtons = new List<Button>();
@@ -360,6 +369,7 @@ namespace GameLogic.Takeover
             _hud = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD").gameObject;
             _result = FindRequired<RectTransform>("TakeoverRuntimeUI/Result").gameObject;
             _inspector = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Inspector").gameObject;
+            _inspectorRect = (RectTransform)_inspector.transform;
             _spellBar = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/Spells").gameObject;
             _gmPanel = FindRequired<RectTransform>("TakeoverRuntimeUI/BattleHUD/GmControls").gameObject;
             _gmPanelRect = (RectTransform)_gmPanel.transform;
@@ -503,6 +513,16 @@ namespace GameLogic.Takeover
             if (_inspector.activeSelf != visible) _inspector.SetActive(visible);
             if (!visible) return;
 
+            // 面板高度按内容收缩：只有标题+正文（比如选中部队）时不再留一大块空底板
+            float panelHeight = _inspectorPlan.Count == 0
+                ? InspectorInfoOnlyHeight
+                : InspectorActionBaseHeight + (_inspectorPlan.Count - 1) * InspectorActionSpacing;
+            if (_inspectorRect != null &&
+                !Mathf.Approximately(_inspectorRect.sizeDelta.y, panelHeight))
+            {
+                _inspectorRect.sizeDelta = new Vector2(_inspectorRect.sizeDelta.x, panelHeight);
+            }
+
             // 结构签名只包含“按钮集合 + 文案”，金币/补给的整数变化不会让它变化，
             // 因此每秒进账只刷新 interactable，不再销毁重建按钮（原来的闪烁来源）。
             string signature = targetKey + "#" + BuildPlanSignature(_inspectorPlan);
@@ -513,7 +533,7 @@ namespace GameLogic.Takeover
                 foreach (var plan in _inspectorPlan)
                 {
                     var button = InstantiateActionButton(plan.Name, _inspectorActions,
-                        plan.Position, plan.Size, plan.Label, plan.Click);
+                        plan.Position, plan.Size, plan.Label, plan.Click, stateTint: true);
                     if (plan.FontSize > 0) button.GetComponentInChildren<Text>().fontSize = plan.FontSize;
                     _inspectorButtons.Add(button);
                     _inspectorRules.Add(plan.Enabled);
@@ -554,7 +574,8 @@ namespace GameLogic.Takeover
                 {
                     var unit = units[i];
                     AddPlan($"Buy{unit.Id}", $"{unit.CnName}  {unit.Cost}金  补给{unit.Upkeep}",
-                        new Vector2(0f, -34f - i * 40f), new Vector2(250f, 32f),
+                        new Vector2(0f, InspectorActionTopY - i * InspectorActionSpacing),
+                        new Vector2(250f, 32f),
                         delegate { _runner.Buy(unit, node); },
                         () => _runner.CanBuy(unit, node));
                 }
@@ -563,7 +584,8 @@ namespace GameLogic.Takeover
                     ? buildingDef?.UpgradeCost1 ?? 350
                     : buildingDef?.UpgradeCost2 ?? 500;
                 AddPlan("Upgrade", building.Level >= 2 ? "已满级" : $"升级 {upgradeCost} 金",
-                    new Vector2(0f, -46f - units.Count * 40f), new Vector2(250f, 32f),
+                    new Vector2(0f, InspectorActionTopY - units.Count * InspectorActionSpacing),
+                    new Vector2(250f, 32f),
                     delegate { _runner.Upgrade(node); },
                     () => building.Level < 2 && _runner.Simulation.Human.Gold >= upgradeCost);
                 return true;
@@ -592,7 +614,8 @@ namespace GameLogic.Takeover
                     if (def == null) continue;
                     string effect = def.Supply > 0 ? "补给 +1" : def.Gold > 0 ? "金币 +1/s" : "法力 +1/s";
                     AddPlan($"Build{id}", $"{def.CnName}  {def.BuildCost}金  {effect}",
-                        new Vector2(0f, -40f - i * 44f), new Vector2(250f, 32f),
+                        new Vector2(0f, InspectorActionTopY - i * InspectorActionSpacing),
+                        new Vector2(250f, 32f),
                         delegate { _runner.Build(node, id); },
                         () => _runner.CanBuild(node, id));
                 }
@@ -703,6 +726,29 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>检查器里的招募/建造/升级按钮：可点绿色、不可点灰色（走 Selectable 的 ColorTint）。</summary>
+        private static readonly Color ActionEnabledColor = new Color(0.20f, 0.48f, 0.26f, 0.95f);
+        private static readonly Color ActionHighlightColor = new Color(0.27f, 0.60f, 0.33f, 0.95f);
+        private static readonly Color ActionPressedColor = new Color(0.15f, 0.38f, 0.21f, 0.95f);
+        private static readonly Color ActionDisabledColor = new Color(0.30f, 0.30f, 0.30f, 0.85f);
+
+        private static void ApplyActionStateColors(Button button)
+        {
+            button.transition = Selectable.Transition.ColorTint;
+            var colors = button.colors;
+            colors.normalColor = ActionEnabledColor;
+            colors.highlightedColor = ActionHighlightColor;
+            colors.selectedColor = ActionEnabledColor;
+            colors.pressedColor = ActionPressedColor;
+            colors.disabledColor = ActionDisabledColor;
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0.05f;
+            button.colors = colors;
+            // ColorTint 是把 CanvasRenderer 颜色乘到 Image 自身上，模板底图是深色
+            // rgba(0.15,0.2,0.16)，直接叠绿会变成墨绿；这里把底图刷白，状态色才是最终颜色。
+            if (button.targetGraphic != null) button.targetGraphic.color = Color.white;
+        }
+
         private static string FormatTime(float seconds)
         {
             int total = Mathf.Max(0, Mathf.FloorToInt(seconds));
@@ -710,7 +756,7 @@ namespace GameLogic.Takeover
         }
 
         private Button InstantiateActionButton(string name, Transform parent, Vector2 position, Vector2 size,
-            string label, UnityEngine.Events.UnityAction action)
+            string label, UnityEngine.Events.UnityAction action, bool stateTint = false)
         {
             var instance = Object.Instantiate(_actionButtonTemplate, parent, false);
             instance.name = name;
@@ -727,10 +773,12 @@ namespace GameLogic.Takeover
             var text = instance.GetComponentInChildren<Text>(true);
             if (button == null || text == null)
                 throw new InvalidOperationException($"UI 列表项预制体缺少 Button 或 Text：{ActionButtonPrefabLocation}");
-            instance.SetActive(true);
             text.text = label;
             text.font = _font;
             button.onClick.AddListener(action);
+            // 先套好状态配色再显示，避免首帧闪一下模板默认色
+            if (stateTint) ApplyActionStateColors(button);
+            instance.SetActive(true);
             return button;
         }
 

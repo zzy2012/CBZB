@@ -28,7 +28,6 @@ namespace GameLogic.Takeover
             new Dictionary<MapNode, LineRenderer>();
         private readonly Dictionary<int, LineRenderer> _unitClickableAreas =
             new Dictionary<int, LineRenderer>();
-        private readonly HashSet<Squad> _selectedSquads = new HashSet<Squad>();
         private SpriteRenderer _mapBackground;
         private MapNode _selected;
         private Squad _selectedSquad;
@@ -43,10 +42,7 @@ namespace GameLogic.Takeover
         private GameConfig.takeover.Spell _pendingSpell;
         private TakeoverUIWindow _ui;
         private Squad _dragSquad;
-        private Vector2 _selectionStart;
-        private Vector2 _selectionEnd;
-        private bool _selecting;
-        private LineRenderer _selectionBox;
+        private Vector2 _pressScreen;
         private LineRenderer _orderPreview;
         private Material _clickableAreaMaterial;
         private CancellationTokenSource _visualBindingCancellationTokenSource;
@@ -99,7 +95,6 @@ namespace GameLogic.Takeover
             _paused = true;
             _selected = null;
             _selectedSquad = null;
-            _selectedSquads.Clear();
             _pendingSpell = null;
             if (_root != null) _root.gameObject.SetActive(false);
             _ui?.ShowLevelSelect();
@@ -126,7 +121,6 @@ namespace GameLogic.Takeover
             _unitClickableAreas.Clear();
             _selected = null;
             _selectedSquad = null;
-            _selectedSquads.Clear();
             _paused = false;
             _reported = false;
             _pendingSpell = null;
@@ -158,11 +152,11 @@ namespace GameLogic.Takeover
         {
             if (_ui == null) return;
             if (LevelAssetId == 1)
-                _ui.ShowToast("点击己方城堡招募，再按住部队拖到目标；拖框可多选", 6f);
+                _ui.ShowToast("点击己方城堡招募，再按住部队拖到目标", 6f);
             else if (LevelAssetId == 2)
-                _ui.ShowToast("先建造农场增加补给；左键拖动部队下令，拖框多选", 6f);
+                _ui.ShowToast("先建造农场增加补给；左键按住部队拖动下令", 6f);
             else
-                _ui.ShowToast("左键按住部队拖动下令；空地拖框多选；左键点击建筑打开面板", 6f);
+                _ui.ShowToast("左键按住部队拖动下令；左键点击建筑打开面板", 6f);
         }
 
         public void RegisterUI(TakeoverUIWindow ui)
@@ -230,9 +224,12 @@ namespace GameLogic.Takeover
             if (_sim.Nodes.Count == 0) return;
             var go = new GameObject("TakeoverMapBackground");
             go.transform.SetParent(_root, false);
+            // 地图 PNG 与舞台坐标差一个平移（居中裁切导致），按表里的修正量把贴图挪回去：
+            // 贴图特征在 贴图坐标 (x+ox, y+oy)，渲染后世界坐标 y = 600 - y_pixel，所以 x 取反、y 同号。
+            Vector2 mapOffset = TakeoverVisualCatalog.MapOffset(LevelAssetId);
             go.transform.position = new Vector2(
-                OriginalRules.NativeStageWidth * 0.5f,
-                OriginalRules.NativeStageHeight * 0.5f);
+                OriginalRules.NativeStageWidth * 0.5f - mapOffset.x,
+                OriginalRules.NativeStageHeight * 0.5f + mapOffset.y);
             _mapBackground = go.AddComponent<SpriteRenderer>();
             _mapBackground.sortingOrder = -10;
         }
@@ -345,8 +342,6 @@ namespace GameLogic.Takeover
             if (_clickableAreaMaterial != null)
                 Destroy(_clickableAreaMaterial);
             _clickableAreaMaterial = new Material(Shader.Find("Sprites/Default"));
-            _selectionBox = CreateOverlayLine("SelectionBox", new Color(0.35f, 1f, 0.35f, 0.9f));
-            _selectionBox.loop = true;
             _orderPreview = CreateOverlayLine("OrderPreview", new Color(1f, 0.85f, 0.35f, 0.9f));
         }
 
@@ -407,13 +402,10 @@ namespace GameLogic.Takeover
 
             if (_toastTimer > 0f) _toastTimer -= Time.deltaTime;
 
-            _selectedSquads.RemoveWhere(squad => squad == null || squad.IsDead);
-            if (_selectedSquad != null && (!_selectedSquads.Contains(_selectedSquad) || _selectedSquad.IsDead))
-                _selectedSquad = _selectedSquads.FirstOrDefault();
+            if (_selectedSquad != null && _selectedSquad.IsDead) _selectedSquad = null;
             if (_sim.IsOver)
             {
                 _selected = null;
-                _selectedSquads.Clear();
                 _selectedSquad = null;
                 return;
             }
@@ -477,7 +469,7 @@ namespace GameLogic.Takeover
                     }
                     renderer.transform.position = DisplayPosition(unit.Pos);
                     renderer.transform.localScale = new Vector3(NativeSpriteScale, NativeSpriteScale, 1f);
-                    bool picked = _selectedSquads.Contains(squad);
+                    bool picked = squad == _selectedSquad;
                     renderer.color = unit.FrozenSeconds > 0f ? new Color(0.65f, 0.85f, 1f) :
                         unit.PoisonSeconds > 0f ? new Color(0.70f, 1f, 0.55f) :
                         picked ? new Color(1f, 0.94f, 0.58f) : Color.white;
@@ -593,21 +585,16 @@ namespace GameLogic.Takeover
             if (Input.GetKeyDown(KeyCode.Escape)) ShowLevelSelect();
             bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null
                                  && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
-            if (pointerOverUI && _dragSquad == null && !_selecting)
+            if (pointerOverUI && _dragSquad == null)
                 return;
 
+            // 原版没有框选：左键按住部队拖动下令，左键单击建筑/空地选中，单击空地取消选择。
             if (Input.GetMouseButtonDown(0))
             {
-                _selectionStart = Input.mousePosition;
-                _selectionEnd = _selectionStart;
-                _dragSquad = FindHumanSquadAtScreen(_selectionStart);
+                _pressScreen = Input.mousePosition;
+                _dragSquad = FindHumanSquadAtScreen(_pressScreen);
                 if (_dragSquad != null)
                 {
-                    if (_selectedSquads.Count == 0 || !_selectedSquads.Contains(_dragSquad))
-                    {
-                        _selectedSquads.Clear();
-                        _selectedSquads.Add(_dragSquad);
-                    }
                     _selectedSquad = _dragSquad;
                     _selected = null;
                     MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
@@ -617,17 +604,10 @@ namespace GameLogic.Takeover
                         hover?.Pos ?? MouseWorldPosition(),
                         hover?.Building != null && hover.Building.Owner != HumanFaction);
                 }
-                else
-                {
-                    _selecting = true;
-                    ClearSelection();
-                    UpdateSelectionBox();
-                }
             }
 
             if (Input.GetMouseButton(0))
             {
-                _selectionEnd = Input.mousePosition;
                 if (_dragSquad != null)
                 {
                     MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
@@ -635,46 +615,37 @@ namespace GameLogic.Takeover
                         hover?.Pos ?? MouseWorldPosition(),
                         hover?.Building != null && hover.Building.Owner != HumanFaction);
                 }
-                else if (_selecting)
-                {
-                    UpdateSelectionBox();
-                    SelectSquadsInBox();
-                }
             }
 
             if (Input.GetMouseButtonUp(0))
             {
-                float dragDistance = Vector2.Distance(_selectionStart, Input.mousePosition);
+                float dragDistance = Vector2.Distance(_pressScreen, Input.mousePosition);
                 if (_dragSquad != null)
                 {
                     if (dragDistance >= 8f)
-                        IssueGroupOrderAtMouse();
+                        IssueOrderAtMouse(_dragSquad);
                     else
                         Toast($"选中 {_dragSquad.Def.CnName}  {_dragSquad.AliveSoldiers}/{_dragSquad.MaxSoldiers} 人");
                 }
-                else if (_selecting && dragDistance < 8f)
+                else if (dragDistance < 8f)
                 {
                     HandleLeftClickAtMouse();
                 }
                 _dragSquad = null;
-                _selecting = false;
-                if (_selectionBox != null) _selectionBox.enabled = false;
                 if (_orderPreview != null) _orderPreview.enabled = false;
             }
         }
 
-        private void IssueGroupOrderAtMouse()
+        private void IssueOrderAtMouse(Squad squad)
         {
-            if (_selectedSquads.Count == 0) return;
+            if (squad == null || squad.IsDead) return;
             MapNode node = FindNodeAtScreen(Input.mousePosition, 34f);
             Vector2 target = node?.Pos ?? MouseWorldPosition();
-            int[] ids = _selectedSquads.Where(squad => !squad.IsDead).Select(squad => squad.Id).ToArray();
-            if (ids.Length == 0) return;
-            _sim.Enqueue(BattleCommand.Move(ids, target, node?.Id ?? 0));
+            _sim.Enqueue(BattleCommand.Move(new[] { squad.Id }, target, node?.Id ?? 0));
             if (node?.Building != null && node.Building.Owner != HumanFaction)
                 Toast($"部队前往 {node.Key}");
             else
-                Toast($"已命令 {ids.Length} 支部队移动");
+                Toast($"已命令 {squad.Def.CnName} 移动");
         }
 
         private void HandleLeftClickAtMouse()
@@ -706,7 +677,11 @@ namespace GameLogic.Takeover
                     ? $"空地 {node.Key}：可以建造"
                     : $"空地 {node.Key}：不在己方控制区");
             }
-            _selectedSquads.Clear();
+            else
+            {
+                // 点空地：取消选择
+                ClearSelection();
+            }
             _selectedSquad = null;
         }
 
@@ -751,39 +726,8 @@ namespace GameLogic.Takeover
 
         private void ClearSelection()
         {
-            _selectedSquads.Clear();
             _selectedSquad = null;
             _selected = null;
-        }
-
-        private void SelectSquadsInBox()
-        {
-            Rect rect = ScreenRect(_selectionStart, _selectionEnd);
-            _selectedSquads.Clear();
-            foreach (Squad squad in _sim.Human.Squads.Where(value => !value.IsDead))
-            {
-                Vector3 screen = _cam.WorldToScreenPoint(DisplayPosition(squad.Pos));
-                if (rect.Contains(screen)) _selectedSquads.Add(squad);
-            }
-            _selectedSquad = _selectedSquads.FirstOrDefault();
-        }
-
-        private void UpdateSelectionBox()
-        {
-            if (_selectionBox == null) return;
-            Vector2 a = ScreenToDisplayWorld(_selectionStart);
-            Vector2 b = ScreenToDisplayWorld(_selectionEnd);
-            Vector2 c = new Vector2(a.x, b.y);
-            Vector2 d = new Vector2(b.x, a.y);
-            _selectionBox.positionCount = 4;
-            _selectionBox.SetPositions(new[]
-            {
-                new Vector3(a.x, a.y, 0f),
-                new Vector3(c.x, c.y, 0f),
-                new Vector3(b.x, b.y, 0f),
-                new Vector3(d.x, d.y, 0f),
-            });
-            _selectionBox.enabled = Vector2.Distance(_selectionStart, _selectionEnd) >= 3f;
         }
 
         /// <summary>绘制拖拽下令的预览曲线。from / to 都是模拟逻辑坐标（不是显示坐标）。</summary>
@@ -810,18 +754,6 @@ namespace GameLogic.Takeover
             _orderPreview.startColor = color;
             _orderPreview.endColor = color;
             _orderPreview.enabled = true;
-        }
-
-        private Vector2 ScreenToDisplayWorld(Vector2 screen)
-        {
-            Vector3 world = _cam.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -_cam.transform.position.z));
-            return new Vector2(world.x, world.y);
-        }
-
-        private static Rect ScreenRect(Vector2 a, Vector2 b)
-        {
-            return new Rect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y),
-                Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
         }
 
         private void UpdateCamera()
@@ -887,7 +819,6 @@ namespace GameLogic.Takeover
         public BattleSimulation Simulation => _sim;
         public MapNode SelectedNode => _selected;
         public Squad SelectedSquad => _selectedSquad;
-        public IReadOnlyCollection<Squad> SelectedSquads => _selectedSquads;
         public bool Paused => _paused;
         public float Speed => _speed;
         public bool LevelSelectOpen => _levelSelectOpen;
