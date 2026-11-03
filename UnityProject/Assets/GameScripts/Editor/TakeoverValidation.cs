@@ -245,6 +245,13 @@ public static class TakeoverValidation
         "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_text_Hint",
         "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave",
         "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_Edicts",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_text_EdictTitle",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_text_EdictPoints",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_rect_EdictList",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_text_EdictHint",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_btn_EdictClose",
     };
 
     private static readonly string[] BattleHudPaths =
@@ -373,6 +380,21 @@ public static class TakeoverValidation
                 UiPrefabs[0], failures);
             CheckComponent<Text>(levelSelect,
                 "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave/m_text_Label",
+                UiPrefabs[0], failures);
+            CheckComponent<Button>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_Edicts",
+                UiPrefabs[0], failures);
+            CheckComponent<RectTransform>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel",
+                UiPrefabs[0], failures);
+            CheckComponent<Text>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_text_EdictPoints",
+                UiPrefabs[0], failures);
+            CheckComponent<RectTransform>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_rect_EdictList",
+                UiPrefabs[0], failures);
+            CheckComponent<Button>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_btn_EdictClose",
                 UiPrefabs[0], failures);
             for (int levelId = 1; levelId <= 8; levelId++)
             {

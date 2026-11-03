@@ -20,11 +20,15 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class CampaignSave
     {
-        public int Version = 1;
+        public int Version = 2;
         public int LastLevel = 1;
         public int Xp;
         public List<int> Unlocked = new List<int> { 1 };
         public List<LevelRecord> Records = new List<LevelRecord>();
+        /// <summary>教令点余额（首通 +2、首次三星 +2）。</summary>
+        public int EdictPoints;
+        /// <summary>每条教令已购档位（索引 = edictId-1，值 0..3）。</summary>
+        public List<int> EdictTiers = new List<int>();
 
         public bool IsUnlocked(int assetId) => Unlocked.Contains(assetId);
 
@@ -42,6 +46,8 @@ namespace GameLogic.Takeover
         public void Normalize(IReadOnlyCollection<int> validLevelIds)
         {
             if (Version <= 0) Version = 1;
+            if (Version < 2) Version = 2;
+            NormalizeEdicts(validLevelIds);
             if (validLevelIds == null || validLevelIds.Count == 0)
             {
                 Unlocked = new List<int> { 1 };
@@ -65,6 +71,26 @@ namespace GameLogic.Takeover
                     .ThenBy(r => r.BestSeconds < 0f ? float.MaxValue : r.BestSeconds)
                     .First())
                 .ToList();
+        }
+
+        /// <summary>教令数据规范化：点数不为负、档位表补齐到 27 条并夹在 0..3。</summary>
+        public void EnsureEdictTiers()
+        {
+            NormalizeEdicts(null);
+        }
+
+        private void NormalizeEdicts(IReadOnlyCollection<int> validLevelIds)
+        {
+            if (EdictPoints < 0) EdictPoints = 0;
+
+            var tiers = EdictTiers ?? new List<int>();
+            var normalized = new List<int>(TakeoverEdicts.EdictCount);
+            for (int i = 0; i < TakeoverEdicts.EdictCount; i++)
+            {
+                int value = i < tiers.Count ? tiers[i] : 0;
+                normalized.Add(Mathf.Clamp(value, 0, TakeoverEdicts.MaxTier));
+            }
+            EdictTiers = normalized;
         }
     }
 

@@ -176,7 +176,8 @@ namespace GameLogic.Takeover
                                OriginalRules.FromConfigFaction(lv.EnemyFaction);
             }
 
-            _sim = new BattleSimulation(LevelAssetId, HumanFaction, EnemyFaction);
+            // 已购教令在进关时换算成修正器数组交给模拟器（建筑 HP 在建图时按 mods 缩放）
+            _sim = new BattleSimulation(LevelAssetId, HumanFaction, EnemyFaction, Campaign.BuildHumanMods());
             PlayMusic("takeover_sfx_2910_musicGameplayClass_musicGameplayClass");
             BuildSelectionVisuals();
             BuildNodeViews();

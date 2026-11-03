@@ -11,6 +11,8 @@ namespace GameLogic.Takeover
             new List<TakeoverLevelButtonWidget>(8);
         private Button _resetButton;
         private Text _resetLabel;
+        private Button _edictsButton;
+        private TakeoverEdictPanelWidget _edictPanel;
         private TakeoverRunner _runner;
         private bool _resetArmed;
 
@@ -20,11 +22,24 @@ namespace GameLogic.Takeover
             Required<Text>("m_rect_ChapterPanel/m_text_Hint");
             _resetButton = Required<Button>("m_rect_ChapterPanel/m_btn_ResetSave");
             _resetLabel = Required<Text>("m_rect_ChapterPanel/m_btn_ResetSave/m_text_Label");
+            _edictsButton = Required<Button>("m_rect_ChapterPanel/m_btn_Edicts");
         }
 
         protected override void RegisterEvent()
         {
             _resetButton.onClick.AddListener(HandleResetSave);
+            _edictsButton.onClick.AddListener(HandleOpenEdicts);
+        }
+
+        /// <summary>教令面板由窗口创建（和本章面板同级），这里只负责打开。</summary>
+        public void SetEdictPanel(TakeoverEdictPanelWidget panel)
+        {
+            _edictPanel = panel;
+        }
+
+        private void HandleOpenEdicts()
+        {
+            _edictPanel?.SetVisible(true);
         }
 
         protected override void OnCreate()

@@ -24,6 +24,8 @@ public sealed partial class Edict : Luban.BeanBase
         Value = _buf.ReadInt();
         Cost = _buf.ReadInt();
         Desc = _buf.ReadString();
+        CnName = _buf.ReadString();
+        CnDesc = _buf.ReadString();
     }
 
     public static Edict DeserializeEdict(ByteBuf _buf)
@@ -63,6 +65,14 @@ public sealed partial class Edict : Luban.BeanBase
     /// 效果描述
     /// </summary>
     public readonly string Desc;
+    /// <summary>
+    /// 中文教令名
+    /// </summary>
+    public readonly string CnName;
+    /// <summary>
+    /// 中文效果
+    /// </summary>
+    public readonly string CnDesc;
    
     public const int __ID__ = -841346136;
     public override int GetTypeId() => __ID__;
@@ -82,6 +92,8 @@ public sealed partial class Edict : Luban.BeanBase
         + "value:" + Value + ","
         + "cost:" + Cost + ","
         + "desc:" + Desc + ","
+        + "cnName:" + CnName + ","
+        + "cnDesc:" + CnDesc + ","
         + "}";
     }
 }

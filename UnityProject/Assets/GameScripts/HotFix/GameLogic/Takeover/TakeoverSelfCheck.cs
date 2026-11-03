@@ -46,6 +46,7 @@ namespace GameLogic.Takeover
                 Check(tables.TbMapEdge.DataList.Count == 515, "地图道路数量不是 515", failures);
                 Check(tables.TbLevel.DataList.Count == 24, "关卡数量不是 24", failures);
                 Check(tables.TbEdict.DataList.Count == 81, "教令档位数量不是 81", failures);
+                CheckEdicts(tables, failures);
 
                 int chapterWaypointCount = 0;
                 for (int level = 1; level <= 8; level++)
@@ -344,6 +345,37 @@ namespace GameLogic.Takeover
         private static void Check(bool condition, string message, ICollection<string> failures)
         {
             if (!condition) failures.Add(message);
+        }
+
+        /// <summary>教令树结构 + 修正器换算：27 条 × 3 档、同价、阵营分组、应用后数值正确。</summary>
+        private static void CheckEdicts(Tables tables, ICollection<string> failures)
+        {
+            var rows = tables.TbEdict.DataList;
+            for (int edictId = 1; edictId <= TakeoverEdicts.EdictCount; edictId++)
+            {
+                var tiers = rows.Where(r => r.EdictId == edictId).OrderBy(r => r.Tier).ToList();
+                Check(tiers.Count == TakeoverEdicts.MaxTier,
+                    $"教令 {edictId} 档位数量不是 {TakeoverEdicts.MaxTier}", failures);
+                if (tiers.Count == 0) continue;
+                Check(tiers.Select(t => t.Cost).Distinct().Count() == 1,
+                    $"教令 {edictId} 各档花费不一致", failures);
+                Check(tiers.All(t => t.ModifierId >= 0 && t.ModifierId < TakeoverEdicts.ModCount),
+                    $"教令 {edictId} 修正器 ID 越界", failures);
+                Check(tiers.All(t => !string.IsNullOrEmpty(t.CnName) && !string.IsNullOrEmpty(t.CnDesc)),
+                    $"教令 {edictId} 缺少中文文案", failures);
+            }
+
+            Check(tables.TbEdict.DataList.Select(r => r.EdictId).Distinct().Count()
+                  == TakeoverEdicts.EdictCount, "教令条数不是 27", failures);
+
+            // 三档 DUCAL SOVEREIGNITY 第 2 档 → mods[8]=75；LEGION 第 2 档 → mods[16]=15
+            var tiersByEdict = new int[TakeoverEdicts.EdictCount];
+            tiersByEdict[1] = 2;   // edict 2
+            tiersByEdict[8] = 2;   // edict 9
+            int[] mods = TakeoverEdicts.BuildMods(tiersByEdict);
+            Check(mods[8] == 75, $"教令换算 mods[8] 应为 75，实际 {mods[8]}", failures);
+            Check(mods[16] == 15, $"教令换算 mods[16] 应为 15，实际 {mods[16]}", failures);
+            Check(mods[5] == 0, "未购买 THE LORD'S CHURCH 时不应有 mods[5]", failures);
         }
 
         private static Squad DummySquad(PlayerState player)

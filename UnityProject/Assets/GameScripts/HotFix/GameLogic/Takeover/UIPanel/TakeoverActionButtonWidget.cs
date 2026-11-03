@@ -45,8 +45,8 @@ namespace GameLogic.Takeover
 
             _label.text = plan.Label;
             _label.fontSize = plan.FontSize > 0 ? plan.FontSize : _defaultFontSize;
-            if (OwnerWindow is TakeoverBattleUI battleUI)
-                TakeoverUIResources.ApplyFont(gameObject, battleUI.Font);
+            if (OwnerWindow is ITakeoverFontSource fontSource)
+                TakeoverUIResources.ApplyFont(gameObject, fontSource.Font);
 
             if (stateTint) ApplyStateColors();
             SetInteractable(plan.Enabled == null || plan.Enabled());

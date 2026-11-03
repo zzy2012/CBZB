@@ -7,6 +7,12 @@ using UnityEngine.UI;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>窗口若暴露了原版字体，动态列表按钮创建时会自动套用。</summary>
+    public interface ITakeoverFontSource
+    {
+        Font Font { get; }
+    }
+
     internal static class TakeoverUIResources
     {
         private const string FontLocation = "takeover_font_328_Chaparral_Pro";

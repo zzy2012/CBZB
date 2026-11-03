@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     [Window(UILayer.UI, location: "TakeoverBattleUI", fullScreen: true)]
-    public sealed class TakeoverBattleUI : UIWindow
+    public sealed class TakeoverBattleUI : UIWindow, ITakeoverFontSource
     {
         private TakeoverRunner _runner;
         private TakeoverBattleHudWidget _battleHud;
