@@ -50,8 +50,17 @@ namespace GameLogic.Takeover
         private bool _badgeDisabled;
         private readonly Dictionary<int, TakeoverSquadBadgeWidget> _squadBadges =
             new Dictionary<int, TakeoverSquadBadgeWidget>();
+        private readonly Dictionary<int, TakeoverBuildingBadgeWidget> _buildingBadges =
+            new Dictionary<int, TakeoverBuildingBadgeWidget>();
+        private bool _buildingBadgeDisabled;
+        private bool _buildingBadgeErrorLogged;
 
         private const float BadgeWorldOffsetY = 34f;
+        private const float BuildingBadgeWorldOffsetY = 42f;
+
+        /// <summary>敌方普通法术播报的最小间隔（秒），避免 AI 互丢法术刷屏。</summary>
+        private const float EnemySpellToastInterval = 4f;
+        private float _lastEnemySpellToast = -100f;
 
         public int LevelAssetId = 1;
         public Faction HumanFaction = Faction.Westaria;
@@ -59,6 +68,9 @@ namespace GameLogic.Takeover
 
         /// <summary>调试开关：关掉后不再创建 squad 头顶徽标（排查卡顿/不显示时用）。</summary>
         public bool ShowSquadBadges = true;
+
+        /// <summary>调试开关：关掉后不再创建建筑头顶徽标。</summary>
+        public bool ShowBuildingBadges = true;
 
         private void Awake()
         {
@@ -87,6 +99,8 @@ namespace GameLogic.Takeover
         private void OnDestroy()
         {
             ClearSquadBadges();
+            ClearBuildingBadges();
+            ClearSpellFx();
             CancelVisualBinding();
             if (_clickableAreaMaterial != null)
             {
@@ -109,6 +123,8 @@ namespace GameLogic.Takeover
             _selectedSquad = null;
             _pendingSpell = null;
             ClearSquadBadges();
+            ClearBuildingBadges();
+            ClearSpellFx();
             if (_root != null) _root.gameObject.SetActive(false);
             GameModule.UI.CloseUI<TakeoverBattleUI>();
             GameModule.UI.CloseUI<TakeoverResultUI>();
@@ -139,12 +155,15 @@ namespace GameLogic.Takeover
             _nodeClickableAreas.Clear();
             _unitClickableAreas.Clear();
             ClearSquadBadges();
+            ClearBuildingBadges();
+            ClearSpellFx();
             _badgeCreateErrorLogged = false;
             _badgeProbeLogged = false;
             _badgeDisabled = false;
             _selected = null;
             _selectedSquad = null;
             _paused = false;
+            _speed = 1f;              // 每次重开/进关都回到 ×1
             _reported = false;
             _pendingSpell = null;
 
@@ -432,6 +451,8 @@ namespace GameLogic.Takeover
 
             SyncSquads();
             SyncNodes();
+            SyncBuildingBadges();
+            if (!_paused) UpdateSpellFx(Time.deltaTime);
 
             if (_selectedSquad != null && _selectedSquad.IsDead) _selectedSquad = null;
             if (_sim.IsOver)
@@ -451,7 +472,7 @@ namespace GameLogic.Takeover
                 {
                     case "SpellCast":
                     case "UltimateCast":
-                        Toast(battleEvent.Kind == "UltimateCast" ? "终极技能发动" : "法术发动");
+                        HandleSpellCastEvent(battleEvent);
                         break;
                     case "BuildingCaptured":
                         Toast("建筑已占领");
@@ -476,6 +497,136 @@ namespace GameLogic.Takeover
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// 法术播报 + 表现：谁放的、什么法术、具体效果，并在落点画一圈范围提示。
+        /// 敌方普通法术 4 秒内只播一次，避免 AI 互丢法术刷屏；终极技能每次播。
+        /// </summary>
+        private void HandleSpellCastEvent(BattleEvent battleEvent)
+        {
+            var spell = Cfg.TbSpell.DataList.FirstOrDefault(value =>
+                value.Id == Mathf.RoundToInt(battleEvent.Value));
+            PlayerState caster = _sim != null
+                ? _sim.Players.FirstOrDefault(value => value.Id == battleEvent.ActorId)
+                : null;
+            int originalId = spell != null ? OriginalRules.OriginalSpellIndex(spell.Id) : -1;
+            SpawnSpellFx(battleEvent.Position, spell != null ? spell.Radius : 0f, originalId);
+
+            bool ultimate = battleEvent.Kind == "UltimateCast";
+            bool byHuman = caster != null && _sim != null && _sim.Human != null && caster == _sim.Human;
+            if (!byHuman && !ultimate &&
+                Time.unscaledTime - _lastEnemySpellToast < EnemySpellToastInterval)
+            {
+                return;
+            }
+            _lastEnemySpellToast = Time.unscaledTime;
+
+            string who = caster != null ? FactionDisplayName(caster.Faction) : "未知阵营";
+            string name = spell != null ? spell.CnName : "法术";
+            string effect = spell != null ? BattleSpellSystem.DescribeSpellText(originalId, spell) : "";
+            Toast($"{who} 施放 {name}：{effect}");
+        }
+
+        private static string FactionDisplayName(Faction faction)
+        {
+            switch (faction)
+            {
+                case Faction.Westaria: return "维斯特利亚";
+                case Faction.Khaganate: return "游牧汗国";
+                case Faction.Cult: return "暗影教团";
+                case Faction.Empire: return "帝国";
+                default: return faction.ToString();
+            }
+        }
+
+        private struct SpellFx
+        {
+            public LineRenderer Line;
+            public float Life;
+            public float Total;
+            public Color Color;
+        }
+
+        private const float SpellFxLife = 1.2f;
+        private readonly List<SpellFx> _spellFx = new List<SpellFx>();
+
+        /// <summary>法术落点表现：一圈会淡出的范围指示；全屏类法术（半径 0）画满舞台。</summary>
+        private void SpawnSpellFx(Vector2 center, float radius, int originalId)
+        {
+            if (_root == null) return;
+            Color color = SpellFxColor(originalId);
+            bool global = radius <= 1f;
+            float drawRadius = global ? 300f : radius;
+            Vector2 worldCenter = global
+                ? new Vector2(OriginalRules.NativeStageWidth * 0.5f,
+                    OriginalRules.NativeStageHeight * 0.5f)
+                : DisplayPosition(center);
+
+            LineRenderer line = CreateOverlayLine("SpellFx", color);
+            const int segments = 48;
+            line.positionCount = segments + 1;
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i / (float)segments * Mathf.PI * 2f;
+                line.SetPosition(i, new Vector3(worldCenter.x + Mathf.Cos(angle) * drawRadius,
+                    worldCenter.y + Mathf.Sin(angle) * drawRadius, 0f));
+            }
+            line.startWidth = 3f;
+            line.endWidth = 3f;
+            line.enabled = true;
+            _spellFx.Add(new SpellFx { Line = line, Life = SpellFxLife, Total = SpellFxLife, Color = color });
+        }
+
+        private static Color SpellFxColor(int originalId)
+        {
+            switch (originalId)
+            {
+                case 0:
+                case 4:
+                case 7:
+                case 12:
+                case 14:
+                    return new Color(1f, 0.38f, 0.28f, 0.9f);   // 伤害 / 控制
+                case 1:
+                case 2:
+                case 6:
+                case 9:
+                case 10:
+                    return new Color(0.45f, 1f, 0.55f, 0.9f);   // 治疗 / 增益
+                case 8:
+                    return new Color(0.55f, 0.85f, 1f, 0.9f);   // 冰冻
+                default:
+                    return new Color(0.85f, 0.75f, 1f, 0.9f);
+            }
+        }
+
+        private void UpdateSpellFx(float dt)
+        {
+            for (int i = _spellFx.Count - 1; i >= 0; i--)
+            {
+                SpellFx fx = _spellFx[i];
+                fx.Life -= dt;
+                if (fx.Line == null || fx.Life <= 0f)
+                {
+                    if (fx.Line != null) Destroy(fx.Line.gameObject);
+                    _spellFx.RemoveAt(i);
+                    continue;
+                }
+                float k = Mathf.Clamp01(fx.Life / fx.Total);
+                fx.Line.startColor = new Color(fx.Color.r, fx.Color.g, fx.Color.b, fx.Color.a * k);
+                fx.Line.endColor = fx.Line.startColor;
+                _spellFx[i] = fx;
+            }
+        }
+
+        private void ClearSpellFx()
+        {
+            for (int i = 0; i < _spellFx.Count; i++)
+            {
+                if (_spellFx[i].Line != null) Destroy(_spellFx[i].Line.gameObject);
+            }
+            _spellFx.Clear();
         }
 
         private void SyncSquads()
@@ -580,6 +731,7 @@ namespace GameLogic.Takeover
                             Log.Error("[Takeover] Squad badge widget could not be created; badges are disabled.");
                         }
                         ClearSquadBadges();
+                        ClearBuildingBadges();
                         return;
                     }
                     _squadBadges[squad.Id] = badge;
@@ -624,6 +776,91 @@ namespace GameLogic.Takeover
         {
             foreach (int id in _squadBadges.Keys.ToList()) DestroySquadBadge(id);
             _squadBadges.Clear();
+        }
+
+        /// <summary>建筑头顶徽标：等级 + 血条 + 阵营色环，跟随建筑位置（只对城镇/要塞/营地/魔法塔）。</summary>
+        private void SyncBuildingBadges()
+        {
+            if (!ShowBuildingBadges || _buildingBadgeDisabled)
+            {
+                if (_buildingBadges.Count > 0) ClearBuildingBadges();
+                return;
+            }
+            if (_sim == null) return;
+            if (!TryResolveBadgeContext(out RectTransform layer, out Camera uiCamera, out float badgeScale))
+                return;
+
+            var live = new HashSet<int>();
+            foreach (MapNode node in _sim.Nodes)
+            {
+                BuildingState building = node.Building;
+                if (building == null || !BattleSim.IsKeyBuilding(building)) continue;
+                live.Add(node.Id);
+                if (!_buildingBadges.TryGetValue(node.Id, out TakeoverBuildingBadgeWidget badge))
+                {
+                    badge = _battleUI.CreateBuildingBadgeWidget();
+                    if (badge == null || !badge.IsValid)
+                    {
+                        if (badge != null) badge.Destroy();
+                        _buildingBadgeDisabled = true;
+                        if (!_buildingBadgeErrorLogged)
+                        {
+                            _buildingBadgeErrorLogged = true;
+                            Log.Error("[Takeover] Building badge widget could not be created; " +
+                                      "building badges are disabled.");
+                        }
+                        ClearBuildingBadges();
+                        return;
+                    }
+                    _buildingBadges[node.Id] = badge;
+                    badge.Bind(node);
+                }
+
+                Vector3 screen = _cam.WorldToScreenPoint(
+                    DisplayPosition(node.Pos) + new Vector2(0f, BuildingBadgeWorldOffsetY));
+                Vector2 local;
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(layer, screen, uiCamera, out local))
+                    continue;
+                badge.SetPosition(local);
+                badge.RefreshVisuals(node == _selected, building.Owner == _sim.Human.Faction, badgeScale);
+            }
+
+            foreach (int id in _buildingBadges.Keys.ToList())
+            {
+                if (live.Contains(id)) continue;
+                DestroyBuildingBadge(id);
+            }
+        }
+
+        /// <summary>徽标层、UI 相机、尺寸换算，squad 与建筑徽标共用。</summary>
+        private bool TryResolveBadgeContext(out RectTransform layer, out Camera uiCamera, out float badgeScale)
+        {
+            layer = null;
+            uiCamera = null;
+            badgeScale = 1f;
+            if (_battleUI == null || _cam == null) return false;
+            layer = _battleUI.SquadBadgeLayer;
+            if (layer == null) return false;
+            Canvas canvas = layer.GetComponentInParent<Canvas>();
+            Canvas rootCanvas = canvas != null ? canvas.rootCanvas : null;
+            uiCamera = rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? rootCanvas.worldCamera
+                : null;
+            badgeScale = ResolveBadgeScale(rootCanvas);
+            return true;
+        }
+
+        private void DestroyBuildingBadge(int nodeId)
+        {
+            if (!_buildingBadges.TryGetValue(nodeId, out TakeoverBuildingBadgeWidget badge)) return;
+            badge.Destroy();
+            _buildingBadges.Remove(nodeId);
+        }
+
+        private void ClearBuildingBadges()
+        {
+            foreach (int id in _buildingBadges.Keys.ToList()) DestroyBuildingBadge(id);
+            _buildingBadges.Clear();
         }
 
         private void SyncNodes()
@@ -784,7 +1021,8 @@ namespace GameLogic.Takeover
                 Vector2 target = spellNode?.Pos ?? MouseWorldPosition();
                 bool cast = _sim.ExecuteNow(BattleCommand.CastSpell(
                     _pendingSpell.Id, target, spellNode?.Id ?? 0));
-                Toast(cast ? $"已施放 {_pendingSpell.CnName}" : "法术施放失败");
+                // 成功时的播报交给 SpellCast 事件（带施法者和效果说明），这里只报失败
+                if (!cast) Toast("法术施放失败");
                 _pendingSpell = null;
                 return;
             }
@@ -794,7 +1032,7 @@ namespace GameLogic.Takeover
             {
                 _selected = node;
                 Toast(node.Building.Owner == HumanFaction
-                    ? $"选中 {node.Key}，等级 {node.Building.Level}"
+                    ? $"选中 {node.Key}，等级 {node.Building.Level + 1}"
                     : $"{node.Key} 属于 {node.Building.Owner}");
             }
             else if (node?.Kind == NodeKind.BuildSpot && node.Building == null)
@@ -953,7 +1191,31 @@ namespace GameLogic.Takeover
         public bool LevelSelectOpen => _levelSelectOpen;
 
         public void TogglePause() => _paused = !_paused;
-        public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, 1f, 8f);
+        public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, 1f, MaxSpeed);
+
+        /// <summary>GM 面板最高 64 倍速。</summary>
+        public const float MaxSpeed = 256f;
+
+        /// <summary>玩家是否已被 AI 托管（底栏 AI 开关）。</summary>
+        public bool HumanAiControlled => _sim != null && _sim.Human != null && _sim.Human.AiControlled;
+
+        public void ToggleHumanAi()
+        {
+            if (_sim == null || _sim.Human == null) return;
+            SetHumanAi(!_sim.Human.AiControlled);
+        }
+
+        public void SetHumanAi(bool enabled)
+        {
+            if (_sim == null || _sim.Human == null) return;
+            _sim.Human.AiControlled = enabled;
+            if (enabled)
+            {
+                // 立刻跑一拍，不用等下一个逻辑秒，开关点下去就能看到 AI 开始行动
+                _sim.ForceAiTick(_sim.Human);
+            }
+            Toast(enabled ? "AI 已接管我方（再点一次收回）" : "已收回 AI，恢复手动操作");
+        }
 
         public void GrantResources(int gold, int mana)
         {

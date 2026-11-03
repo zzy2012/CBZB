@@ -96,7 +96,7 @@ namespace GameLogic.Takeover
                 BattleSim.IsKeyBuilding(node.Building))
             {
                 var building = node.Building;
-                _title.text = $"{node.Key}  等级 {building.Level}/2";
+                _title.text = $"{node.Key}  等级 {building.Level + 1}/3";
                 _body.text =
                     $"HP {building.Hp}/{building.MaxHp}\n金币 +{building.GoldPerSec}/s   " +
                     $"法力 +{building.ManaPerSec}/s\n补给 +{building.Supply}";
@@ -129,7 +129,7 @@ namespace GameLogic.Takeover
                 _title.text = $"{node.Building.Node.Key}  {node.Building.Owner}";
                 _body.text =
                     $"HP {node.Building.Hp}/{node.Building.MaxHp}\n" +
-                    $"等级 {node.Building.Level}/2\n" +
+                    $"等级 {node.Building.Level + 1}/3\n" +
                     "拖动己方部队到此处进行攻击";
                 return true;
             }

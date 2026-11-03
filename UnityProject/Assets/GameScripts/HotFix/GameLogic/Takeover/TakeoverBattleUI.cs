@@ -60,6 +60,11 @@ namespace GameLogic.Takeover
             return _battleHud != null ? _battleHud.CreateSquadBadge() : null;
         }
 
+        public TakeoverBuildingBadgeWidget CreateBuildingBadgeWidget()
+        {
+            return _battleHud != null ? _battleHud.CreateBuildingBadge() : null;
+        }
+
         private async UniTask LoadFontAsync()
         {
             _font = await TakeoverUIResources.LoadAndApplyFontAsync(

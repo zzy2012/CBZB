@@ -266,6 +266,8 @@ namespace GameLogic.Takeover
         public Faction Faction;
         public bool IsHuman;
         public bool AiEnabled = true;
+        /// <summary>由 GM 开关控制：为 true 时玩家也交给 AI 托管（人类玩家默认 false）。</summary>
+        public bool AiControlled;
         public bool SpellsEnabled = true;
         public int UnitTypeLimit = 4;
         public float Gold;

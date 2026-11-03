@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
 {
     public sealed class TakeoverBattleHudWidget : UIWidget
     {
-        private static readonly float[] BottomSpeeds = { 1f, 2f, 4f };
+        private static readonly float[] BottomSpeeds = { 1f, 4f, 16f, 64f, 256f };
         private static readonly Color SpeedIdleColor = new Color(0.18f, 0.15f, 0.10f, 0.95f);
         private static readonly Color SpeedActiveColor = new Color(0.38f, 0.31f, 0.15f, 0.98f);
 
@@ -25,8 +25,13 @@ namespace GameLogic.Takeover
         private Button _restartButton;
         private Button _levelsButton;
         private Button _settingsButton;
+        private Button _aiButton;
+        private Text _aiLabel;
+        private static readonly Color AiIdleColor = new Color(0.18f, 0.15f, 0.10f, 0.95f);
+        private static readonly Color AiActiveColor = new Color(0.30f, 0.52f, 0.30f, 0.98f);
         private RectTransform _squadBadgeLayer;
         private RectTransform _squadBadgePrototype;
+        private RectTransform _buildingBadgePrototype;
         private int _timerId;
 
         public RectTransform SquadBadgeLayer => _squadBadgeLayer;
@@ -39,9 +44,13 @@ namespace GameLogic.Takeover
             _restartButton = Required<Button>("m_rect_Controls/m_btn_Restart");
             _levelsButton = Required<Button>("m_rect_Controls/m_btn_Levels");
             _settingsButton = Required<Button>("m_rect_BottomBar/m_btn_Settings");
+            _aiButton = Required<Button>("m_rect_BottomBar/m_btn_AiToggle");
+            _aiLabel = Required<Text>("m_rect_BottomBar/m_btn_AiToggle/m_text_Label");
             _squadBadgeLayer = Required<RectTransform>("m_rect_SquadBadgeLayer");
             _squadBadgePrototype = Required<RectTransform>(
                 "m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype");
+            _buildingBadgePrototype = Required<RectTransform>(
+                "m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype");
 
             _bottomSpeedButtons.Clear();
             _bottomSpeedLabels.Clear();
@@ -60,6 +69,7 @@ namespace GameLogic.Takeover
             _levelsButton.onClick.AddListener(() => _runner?.ShowLevelSelect());
             _settingsButton.onClick.AddListener(
                 () => TakeoverToastUI.Show("设置面板还没做（音量 / 画质 / 退出）", 2.5f));
+            _aiButton.onClick.AddListener(() => _runner?.ToggleHumanAi());
 
             for (int i = 0; i < BottomSpeeds.Length; i++)
             {
@@ -114,6 +124,14 @@ namespace GameLogic.Takeover
                 _squadBadgePrototype.gameObject, _squadBadgeLayer);
         }
 
+        public TakeoverBuildingBadgeWidget CreateBuildingBadge()
+        {
+            if (_buildingBadgePrototype == null || _squadBadgeLayer == null)
+                return null;
+            return CreateWidgetByPrefab<TakeoverBuildingBadgeWidget>(
+                _buildingBadgePrototype.gameObject, _squadBadgeLayer);
+        }
+
         private void OnUiTick(object[] args)
         {
             if (gameObject.activeInHierarchy)
@@ -150,6 +168,11 @@ namespace GameLogic.Takeover
 
             _inspector.Refresh();
             _spellBar.Refresh();
+
+            bool ai = _runner.HumanAiControlled;
+            if (_aiLabel != null) _aiLabel.text = ai ? "AI*" : "AI";
+            Graphic aiGraphic = _aiButton != null ? _aiButton.targetGraphic : null;
+            if (aiGraphic != null) aiGraphic.color = ai ? AiActiveColor : AiIdleColor;
         }
 
         private static int CountEnemyKeyBuildings(BattleSimulation simulation)

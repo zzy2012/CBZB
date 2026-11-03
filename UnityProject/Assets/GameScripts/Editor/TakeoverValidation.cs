@@ -260,15 +260,25 @@ public static class TakeoverValidation
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusCharge",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusShield",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusFear",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype/m_img_Ring",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype/m_img_Inside",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype/m_img_HpBack",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype/m_img_HpFill",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype/m_text_Level",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_rect_Top/m_text_Resources",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_rect_Top/m_text_Clock",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_Settings",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_AiToggle",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_AiToggle/m_text_Label",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Pause",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Restart",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Levels",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed1/m_text_Label",
-        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed2/m_text_Label",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed4/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed16/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed64/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed256/m_text_Label",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_text_InspectorTitle",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_text_InspectorBody",
         "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_rect_Actions",
@@ -398,6 +408,12 @@ public static class TakeoverValidation
             CheckComponent<Button>(battle,
                 "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_Settings",
                 UiPrefabs[1], failures);
+            CheckComponent<Button>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_AiToggle",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_AiToggle/m_text_Label",
+                UiPrefabs[1], failures);
             CheckComponent<RectTransform>(battle,
                 "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector",
                 UiPrefabs[1], failures);
@@ -447,7 +463,7 @@ public static class TakeoverValidation
                 CheckComponent<Button>(battle,
                     $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/{button}",
                     UiPrefabs[1], failures);
-            foreach (float speed in new[] { 1f, 2f, 4f, 8f })
+            foreach (float speed in new[] { 1f, 2f, 4f, 8f, 16f, 32f, 64f })
             {
                 CheckComponent<Button>(battle,
                     $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed{speed:0}",
@@ -456,7 +472,7 @@ public static class TakeoverValidation
                     $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed{speed:0}/m_text_Label",
                     UiPrefabs[1], failures);
             }
-            foreach (float speed in new[] { 1f, 2f, 4f })
+            foreach (float speed in new[] { 1f, 4f, 16f, 64f, 256f })
             {
                 string path =
                     $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed{speed:0}";

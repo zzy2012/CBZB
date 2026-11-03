@@ -7,9 +7,9 @@ namespace GameLogic.Takeover
 {
     public sealed class TakeoverGmPanelWidget : UIWidget
     {
-        private static readonly float[] GmSpeeds = { 1f, 2f, 4f, 8f };
+        private static readonly float[] GmSpeeds = { 1f, 2f, 4f, 8f, 16f, 32f, 64f };
 
-        private readonly List<Text> _speedLabels = new List<Text>(4);
+        private readonly List<Text> _speedLabels = new List<Text>(7);
         private TakeoverRunner _runner;
         private Button _toggle;
         private Button _gold;

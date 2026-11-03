@@ -59,9 +59,11 @@ namespace GameLogic.Takeover
                 }
                 ResolveUnitSeparation(squad);
                 TryCollectChest(squad);
+                // 接收半径要和 FinishMove 的 AtNode 判定（70）一致：
+                // 原来 42 会导致部队在 42~70 之间停下却永远接收不了空血建筑。
                 if (squad.TargetNode?.Building != null && squad.TargetNode.Building.Hp <= 0 &&
                     squad.Units.Where(unit => !unit.IsDead).Any(unit =>
-                        Vector2.Distance(unit.Pos, squad.TargetNode.Pos) <= 42f))
+                        Vector2.Distance(unit.Pos, squad.TargetNode.Pos) <= 70f))
                 {
                     MapSystem.Capture(squad.TargetNode, squad);
                 }

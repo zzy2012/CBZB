@@ -386,7 +386,9 @@ namespace GameLogic.Takeover
                 player.Mana = Mathf.Min(ManaCap, player.Mana + player.ManaIncome);
                 player.Ultimate = Mathf.Min(player.UltimateMax, player.Ultimate + player.UltimateRate);
                 player.SpellCooldown = Mathf.Max(0f, player.SpellCooldown - 1f);
-                if (player.AiEnabled && !player.IsHuman) _aiSystem.TickAiSecond(player);
+                // 人类玩家默认 AiEnabled = false，托管时要靠 AiControlled 单独放行
+                bool aiDriven = player.IsHuman ? player.AiControlled : player.AiEnabled;
+                if (aiDriven) _aiSystem.TickAiSecond(player);
             }
         }
 

@@ -89,6 +89,8 @@ namespace GameLogic.Takeover
         public int TargetId;
         public float Value;
         public Vector2 Position;
+        /// <summary>可选的表现文案（例如法术效果说明），由模拟器在触发时填好。</summary>
+        public string Text;
     }
 
     /// <summary>供表现层读取的部队状态快照，不暴露模拟器内部对象。</summary>
@@ -310,14 +312,31 @@ namespace GameLogic.Takeover
 
         public void Enqueue(BattleCommand command) => _commands.Enqueue(command);
 
+        /// <summary>GM 的「AI 托管」开关打开时，立刻让 AI 跑一拍，玩家马上能看到它开始买兵/建造。</summary>
+        public void ForceAiTick(PlayerState player)
+        {
+            if (player == null) return;
+            State.AiSystem.TickAiSecond(player);
+        }
+
         public bool ExecuteNow(BattleCommand command) => State.ExecuteCommand(State.Human, command);
+
+        /// <summary>单次 Tick 允许推进的最大模拟时间（秒）：只防卡死，不再限制倍速。</summary>
+        private const float MaxTickSeconds = 40f;
+
+        /// <summary>单次 Tick 的硬步数上限，防止极端卡顿后一次跑几千步卡住主线程。</summary>
+        private const int MaxStepsPerTick = 1500;
 
         public void Tick(float realDeltaSeconds)
         {
             if (realDeltaSeconds <= 0f) return;
-            _accumulator += Mathf.Min(realDeltaSeconds, 0.25f);
+            // 之前这里用 Mathf.Min(realDeltaSeconds, 0.25f) 和 guard < 20，
+            // 等于把倍速硬顶在 ~15 倍（0.25s × 帧率），所以 ×64 和 ×256 手感一样。
+            float budget = Mathf.Min(realDeltaSeconds, MaxTickSeconds);
+            _accumulator += budget;
+            int maxSteps = Mathf.Clamp(Mathf.CeilToInt(budget / FixedStep) + 2, 1, MaxStepsPerTick);
             int guard = 0;
-            while (_accumulator >= FixedStep && guard++ < 20)
+            while (_accumulator >= FixedStep && guard++ < maxSteps)
             {
                 while (_commands.Count > 0)
                 {
@@ -326,6 +345,8 @@ namespace GameLogic.Takeover
                 State.Tick(FixedStep);
                 _accumulator -= FixedStep;
             }
+            // 撞到步数上限时丢掉积压，避免下一帧继续追赶
+            if (guard >= maxSteps) _accumulator = 0f;
         }
 
         public IReadOnlyList<BattleEvent> DrainEvents() => State.DrainEvents();

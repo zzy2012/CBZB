@@ -184,8 +184,51 @@ namespace GameLogic.Takeover
                 TargetId = target?.Id ?? -1,
                 Value = spell.Id,
                 Position = position,
+                Text = DescribeSpellText(OriginalRules.OriginalSpellIndex(spell.Id), spell),
             });
             return true;
+        }
+
+        /// <summary>给表现层用的效果说明（施法播报里显示「谁、放了什么、干了什么」）。</summary>
+        internal static string DescribeSpellText(int originalId, GameConfig.takeover.Spell spell)
+        {
+            switch (originalId)
+            {
+                case 0:
+                    return $"对范围内敌人造成 {Mathf.RoundToInt(spell.Power)}% 生命伤害";
+                case 1:
+                    return $"范围内友军持续回复 {Mathf.RoundToInt(spell.Power)} 生命";
+                case 2:
+                    return "范围内友军士气回满，持续 10 秒";
+                case 3:
+                    return "召唤化身参战";
+                case 4:
+                    return $"召唤石虫，对范围内敌人造成 {Mathf.RoundToInt(spell.Power)} 伤害";
+                case 5:
+                    return "召唤不朽者参战";
+                case 6:
+                    return $"范围内友军伤害 +{Mathf.RoundToInt((spell.Power - 1f) * 100f)}%";
+                case 7:
+                    return $"全屏天灾落雷，持续 {spell.Time:0.#} 秒";
+                case 8:
+                    return $"冰冻范围内敌人 {spell.Time:0.#} 秒";
+                case 9:
+                    return $"范围内友军减伤 25%，持续 {spell.Time:0.#} 秒";
+                case 10:
+                    return $"范围内友军免疫法术，持续 {spell.Time:0.#} 秒";
+                case 11:
+                    return "全军变身强化";
+                case 12:
+                    return "使范围内敌人恐惧 10 秒";
+                case 13:
+                    return "召唤亡灵射手/战士参战";
+                case 14:
+                    return "范围内友军持续回血";
+                case 15:
+                    return "召唤亡者参战";
+                default:
+                    return $"范围 {Mathf.RoundToInt(spell.Radius)} 的效果";
+            }
         }
 
         internal void CastSpellEffect(PlayerState player, GameConfig.takeover.Spell spell, Vector2 position, MapNode target)
