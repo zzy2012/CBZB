@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2000000003}
   - component: {fileID: 2000000004}
   m_Layer: 5
-  m_Name: TakeoverUIActionButton
+  m_Name: m_item_ActionButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 2000000007}
   - component: {fileID: 2000000008}
   m_Layer: 5
-  m_Name: Label
+  m_Name: m_text_Label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -199,4 +199,4 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1
-  m_Text: "选项"
+  m_Text: "\u9009\u9879"

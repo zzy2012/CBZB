@@ -151,7 +151,7 @@ public static class TakeoverValidation
         float started = SessionState.GetFloat("TakeoverValidation.PlaySmoke.Started", 0f);
         if (started <= 0f || EditorApplication.timeSinceStartup - started < 3f) return;
 
-        bool uiReady = GameModule.UI.HasWindow<TakeoverUIWindow>();
+        bool uiReady = GameModule.UI.HasWindow<TakeoverBattleUI>();
         bool simulated = runner.Simulation.Time > 0.5f;
         const string music = "takeover_sfx_2910_musicGameplayClass_musicGameplayClass";
         Debug.Log($"[TakeoverValidation] audio candidates: " +
@@ -161,7 +161,7 @@ public static class TakeoverValidation
                   $"{GameModule.Resource.CheckLocationValid("takeover_font_328_Chaparral_Pro")}");
         FinishPlaySmoke(uiReady && simulated,
             uiReady ? (simulated ? string.Empty : "模拟没有推进")
-                : "TakeoverUIWindow 未创建");
+                : "TakeoverBattleUI 未创建");
     }
 
     private static void FinishPlaySmoke(bool success, string message)
@@ -221,49 +221,312 @@ public static class TakeoverValidation
         }
     }
 
+    private static readonly string[] UiWindowPrefabs =
+    {
+        "Assets/AssetRaw/UI/TakeoverLevelSelectUI.prefab",
+        "Assets/AssetRaw/UI/TakeoverBattleUI.prefab",
+        "Assets/AssetRaw/UI/TakeoverResultUI.prefab",
+        "Assets/AssetRaw/UI/TakeoverToastUI.prefab",
+    };
+
     private static readonly string[] UiPrefabs =
     {
-        "Assets/AssetRaw/UI/TakeoverUIWindow.prefab",
+        "Assets/AssetRaw/UI/TakeoverLevelSelectUI.prefab",
+        "Assets/AssetRaw/UI/TakeoverBattleUI.prefab",
+        "Assets/AssetRaw/UI/TakeoverResultUI.prefab",
+        "Assets/AssetRaw/UI/TakeoverToastUI.prefab",
         "Assets/AssetRaw/UI/TakeoverUIActionButton.prefab",
+    };
+
+    private static readonly string[] LevelSelectPaths =
+    {
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_text_Title",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_text_Hint",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave",
+        "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave/m_text_Label",
     };
 
     private static readonly string[] BattleHudPaths =
     {
-        "BattleHUD/SquadBadgeLayer",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/HpFill",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Ring",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Portrait",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusFrozen",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusPoison",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusCharge",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusShield",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusFear",
-        "BattleHUD/BottomBar",
-        "BattleHUD/BottomBar/PortraitFrame",
-        "BattleHUD/BottomBar/Top/Resources",
-        "BattleHUD/BottomBar/Top/Clock",
-        "BattleHUD/BottomBar/Settings",
-        "BattleHUD/SpeedControls",
-        "BattleHUD/SpeedControls/Speed1/Label",
-        "BattleHUD/SpeedControls/Speed2/Label",
-        "BattleHUD/SpeedControls/Speed4/Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_HpFill",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_Ring",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_Portrait",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusFrozen",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusPoison",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusCharge",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusShield",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/m_img_StatusFear",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_rect_Top/m_text_Resources",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_rect_Top/m_text_Clock",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_Settings",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Pause",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Restart",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Levels",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed1/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed2/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed4/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_text_InspectorTitle",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_text_InspectorBody",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_rect_Actions",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_SpellBar",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_btn_GmToggle/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmGold",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmMana",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmWin",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmLose",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_text_GmTitle",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_text_GmHint",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed1/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed2/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed4/m_text_Label",
+        "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed8/m_text_Label",
     };
 
-    /// <summary>战斗 HUD 与头顶徽标全部来自预制体；节点被误删时这里要报出来。</summary>
+    private static readonly string[] ResultPaths =
+    {
+        "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_text_Title",
+        "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_text_Body",
+        "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_btn_Replay",
+        "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_btn_Next",
+        "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_btn_Menu",
+    };
+
+    private static readonly string[] ToastPaths =
+    {
+        "m_rect_TakeoverRuntimeUI/m_rect_ToastPanel",
+        "m_rect_TakeoverRuntimeUI/m_rect_ToastPanel/m_text_ToastText",
+    };
+
+    /// <summary>窗口 Canvas、Widget 节点和交互控件均由预制体提供。</summary>
     private static void CheckUiPrefabStructure(System.Collections.Generic.ICollection<string> failures)
     {
-        var window = AssetDatabase.LoadAssetAtPath<GameObject>(UiPrefabs[0]);
-        if (window == null)
+        var prefabs = new System.Collections.Generic.Dictionary<string, GameObject>();
+        foreach (string path in UiWindowPrefabs)
         {
-            failures.Add($"UI 预制体缺失: {UiPrefabs[0]}");
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null)
+            {
+                failures.Add($"UI 预制体缺失: {path}");
+                continue;
+            }
+
+            prefabs[path] = prefab;
+            if (prefab.GetComponent<Canvas>() == null)
+                failures.Add($"UI 窗口缺少 Canvas: {path}");
+            var rootRect = prefab.GetComponent<RectTransform>();
+            if (rootRect == null)
+                failures.Add($"UI 窗口缺少根 RectTransform: {path}");
+            else if (rootRect.localScale != Vector3.one ||
+                     rootRect.anchorMin != Vector2.zero ||
+                     rootRect.anchorMax != Vector2.one ||
+                     rootRect.pivot != new Vector2(0.5f, 0.5f))
+                failures.Add($"UI 窗口根 RectTransform 未铺满 Canvas: {path}");
+            var scaler = prefab.GetComponent<CanvasScaler>();
+            if (scaler == null)
+                failures.Add($"UI 窗口缺少 CanvasScaler: {path}");
+            else if (scaler.referenceResolution != new Vector2(800f, 600f) ||
+                     scaler.screenMatchMode != CanvasScaler.ScreenMatchMode.MatchWidthOrHeight ||
+                     !Mathf.Approximately(scaler.matchWidthOrHeight, 0.5f))
+                failures.Add($"UI 窗口 CanvasScaler 设置不符合 800x600 舞台: {path}");
+            if (prefab.GetComponent<GraphicRaycaster>() == null)
+                failures.Add($"UI 窗口缺少 GraphicRaycaster: {path}");
+        }
+
+        GameObject actionButtonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(UiPrefabs[4]);
+        if (actionButtonPrefab == null)
+            failures.Add($"UI 预制体缺失: {UiPrefabs[4]}");
+        else
+            prefabs[UiPrefabs[4]] = actionButtonPrefab;
+
+        CheckChildPaths(prefabs, UiPrefabs[0], LevelSelectPaths, failures);
+        CheckChildPaths(prefabs, UiPrefabs[1], BattleHudPaths, failures);
+        CheckChildPaths(prefabs, UiPrefabs[2], ResultPaths, failures);
+        CheckChildPaths(prefabs, UiPrefabs[3], ToastPaths, failures);
+
+        if (prefabs.TryGetValue(UiPrefabs[0], out GameObject levelSelect))
+        {
+            CheckComponent<RectTransform>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect", UiPrefabs[0], failures);
+            CheckComponent<Text>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_text_Title",
+                UiPrefabs[0], failures);
+            CheckComponent<Text>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_text_Hint",
+                UiPrefabs[0], failures);
+            CheckComponent<Button>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave",
+                UiPrefabs[0], failures);
+            CheckComponent<Text>(levelSelect,
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave/m_text_Label",
+                UiPrefabs[0], failures);
+            for (int levelId = 1; levelId <= 8; levelId++)
+            {
+                string path = $"m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_item_LevelButton{levelId}";
+                CheckComponent<Button>(levelSelect, path, UiPrefabs[0], failures);
+                CheckComponent<Text>(levelSelect, path + "/m_text_Label", UiPrefabs[0], failures);
+            }
+        }
+
+        if (prefabs.TryGetValue(UiPrefabs[1], out GameObject battle))
+        {
+            CheckComponent<RectTransform>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud", UiPrefabs[1], failures);
+            Transform badgePrototype = FindChild(battle.transform,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype");
+            if (badgePrototype != null && badgePrototype.gameObject.activeSelf)
+                failures.Add($"UI 徽标原型必须默认隐藏: {UiPrefabs[1]}");
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_rect_Top/m_text_Resources",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_rect_Top/m_text_Clock",
+                UiPrefabs[1], failures);
+            CheckComponent<Button>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Pause",
+                UiPrefabs[1], failures);
+            CheckComponent<Button>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Restart",
+                UiPrefabs[1], failures);
+            CheckComponent<Button>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_Controls/m_btn_Levels",
+                UiPrefabs[1], failures);
+            CheckComponent<Button>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_BottomBar/m_btn_Settings",
+                UiPrefabs[1], failures);
+            CheckComponent<RectTransform>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_text_InspectorTitle",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_Inspector/m_text_InspectorBody",
+                UiPrefabs[1], failures);
+            CheckComponent<RectTransform>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_SpellBar",
+                UiPrefabs[1], failures);
+            CheckComponent<RectTransform>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel",
+                UiPrefabs[1], failures);
+            const string gmContentPath =
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent";
+            CheckComponent<Image>(battle, gmContentPath, UiPrefabs[1], failures);
+            Transform gmContent = FindChild(battle.transform, gmContentPath);
+            if (gmContent != null)
+            {
+                if (gmContent.gameObject.activeSelf)
+                    failures.Add($"GM 面板内容必须默认折叠: {UiPrefabs[1]}");
+                Image gmBackground = gmContent.GetComponent<Image>();
+                if (gmBackground != null &&
+                    (gmBackground.raycastTarget || gmBackground.color.a > 0.001f))
+                    failures.Add($"GM 面板背景必须透明且不拦截射线: {UiPrefabs[1]}");
+            }
+            string badge = "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype/";
+            foreach (string part in new[] { "m_img_Ring", "m_img_HpFill", "m_img_Portrait",
+                         "m_img_StatusFrozen", "m_img_StatusPoison", "m_img_StatusCharge",
+                         "m_img_StatusShield", "m_img_StatusFear" })
+                CheckComponent<Image>(battle, badge + part, UiPrefabs[1], failures);
+            CheckComponent<Button>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_btn_GmToggle",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_btn_GmToggle/m_text_Label",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_text_GmTitle",
+                UiPrefabs[1], failures);
+            CheckComponent<Text>(battle,
+                "m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_text_GmHint",
+                UiPrefabs[1], failures);
+            foreach (string button in new[] { "m_btn_GmGold", "m_btn_GmMana", "m_btn_GmWin", "m_btn_GmLose" })
+                CheckComponent<Button>(battle,
+                    $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/{button}",
+                    UiPrefabs[1], failures);
+            foreach (float speed in new[] { 1f, 2f, 4f, 8f })
+            {
+                CheckComponent<Button>(battle,
+                    $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed{speed:0}",
+                    UiPrefabs[1], failures);
+                CheckComponent<Text>(battle,
+                    $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_item_GmPanel/m_rect_GmContent/m_btn_GmSpeed{speed:0}/m_text_Label",
+                    UiPrefabs[1], failures);
+            }
+            foreach (float speed in new[] { 1f, 2f, 4f })
+            {
+                string path =
+                    $"m_rect_TakeoverRuntimeUI/m_item_BattleHud/m_rect_SpeedControls/m_btn_Speed{speed:0}";
+                CheckComponent<Button>(battle, path, UiPrefabs[1], failures);
+                CheckComponent<Text>(battle, path + "/m_text_Label", UiPrefabs[1], failures);
+            }
+        }
+
+        if (prefabs.TryGetValue(UiPrefabs[2], out GameObject result))
+        {
+            CheckComponent<Text>(result,
+                "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_text_Title",
+                UiPrefabs[2], failures);
+            CheckComponent<Text>(result,
+                "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_text_Body",
+                UiPrefabs[2], failures);
+            CheckComponent<Button>(result,
+                "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_btn_Replay",
+                UiPrefabs[2], failures);
+            CheckComponent<Button>(result,
+                "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_btn_Next",
+                UiPrefabs[2], failures);
+            CheckComponent<Button>(result,
+                "m_rect_TakeoverRuntimeUI/m_rect_Result/m_rect_ResultPanel/m_btn_Menu",
+                UiPrefabs[2], failures);
+        }
+
+        if (prefabs.TryGetValue(UiPrefabs[3], out GameObject toast))
+        {
+            CheckComponent<RectTransform>(toast,
+                "m_rect_TakeoverRuntimeUI/m_rect_ToastPanel", UiPrefabs[3], failures);
+            CheckComponent<Text>(toast,
+                "m_rect_TakeoverRuntimeUI/m_rect_ToastPanel/m_text_ToastText",
+                UiPrefabs[3], failures);
+        }
+
+        if (prefabs.TryGetValue(UiPrefabs[4], out GameObject actionButton))
+        {
+            CheckComponent<Button>(actionButton, string.Empty, UiPrefabs[4], failures);
+            CheckComponent<Text>(actionButton, "m_text_Label", UiPrefabs[4], failures);
+        }
+    }
+
+    private static void CheckChildPaths(
+        System.Collections.Generic.Dictionary<string, GameObject> prefabs,
+        string prefabPath, string[] paths,
+        System.Collections.Generic.ICollection<string> failures)
+    {
+        if (!prefabs.TryGetValue(prefabPath, out GameObject prefab)) return;
+        foreach (string path in paths)
+        {
+            if (FindChild(prefab.transform, path) == null)
+                failures.Add($"UI 预制体缺少节点: {prefabPath} -> {path}");
+        }
+    }
+
+    private static void CheckComponent<T>(
+        GameObject prefab, string path, string prefabPath,
+        System.Collections.Generic.ICollection<string> failures) where T : Component
+    {
+        Transform node = string.IsNullOrEmpty(path)
+            ? prefab.transform
+            : FindChild(prefab.transform, path);
+        if (node == null)
+        {
+            failures.Add($"UI 预制体缺少节点: {prefabPath} -> {path}");
             return;
         }
-        foreach (string path in BattleHudPaths)
-        {
-            if (FindChild(window.transform, path) == null)
-                failures.Add($"UI 预制体缺少节点: {UiPrefabs[0]} -> {path}");
-        }
+        if (node.GetComponent<T>() == null)
+            failures.Add($"UI 预制体节点缺少 {typeof(T).Name}: {prefabPath} -> {path}");
     }
 
     private static Transform FindChild(Transform root, string path)
