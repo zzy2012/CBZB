@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement class="audio-controls">
+    <ui:Button name="sound-button" class="round-button audio-button" />
+    <ui:Button name="music-button" class="round-button audio-button" />
+  </ui:VisualElement>
+</ui:UXML>

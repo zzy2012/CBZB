@@ -42,6 +42,7 @@ public partial class GameApp
     
     private static void Release()
     {
+        GameLogic.UI.UIManager.Shutdown();
         SingletonSystem.Release();
         Log.Warning("======= Release GameApp =======");
     }

@@ -1,0 +1,826 @@
+/* 城邦争霸 UI Toolkit 公共样式（Unity 2022.3 支持范围） */
+
+.view-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.title-screen,
+.faction-screen,
+.map-screen,
+.skill-screen,
+.battle-hud,
+.modal-backdrop,
+.overlay-backdrop,
+.toast-layer,
+.mission-nodes,
+.badge-layer,
+.menu-host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.muted {
+    color: #b7a791;
+    font-size: 12px;
+}
+
+.title-screen {
+    background-color: #17130f;
+}
+
+.title-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #241d18;
+    opacity: 0.96;
+}
+
+.title-art {
+    position: absolute;
+    left: 50%;
+    bottom: 8%;
+    width: 260px;
+    height: 320px;
+    margin-left: -130px;
+    opacity: 0.55;
+}
+
+.title-content {
+    position: absolute;
+    top: 11%;
+    left: 0;
+    right: 0;
+    align-items: center;
+}
+
+.game-title {
+    font-size: 56px;
+    color: #ff6a30;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.beta-badge {
+    margin-top: 16px;
+    padding: 4px 24px;
+    border-width: 3px;
+    border-color: #f4b52f;
+    border-radius: 20px;
+    background-color: #17130f;
+    color: #ffffff;
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.title-start {
+    position: absolute;
+    bottom: 8%;
+    left: 50%;
+    margin-left: -110px;
+    min-width: 220px;
+    font-size: 22px;
+    -unity-font-style: bold;
+}
+
+.version-label {
+    position: absolute;
+    bottom: 2%;
+    left: 0;
+    right: 0;
+    color: #f3d37e;
+    font-size: 12px;
+    -unity-text-align: middle-center;
+}
+
+.studio-mark {
+    position: absolute;
+    left: 18px;
+    bottom: 18px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+Button.button {
+    border-width: 2px;
+    border-color: #f5c455;
+    border-radius: 18px;
+    background-color: #6b1686;
+    color: #fff3d4;
+    padding: 8px 18px;
+    font-size: 15px;
+    -unity-text-align: middle-center;
+}
+
+Button.button:hover {
+    background-color: #82209e;
+}
+
+Button.button--gold {
+    background-color: #d79a2f;
+    color: #352311;
+    -unity-font-style: bold;
+}
+
+Button.button--ghost {
+    background-color: #594633;
+    border-color: #b88d4c;
+    color: #fff3d4;
+}
+
+Button.button--small {
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 14px;
+}
+
+Button.button--wide {
+    min-width: 190px;
+    font-size: 19px;
+    -unity-font-style: bold;
+}
+
+Button.button:disabled {
+    opacity: 0.5;
+}
+
+Button.round-button {
+    width: 42px;
+    height: 42px;
+    border-width: 2px;
+    border-color: #f8c857;
+    border-radius: 21px;
+    background-color: #6e2ca1;
+    color: #fff4d5;
+    font-size: 13px;
+    -unity-text-align: middle-center;
+}
+
+Button.round-button.is-off {
+    opacity: 0.45;
+    background-color: #333333;
+}
+
+.audio-controls {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    flex-direction: row;
+}
+
+Button.audio-button {
+    margin-left: 8px;
+    font-size: 11px;
+}
+
+.modal-backdrop {
+    background-color: rgba(8, 7, 6, 0.72);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    width: 560px;
+    max-width: 92%;
+    padding: 8px;
+    border-width: 3px;
+    border-color: #dca642;
+    border-radius: 20px;
+    background-color: #241d18;
+}
+
+.modal-inner {
+    padding: 20px;
+    border-width: 1px;
+    border-color: #8a6432;
+    border-radius: 13px;
+    background-color: #211b18;
+}
+
+.modal-heading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.modal-title {
+    font-size: 20px;
+    color: #ffe6a0;
+    -unity-font-style: bold;
+}
+
+Button.close-button {
+    width: 30px;
+    height: 30px;
+    border-width: 1px;
+    border-color: #ecb447;
+    border-radius: 15px;
+    background-color: #351e14;
+    color: #ffd869;
+    font-size: 16px;
+    -unity-text-align: middle-center;
+}
+
+.save-list {
+    flex-direction: column;
+}
+
+Button.save-card {
+    height: 64px;
+    margin-bottom: 8px;
+    padding: 10px 14px;
+    border-width: 1px;
+    border-color: #73532c;
+    border-radius: 10px;
+    background-color: #302820;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    -unity-text-align: middle-left;
+}
+
+Button.save-card:hover {
+    border-color: #ffe18a;
+    background-color: #3a2b1d;
+}
+
+.save-card-copy {
+    flex-grow: 1;
+}
+
+.save-card-title {
+    font-size: 15px;
+    color: #ffe49b;
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.save-card-detail {
+    margin-top: 3px;
+    font-size: 11px;
+    color: #bbaa8d;
+    white-space: normal;
+}
+
+.save-card-warning {
+    margin-top: 2px;
+    font-size: 10px;
+    color: #ff9c7a;
+    white-space: normal;
+}
+
+.save-card-action {
+    margin-left: 10px;
+    font-size: 18px;
+    color: #f4c754;
+    -unity-font-style: bold;
+}
+
+.faction-screen {
+    background-color: #1c1713;
+}
+
+.section-ribbon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 44%;
+    padding: 12px 30px;
+    border-width: 3px;
+    border-color: #b37930;
+    border-left-width: 0;
+    border-top-right-radius: 30px;
+    border-bottom-right-radius: 30px;
+    background-color: #8f2a12;
+}
+
+.ribbon-label {
+    font-size: 22px;
+    color: #ffe0a2;
+    -unity-font-style: bold;
+}
+
+.faction-grid {
+    position: absolute;
+    left: 7%;
+    right: 7%;
+    top: 14%;
+    bottom: 16%;
+    flex-direction: row;
+}
+
+Button.faction-card {
+    flex-grow: 1;
+    margin-left: 6px;
+    margin-right: 6px;
+    border-width: 3px;
+    border-color: #8a6943;
+    border-radius: 12px;
+    padding: 10px;
+    align-items: center;
+    background-color: #2a231c;
+    -unity-text-align: middle-center;
+}
+
+Button.faction-card:hover {
+    border-color: #ffe18a;
+}
+
+Button.faction-card.is-selected {
+    border-color: #a7f75a;
+    border-width: 4px;
+}
+
+Button.faction-card.is-locked {
+    opacity: 0.62;
+}
+
+.faction-portrait {
+    width: 130px;
+    height: 130px;
+    margin-top: 50px;
+}
+
+.faction-number {
+    position: absolute;
+    top: 6px;
+    left: 14px;
+    font-size: 42px;
+    color: #fff4d5;
+    -unity-font-style: bold;
+}
+
+.faction-name {
+    margin-top: 10px;
+    font-size: 18px;
+    color: #ffe49b;
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.faction-description {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #f3dfb6;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.faction-lock-badge {
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-width: 1px;
+    border-color: #edc449;
+    border-radius: 12px;
+    background-color: #5a2387;
+    color: #fff3c1;
+    font-size: 11px;
+}
+
+.faction-exit {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+}
+
+.faction-continue {
+    position: absolute;
+    right: 3%;
+    bottom: 4%;
+}
+
+.map-screen {
+    background-color: #6f8487;
+}
+
+.map-background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.map-heading {
+    position: absolute;
+    top: 14px;
+    left: 22px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.map-crest {
+    font-size: 22px;
+    color: #8b591e;
+    margin-right: 8px;
+}
+
+.map-heading-text {
+    font-size: 20px;
+    color: #8b591e;
+    -unity-font-style: bold;
+}
+
+Button.mission-node {
+    position: absolute;
+    width: 72px;
+    height: 88px;
+    margin-left: -36px;
+    margin-top: -44px;
+    align-items: center;
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.mission-node-icon {
+    width: 44px;
+    height: 44px;
+}
+
+.mission-node-number {
+    font-size: 16px;
+    color: #ffffff;
+    -unity-font-style: bold;
+    margin-top: 2px;
+}
+
+.mission-node-label {
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-width: 1px;
+    border-color: #f5c84f;
+    border-radius: 8px;
+    background-color: #1f7a32;
+    color: #ffffff;
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+.mission-node.is-done .mission-node-label {
+    background-color: #165073;
+}
+
+Button.mission-node.is-locked {
+    opacity: 0.55;
+}
+
+.map-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 112px;
+    background-color: rgba(33, 25, 12, 0.9);
+}
+
+.map-exit {
+    position: absolute;
+    left: 16px;
+    bottom: 14px;
+}
+
+.medal-counter {
+    position: absolute;
+    left: 33%;
+    bottom: 18px;
+    color: #fff0be;
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.map-level {
+    position: absolute;
+    left: 45%;
+    bottom: 16px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.level-badge {
+    width: 64px;
+    height: 64px;
+    border-width: 4px;
+    border-color: #f3c34c;
+    border-radius: 32px;
+    background-color: #a47531;
+    align-items: center;
+    justify-content: center;
+}
+
+.level-value {
+    font-size: 24px;
+    color: #fff2cc;
+    -unity-font-style: bold;
+}
+
+.level-caption {
+    font-size: 10px;
+    color: #fff2cc;
+}
+
+.xp-progress {
+    width: 140px;
+    margin-left: 8px;
+}
+
+.xp-label {
+    font-size: 11px;
+    color: #f3d488;
+}
+
+.xp-bar {
+    height: 10px;
+    margin-top: 5px;
+    border-width: 1px;
+    border-color: #eebc3b;
+    border-radius: 5px;
+    background-color: #392816;
+}
+
+.xp-fill {
+    width: 0;
+    height: 100%;
+    border-radius: 5px;
+    background-color: #61b73e;
+}
+
+.skill-map-button {
+    position: absolute;
+    right: 12%;
+    bottom: 40px;
+    min-width: 150px;
+}
+
+.gold-counter {
+    position: absolute;
+    right: 3%;
+    bottom: 18px;
+    color: #fff0be;
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.mission-detail {
+    position: absolute;
+    top: 16%;
+    left: 13%;
+    width: 70%;
+    min-height: 190px;
+    padding: 16px;
+    border-width: 3px;
+    border-color: #b18437;
+    border-radius: 20px;
+    background-color: rgba(36, 70, 42, 0.94);
+    flex-direction: row;
+    align-items: center;
+}
+
+.mission-preview {
+    width: 130px;
+    height: 130px;
+    border-width: 4px;
+    border-color: #e0b445;
+    border-radius: 65px;
+    background-color: #613923;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+}
+
+.mission-enemy {
+    font-size: 14px;
+    color: #f5dc8e;
+    -unity-font-style: bold;
+}
+
+.mission-copy {
+    flex-grow: 1;
+}
+
+.mission-title {
+    font-size: 22px;
+    color: #ffdf77;
+    -unity-font-style: bold;
+}
+
+.mission-reward {
+    font-size: 13px;
+    color: #f5dc8e;
+}
+
+.mission-description {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #e5d7ba;
+    white-space: normal;
+}
+
+.mission-stars {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #d9c8a9;
+}
+
+.mission-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.skill-screen {
+    background-color: #15291b;
+}
+
+.skill-title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 55%;
+    padding: 9px 35px;
+    border-width: 3px;
+    border-color: #b78637;
+    border-left-width: 0;
+    border-bottom-right-radius: 30px;
+    background-color: #672718;
+}
+
+.skill-title-label {
+    font-size: 26px;
+    color: #f2bf57;
+    -unity-font-style: bold;
+}
+
+.skill-grid {
+    position: absolute;
+    top: 12%;
+    left: 4%;
+    right: 4%;
+    bottom: 17%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+}
+
+Button.skill-card {
+    width: 48%;
+    height: 18%;
+    margin-right: 2%;
+    margin-bottom: 1%;
+    padding: 6px;
+    border-width: 2px;
+    border-color: #886131;
+    border-radius: 12px;
+    background-color: #473026;
+    flex-direction: row;
+    align-items: center;
+    -unity-text-align: middle-left;
+}
+
+Button.skill-card.is-available {
+    border-color: #e2b94f;
+    background-color: #4b2923;
+}
+
+Button.skill-card.is-locked {
+    opacity: 0.7;
+}
+
+.skill-icon {
+    width: 42px;
+    height: 42px;
+    margin-right: 6px;
+    border-width: 2px;
+    border-color: #dca340;
+    border-radius: 10px;
+    background-color: #164329;
+    color: #ffe2a0;
+    font-size: 18px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.skill-info {
+    flex-grow: 1;
+}
+
+.skill-name {
+    font-size: 13px;
+    color: #ffd579;
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.skill-rank {
+    font-size: 11px;
+    color: #ffffff;
+    -unity-font-style: bold;
+}
+
+.skill-effect {
+    font-size: 10px;
+    color: #e4d4b8;
+    white-space: normal;
+}
+
+.skill-effect.is-owned {
+    color: #fff1c8;
+}
+
+.skill-cost {
+    font-size: 11px;
+    color: #f3d488;
+}
+
+.skill-footer {
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    bottom: 3%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.skill-points {
+    font-size: 14px;
+    color: #d7edcb;
+}
+
+.skill-actions {
+    flex-direction: row;
+}
+
+.overlay-backdrop {
+    background-color: rgba(8, 7, 6, 0.68);
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay-panel {
+    width: 460px;
+    max-width: 92%;
+    padding: 22px;
+    border-width: 3px;
+    border-color: #d4a449;
+    border-radius: 18px;
+    background-color: #2c231c;
+    align-items: center;
+}
+
+.overlay-title {
+    font-size: 22px;
+    color: #ffe095;
+    -unity-font-style: bold;
+}
+
+.overlay-body {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #d9c8a9;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.overlay-actions {
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+.overlay-actions > Button.button {
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+.toast-layer {
+    align-items: center;
+}
+
+.toast-panel {
+    margin-top: 16px;
+    padding: 10px 18px;
+    max-width: 85%;
+    border-width: 1px;
+    border-color: #efc05b;
+    border-radius: 18px;
+    background-color: #261b12;
+}
+
+.toast-label {
+    font-size: 13px;
+    color: #fff0c1;
+    -unity-text-align: middle-center;
+    white-space: normal;
+}

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="battle-hud" class="battle-hud">
+    <ui:VisualElement name="badge-layer" class="badge-layer" />
+    <ui:VisualElement class="battle-top">
+      <ui:Label name="battle-title" class="battle-title" />
+      <ui:VisualElement class="battle-controls">
+        <ui:Button name="settings-button" class="button button--ghost button--small" />
+        <ui:Button name="pause-button" class="button button--ghost button--small" />
+        <ui:Button name="speed-button" class="button button--ghost button--small" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="inspector" class="inspector">
+      <ui:Label name="inspector-title" class="inspector-title" />
+      <ui:Label name="inspector-body" class="inspector-body" />
+    </ui:VisualElement>
+    <ui:VisualElement class="battle-hud-left">
+      <ui:VisualElement class="commander">
+        <ui:VisualElement class="commander-portrait" />
+        <ui:VisualElement class="commander-copy">
+          <ui:Label name="commander-name" class="commander-name" />
+          <ui:Button name="next-tutorial-button" class="button button--small" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement name="gm-host" class="gm-host" />
+    <ui:VisualElement class="battle-hud-right">
+      <ui:VisualElement class="battle-resources">
+        <ui:VisualElement class="resource">
+          <ui:Label text="金币" class="resource-label" />
+          <ui:Label name="gold-value" class="resource-value" />
+        </ui:VisualElement>
+        <ui:VisualElement class="resource resource--green">
+          <ui:Label text="法力" class="resource-label" />
+          <ui:Label name="mana-value" class="resource-value" />
+        </ui:VisualElement>
+        <ui:VisualElement class="resource resource--blue">
+          <ui:Label text="补给" class="resource-label" />
+          <ui:Label name="supply-value" class="resource-value" />
+        </ui:VisualElement>
+        <ui:VisualElement class="resource">
+          <ui:Label text="部队" class="resource-label" />
+          <ui:Label name="army-value" class="resource-value" />
+        </ui:VisualElement>
+        <ui:VisualElement class="resource">
+          <ui:Label text="荣誉" class="resource-label" />
+          <ui:Label name="honor-value" class="resource-value" />
+        </ui:VisualElement>
+        <ui:VisualElement class="resource">
+          <ui:Label text="敌城" class="resource-label" />
+          <ui:Label name="enemy-value" class="resource-value" />
+        </ui:VisualElement>
+      </ui:VisualElement>
+      <ui:Label name="clock-label" class="clock-label" />
+      <ui:VisualElement name="spell-list" class="spell-list" />
+    </ui:VisualElement>
+    <ui:VisualElement name="tutorial-panel" class="tutorial-panel">
+      <ui:VisualElement name="tutorial-avatar" class="tutorial-avatar" />
+      <ui:Label name="tutorial-tag" text="TUTORIAL" class="tutorial-tag" />
+      <ui:Label name="tutorial-text" class="tutorial-text" />
+    </ui:VisualElement>
+    <ui:VisualElement name="menu-host" class="menu-host" />
+  </ui:VisualElement>
+</ui:UXML>

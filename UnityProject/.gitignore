@@ -99,3 +99,9 @@ package/
 yoo/
 [Aa]ssets/TEngine/AssetSetting/Resources/BuiltinFileManifest.asset
 [Aa]ssets/TEngine/AssetSetting/Resources/BuiltinFileManifest.asset.meta
+# Takeover local CJK font copied from the OS by the editor menu
+[Aa]ssets/Resources/UI/Toolkit/Fonts/TakeoverCjk.*
+[Aa]ssets/Resources/UI/Toolkit/Fonts/TakeoverCjk.*.meta
+
+# Unity-generated default UI Toolkit theme
+[Aa]ssets/UnityDefaultRuntimeTheme.tss*

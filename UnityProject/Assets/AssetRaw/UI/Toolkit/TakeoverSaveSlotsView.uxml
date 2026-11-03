@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="save-modal" class="modal-backdrop">
+    <ui:VisualElement class="modal">
+      <ui:VisualElement class="modal-inner">
+        <ui:VisualElement class="modal-heading">
+          <ui:Label text="选择远征档案" class="modal-title" />
+          <ui:Button name="close-button" class="close-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="slot-list" class="save-list" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

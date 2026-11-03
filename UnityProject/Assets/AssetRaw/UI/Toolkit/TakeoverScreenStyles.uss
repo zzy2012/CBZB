@@ -1,0 +1,21 @@
+/* 屏幕级微调（公共类在 TakeoverCommonStyles.uss） */
+
+.faction-grid {
+    align-items: stretch;
+}
+
+Button.faction-card {
+    -unity-text-align: middle-center;
+}
+
+.mission-nodes {
+    overflow: hidden;
+}
+
+.skill-grid {
+    overflow: hidden;
+}
+
+.battle-hud {
+    overflow: hidden;
+}

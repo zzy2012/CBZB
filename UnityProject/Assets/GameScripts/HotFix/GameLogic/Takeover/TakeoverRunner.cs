@@ -1,15 +1,17 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using GameLogic.Takeover.UI;
+using GameLogic.UI;
 using TEngine;
 using UnityEngine;
 
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// 首章表现控制器：运行时生成地图、单位和正式 UGUI HUD。
-    /// 逻辑全部在 BattleSim 中，View 只负责渲染与输入。
+    /// 首章表现控制器：运行时生成地图与单位，界面由 UI Toolkit 的 UIManager 驱动。
+    /// 逻辑全部在 BattleSim 中，Runner 只负责世界表现、输入与界面流程。
     /// </summary>
     public sealed class TakeoverRunner : MonoBehaviour
     {
@@ -36,24 +38,18 @@ namespace GameLogic.Takeover
         private bool _paused;
         private float _speed = 1f;
         private bool _reported;
-        private bool _levelSelectOpen = true;
+        private bool _battleActive;
+        private bool _resultShown;
+        private bool _pressOverUI;
+        private CampaignReward _lastReward;
+        private int _levelRequestVersion;
+        private string _uiFatal;
         private GameConfig.takeover.Spell _pendingSpell;
-        private TakeoverBattleUI _battleUI;
         private Squad _dragSquad;
         private Vector2 _pressScreen;
         private LineRenderer _orderPreview;
         private Material _clickableAreaMaterial;
         private CancellationTokenSource _visualBindingCancellationTokenSource;
-
-        private bool _badgeCreateErrorLogged;
-        private bool _badgeProbeLogged;
-        private bool _badgeDisabled;
-        private readonly Dictionary<int, TakeoverSquadBadgeWidget> _squadBadges =
-            new Dictionary<int, TakeoverSquadBadgeWidget>();
-        private readonly Dictionary<int, TakeoverBuildingBadgeWidget> _buildingBadges =
-            new Dictionary<int, TakeoverBuildingBadgeWidget>();
-        private bool _buildingBadgeDisabled;
-        private bool _buildingBadgeErrorLogged;
 
         private const float BadgeWorldOffsetY = 34f;
         private const float BuildingBadgeWorldOffsetY = 42f;
@@ -86,22 +82,51 @@ namespace GameLogic.Takeover
                 go.tag = "MainCamera";
             }
             _cam.orthographic = true;
-            _cam.backgroundColor = new Color(0.10f, 0.12f, 0.10f);
+            _cam.backgroundColor = new Color(0.10f, 0.08f, 0.06f);
             _cam.clearFlags = CameraClearFlags.SolidColor;
 
             _root = new GameObject("TakeoverWorld").transform;
             _root.gameObject.SetActive(false);
-            GameModule.UI.ShowUIAsync<TakeoverLevelSelectUI>(this);
-            if (Campaign.LastLoadWarning != null)
-                TakeoverToastUI.Show(Campaign.LastLoadWarning, 5f);
+
+            UIAudioSettings.Load();
+            BootAsync().Forget();
+        }
+
+        private async UniTaskVoid BootAsync()
+        {
+            await UIManager.InitializeAsync();
+            if (!UIManager.IsInitialized)
+            {
+                SetUiFatal("[TakeoverUI] UIManager 初始化失败，标题界面无法打开；请查看 Console。");
+                return;
+            }
+
+            AudioControlsView audio = await UIManager.OpenPersistentAsync<AudioControlsView>();
+            if (audio == null)
+                Log.Error("[TakeoverUI] 音频开关加载失败: TakeoverAudioControlsView");
+
+            if (!_battleActive) ShowTitle();
+        }
+
+        private void SetUiFatal(string message)
+        {
+            _uiFatal = message;
+            Log.Error(message);
+        }
+
+        private void OnGUI()
+        {
+            if (string.IsNullOrEmpty(_uiFatal)) return;
+            GUI.Box(new Rect(20f, 20f, Screen.width - 40f, 120f), "UI Toolkit");
+            GUI.Label(new Rect(36f, 56f, Screen.width - 72f, 72f), _uiFatal);
         }
 
         private void OnDestroy()
         {
-            ClearSquadBadges();
-            ClearBuildingBadges();
+            UIManager.CloseAll();
             ClearSpellFx();
             CancelVisualBinding();
+            if (_root != null) Destroy(_root.gameObject);
             if (_clickableAreaMaterial != null)
             {
                 Destroy(_clickableAreaMaterial);
@@ -114,39 +139,170 @@ namespace GameLogic.Takeover
             StartLevel(LevelAssetId);
         }
 
-        public void ShowLevelSelect()
+        #region 界面流程
+
+        public void ShowTitle()
         {
+            ShowTitleAsync().Forget();
+        }
+
+        private async UniTaskVoid ShowTitleAsync()
+        {
+            await UIManager.InitializeAsync();
+            if (!UIManager.IsInitialized) return;
+            if (_battleActive) return;
+            LeaveBattleWorld();
+            UIManager.ClosePopupAndOverlay();
+            TitleView title = await UIManager.ShowScreenAsync<TitleView>(this);
+            if (title == null)
+            {
+                SetUiFatal("[TakeoverUI] 标题界面打开失败: TakeoverTitleView；请查看 Console。");
+                return;
+            }
             PlayMusic("takeover_sfx_8126_musicMenuClass_musicMenuClass");
-            _levelSelectOpen = true;
-            _paused = true;
+        }
+
+        public void OpenSaveSlots()
+        {
+            UIManager.OpenPopupAsync<SaveSlotsView>(this).Forget();
+        }
+
+        public void EnterCampaignSlot(int slot)
+        {
+            bool hadSave = Campaign.HasSave(slot);
+            Campaign.SelectProfile(slot);
+            // 触发一次读取，损坏档的警告会记录在 LastLoadWarning。
+            _ = Campaign.Data;
+            if (!string.IsNullOrEmpty(Campaign.LastLoadWarning))
+                Toast(Campaign.LastLoadWarning, 5f);
+
+            if (hadSave) ShowCampaignMap();
+            else ShowFactionSelect();
+        }
+
+        public void ShowFactionSelect()
+        {
+            ShowFactionSelectAsync().Forget();
+        }
+
+        private async UniTaskVoid ShowFactionSelectAsync()
+        {
+            await UIManager.InitializeAsync();
+            LeaveBattleWorld();
+            UIManager.ClosePopupAndOverlay();
+            await UIManager.ShowScreenAsync<FactionSelectView>(this);
+        }
+
+        public void ContinueFromFactionSelect()
+        {
+            if (!Campaign.FactionPlayable(Campaign.SelectedFaction))
+            {
+                Toast("第 2/3 章内容尚未导入，暂不可挑战。");
+                return;
+            }
+            Campaign.Save();
+            ShowCampaignMap();
+        }
+
+        public void ShowCampaignMap()
+        {
+            ShowCampaignMapAsync().Forget();
+        }
+
+        private async UniTaskVoid ShowCampaignMapAsync()
+        {
+            await UIManager.InitializeAsync();
+            LeaveBattleWorld();
+            UIManager.ClosePopupAndOverlay();
+            await UIManager.ShowScreenAsync<CampaignMapView>(this);
+            PlayMusic("takeover_sfx_8126_musicMenuClass_musicMenuClass");
+        }
+
+        public void ShowSkillTree()
+        {
+            ShowSkillTreeAsync().Forget();
+        }
+
+        private async UniTaskVoid ShowSkillTreeAsync()
+        {
+            await UIManager.InitializeAsync();
+            await UIManager.ShowScreenAsync<SkillTreeView>(this);
+        }
+
+        public void OpenMissionDetail(int levelAssetId)
+        {
+            UIManager.OpenPopupAsync<MissionDetailView>(new MissionDetailArgs
+            {
+                Runner = this,
+                LevelId = levelAssetId,
+            }).Forget();
+        }
+
+        public void ReturnToCampaignMap()
+        {
+            ShowCampaignMap();
+        }
+
+        public void SetPaused(bool paused)
+        {
+            _paused = paused;
+        }
+
+        public void CycleSpeed()
+        {
+            float[] speeds = { 1f, 4f, 16f, 64f, 256f };
+            int current = 0;
+            for (int i = 0; i < speeds.Length; i++)
+            {
+                if (Mathf.Approximately(_speed, speeds[i])) { current = i; break; }
+            }
+            SetSpeed(speeds[(current + 1) % speeds.Length]);
+        }
+
+        private void LeaveBattleWorld()
+        {
+            _levelRequestVersion++;
+            _battleActive = false;
+            _paused = false;
+            _speed = 1f;
+            _reported = false;
+            _resultShown = false;
             _selected = null;
             _selectedSquad = null;
+            _dragSquad = null;
             _pendingSpell = null;
-            ClearSquadBadges();
-            ClearBuildingBadges();
+            _sim = null;
+            CancelVisualBinding();
             ClearSpellFx();
             if (_root != null) _root.gameObject.SetActive(false);
-            GameModule.UI.CloseUI<TakeoverBattleUI>();
-            GameModule.UI.CloseUI<TakeoverResultUI>();
-            GameModule.UI.ShowUIAsync<TakeoverLevelSelectUI>(this);
-            if (Campaign.LastLoadWarning != null)
-                TakeoverToastUI.Show(Campaign.LastLoadWarning, 5f);
         }
+
+        #endregion
 
         public void StartLevel(int levelAssetId)
         {
+            // 先占住“战斗中”状态，避免启动引导异步打开标题把 HUD 覆盖掉。
+            _battleActive = true;
+            int version = ++_levelRequestVersion;
+            StartLevelAsync(levelAssetId, version).Forget();
+        }
+
+        private async UniTaskVoid StartLevelAsync(int levelAssetId, int requestVersion)
+        {
+            await UIManager.InitializeAsync();
+            if (requestVersion != _levelRequestVersion) return;
             if (!Campaign.IsUnlocked(levelAssetId))
             {
+                _battleActive = false;
                 Toast($"L{levelAssetId} 尚未解锁");
                 return;
             }
 
-            GameModule.UI.CloseUI<TakeoverLevelSelectUI>();
-            GameModule.UI.CloseUI<TakeoverResultUI>();
+            UIManager.ClosePopupAndOverlay();
             CancelVisualBinding();
             LevelAssetId = levelAssetId;
             Campaign.SetLastLevel(levelAssetId);
-            _levelSelectOpen = false;
+            _battleActive = true;
             _root.gameObject.SetActive(true);
             foreach (Transform c in _root) Destroy(c.gameObject);
             _nodeViews.Clear();
@@ -154,24 +310,22 @@ namespace GameLogic.Takeover
             _boundNodeVisuals.Clear();
             _nodeClickableAreas.Clear();
             _unitClickableAreas.Clear();
-            ClearSquadBadges();
-            ClearBuildingBadges();
             ClearSpellFx();
-            _badgeCreateErrorLogged = false;
-            _badgeProbeLogged = false;
-            _badgeDisabled = false;
             _selected = null;
             _selectedSquad = null;
             _paused = false;
-            _speed = 1f;              // 每次重开/进关都回到 ×1
+            _speed = 1f;
             _reported = false;
+            _resultShown = false;
+            _lastReward = default;
             _pendingSpell = null;
+            _dragSquad = null;
 
-            // 可编辑配置表沿用迁移期间的界面阵营顺序，此处转换为模拟器使用的原版 1.0.4 阵营索引。
+            // 玩家阵营来自档案选择；第一章固定西利亚。
+            HumanFaction = Campaign.SelectedFaction;
             var lv = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
             if (lv != null)
             {
-                HumanFaction = OriginalRules.FromConfigFaction(lv.Chapter);
                 EnemyFaction = OriginalRules.EnemyPlayers(LevelAssetId).FirstOrDefault()?.Faction ??
                                OriginalRules.FromConfigFaction(lv.EnemyFaction);
             }
@@ -185,38 +339,11 @@ namespace GameLogic.Takeover
             BuildMapBackground();
             FocusCamera();
             BindLevelVisuals();
-            GameModule.UI.ShowUIAsync<TakeoverBattleUI>(this);
-            ShowScenarioHint();
 
-            Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
-        }
+            await UIManager.ShowScreenAsync<BattleHudView>(this);
+            if (_sim == null) return;
 
-        private void ShowScenarioHint()
-        {
-            if (LevelAssetId == 1)
-                TakeoverToastUI.Show("点击己方城堡招募，再按住头顶徽标拖到目标", 6f);
-            else if (LevelAssetId == 2)
-                TakeoverToastUI.Show("先建造农场增加补给；左键按住头顶徽标拖动下令", 6f);
-            else
-                TakeoverToastUI.Show("左键按住头顶徽标拖动下令；左键点击建筑打开面板", 6f);
-        }
-
-        public void RegisterBattleUI(TakeoverBattleUI ui)
-        {
-            _battleUI = ui;
-            if (!_levelSelectOpen && _sim != null)
-                _battleUI.ShowBattle();
-        }
-
-        public void UnregisterBattleUI(TakeoverBattleUI ui)
-        {
-            if (_battleUI != ui) return;
-            _battleUI = null;
-            _squadBadges.Clear();
-            _badgeCreateErrorLogged = false;
-            _badgeProbeLogged = false;
-            _badgeDisabled = false;
-        }
+            Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");        }
 
         private void FocusCamera()
         {
@@ -429,7 +556,7 @@ namespace GameLogic.Takeover
 
         private void Update()
         {
-            if (_sim == null || _levelSelectOpen) return;
+            if (_sim == null || !_battleActive) return;
             UpdateCamera();
             if (!_paused && !_sim.IsOver)
             {
@@ -441,18 +568,17 @@ namespace GameLogic.Takeover
             if (_sim.IsOver && !_reported)
             {
                 _reported = true;
+                _lastReward = default;
                 if (_sim.HumanVictory)
                 {
                     var lvCfg = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
-                    Campaign.Complete(LevelAssetId, _sim.Time, lvCfg?.Xp ?? 0);
+                    _lastReward = Campaign.CompleteBattle(LevelAssetId, _sim.Time, lvCfg?.Xp ?? 0);
                 }
-                GameModule.UI.CloseUI<TakeoverBattleUI>();
-                GameModule.UI.ShowUIAsync<TakeoverResultUI>(this);
+                ShowResultOverlay();
             }
 
             SyncSquads();
             SyncNodes();
-            SyncBuildingBadges();
             if (!_paused) UpdateSpellFx(Time.deltaTime);
 
             if (_selectedSquad != null && _selectedSquad.IsDead) _selectedSquad = null;
@@ -463,6 +589,22 @@ namespace GameLogic.Takeover
                 return;
             }
             HandleInput();
+        }
+
+        private void ShowResultOverlay()
+        {
+            if (_sim == null || _resultShown) return;
+            _resultShown = true;
+            _paused = true;
+            var args = new ResultOverlayArgs
+            {
+                Runner = this,
+                Victory = _sim.HumanVictory,
+                Seconds = _sim.Time,
+                Stars = _sim.Stars,
+                Reward = _lastReward,
+            };
+            UIManager.OpenOverlayAsync<ResultOverlayView>(args).Forget();
         }
 
         private void ProcessBattleEvents()
@@ -680,188 +822,6 @@ namespace GameLogic.Takeover
                 Destroy(_unitClickableAreas[id].gameObject);
                 _unitClickableAreas.Remove(id);
             }
-            SyncSquadBadges();
-        }
-
-        /// <summary>头顶徽标：位置按屏幕坐标换算到 HUD 画布，尺寸不随镜头缩放（和原版一致）。</summary>
-        private void SyncSquadBadges()
-        {
-            if (!ShowSquadBadges || _badgeDisabled)
-            {
-                if (_squadBadges.Count > 0) ClearSquadBadges();
-                return;
-            }
-            if (_battleUI == null || _sim == null || _cam == null) return;
-            RectTransform layer = _battleUI.SquadBadgeLayer;
-            if (layer == null) return;
-
-            // TEngine 的 UICanvas 是 Screen Space - Camera（带 UICamera），
-            // 用 null 相机换算会把徽标全推到画布角落，所以这里按根画布的实际渲染模式取相机。
-            Canvas canvas = layer.GetComponentInParent<Canvas>();
-            Canvas rootCanvas = canvas != null ? canvas.rootCanvas : null;
-            Camera uiCamera = rootCanvas != null &&
-                              rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
-                ? rootCanvas.worldCamera
-                : null;
-            float badgeScale = ResolveBadgeScale(rootCanvas);
-            if (!_badgeProbeLogged)
-            {
-                _badgeProbeLogged = true;
-                Log.Info($"[Takeover] 头顶 UI: squads={_sim.Squads.Count} " +
-                         $"renderMode={rootCanvas?.renderMode} " +
-                         $"scaleFactor={rootCanvas?.scaleFactor:F2} badgeScale={badgeScale:F2} " +
-                         $"camera={(uiCamera != null ? uiCamera.name : "null")}");
-            }
-
-            var live = new HashSet<int>();
-            foreach (Squad squad in _sim.Squads)
-            {
-                if (squad.IsDead) continue;
-                live.Add(squad.Id);
-                if (!_squadBadges.TryGetValue(squad.Id, out TakeoverSquadBadgeWidget badge))
-                {
-                    badge = _battleUI.CreateSquadBadgeWidget();
-                    if (badge == null || !badge.IsValid)
-                    {
-                        if (badge != null)
-                            badge.Destroy();
-                        _badgeDisabled = true;
-                        if (!_badgeCreateErrorLogged)
-                        {
-                            _badgeCreateErrorLogged = true;
-                            Log.Error("[Takeover] Squad badge widget could not be created; badges are disabled.");
-                        }
-                        ClearSquadBadges();
-                        ClearBuildingBadges();
-                        return;
-                    }
-                    _squadBadges[squad.Id] = badge;
-                    badge.Bind(squad);
-                }
-
-                Vector3 screen = _cam.WorldToScreenPoint(
-                    DisplayPosition(squad.Pos) + new Vector2(0f, BadgeWorldOffsetY));
-                Vector2 local;
-                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(layer, screen, uiCamera, out local))
-                    continue;
-                badge.SetPosition(local);
-                badge.RefreshVisuals(squad == _selectedSquad, badgeScale);
-            }
-
-            foreach (int id in _squadBadges.Keys.ToList())
-            {
-                if (live.Contains(id)) continue;
-                DestroySquadBadge(id);
-            }
-        }
-
-        /// <summary>让徽标的 1 个画布单位等于 1 个舞台像素（画布参考分辨率和舞台不同，需要换算）。</summary>
-        private float ResolveBadgeScale(Canvas canvas)
-        {
-            if (canvas == null || canvas.scaleFactor <= 0.0001f) return 1f;
-            float pixelsPerStagePixel = Mathf.Abs(
-                _cam.WorldToScreenPoint(new Vector3(0f, 1f, 0f)).y -
-                _cam.WorldToScreenPoint(Vector3.zero).y);
-            if (pixelsPerStagePixel <= 0.0001f) return 1f;
-            return pixelsPerStagePixel / canvas.scaleFactor;
-        }
-
-        private void DestroySquadBadge(int squadId)
-        {
-            if (!_squadBadges.TryGetValue(squadId, out TakeoverSquadBadgeWidget badge)) return;
-            badge.Destroy();
-            _squadBadges.Remove(squadId);
-        }
-
-        private void ClearSquadBadges()
-        {
-            foreach (int id in _squadBadges.Keys.ToList()) DestroySquadBadge(id);
-            _squadBadges.Clear();
-        }
-
-        /// <summary>建筑头顶徽标：等级 + 血条 + 阵营色环，跟随建筑位置（只对城镇/要塞/营地/魔法塔）。</summary>
-        private void SyncBuildingBadges()
-        {
-            if (!ShowBuildingBadges || _buildingBadgeDisabled)
-            {
-                if (_buildingBadges.Count > 0) ClearBuildingBadges();
-                return;
-            }
-            if (_sim == null) return;
-            if (!TryResolveBadgeContext(out RectTransform layer, out Camera uiCamera, out float badgeScale))
-                return;
-
-            var live = new HashSet<int>();
-            foreach (MapNode node in _sim.Nodes)
-            {
-                BuildingState building = node.Building;
-                if (building == null || !BattleSim.IsKeyBuilding(building)) continue;
-                live.Add(node.Id);
-                if (!_buildingBadges.TryGetValue(node.Id, out TakeoverBuildingBadgeWidget badge))
-                {
-                    badge = _battleUI.CreateBuildingBadgeWidget();
-                    if (badge == null || !badge.IsValid)
-                    {
-                        if (badge != null) badge.Destroy();
-                        _buildingBadgeDisabled = true;
-                        if (!_buildingBadgeErrorLogged)
-                        {
-                            _buildingBadgeErrorLogged = true;
-                            Log.Error("[Takeover] Building badge widget could not be created; " +
-                                      "building badges are disabled.");
-                        }
-                        ClearBuildingBadges();
-                        return;
-                    }
-                    _buildingBadges[node.Id] = badge;
-                    badge.Bind(node);
-                }
-
-                Vector3 screen = _cam.WorldToScreenPoint(
-                    DisplayPosition(node.Pos) + new Vector2(0f, BuildingBadgeWorldOffsetY));
-                Vector2 local;
-                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(layer, screen, uiCamera, out local))
-                    continue;
-                badge.SetPosition(local);
-                badge.RefreshVisuals(node == _selected, building.Owner == _sim.Human.Faction, badgeScale);
-            }
-
-            foreach (int id in _buildingBadges.Keys.ToList())
-            {
-                if (live.Contains(id)) continue;
-                DestroyBuildingBadge(id);
-            }
-        }
-
-        /// <summary>徽标层、UI 相机、尺寸换算，squad 与建筑徽标共用。</summary>
-        private bool TryResolveBadgeContext(out RectTransform layer, out Camera uiCamera, out float badgeScale)
-        {
-            layer = null;
-            uiCamera = null;
-            badgeScale = 1f;
-            if (_battleUI == null || _cam == null) return false;
-            layer = _battleUI.SquadBadgeLayer;
-            if (layer == null) return false;
-            Canvas canvas = layer.GetComponentInParent<Canvas>();
-            Canvas rootCanvas = canvas != null ? canvas.rootCanvas : null;
-            uiCamera = rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay
-                ? rootCanvas.worldCamera
-                : null;
-            badgeScale = ResolveBadgeScale(rootCanvas);
-            return true;
-        }
-
-        private void DestroyBuildingBadge(int nodeId)
-        {
-            if (!_buildingBadges.TryGetValue(nodeId, out TakeoverBuildingBadgeWidget badge)) return;
-            badge.Destroy();
-            _buildingBadges.Remove(nodeId);
-        }
-
-        private void ClearBuildingBadges()
-        {
-            foreach (int id in _buildingBadges.Keys.ToList()) DestroyBuildingBadge(id);
-            _buildingBadges.Clear();
         }
 
         private void SyncNodes()
@@ -947,39 +907,39 @@ namespace GameLogic.Takeover
         {
             if (Input.GetKeyDown(KeyCode.Space)) _paused = !_paused;
             if (Input.GetKeyDown(KeyCode.R)) NewGame();
-            if (Input.GetKeyDown(KeyCode.Escape)) ShowLevelSelect();
-            bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null
-                                 && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
-            if (pointerOverUI && _dragSquad == null)
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (!UIManager.IsOpen<PauseOverlayView>() && !UIManager.IsOpen<SettingsOverlayView>() &&
+                    !UIManager.IsOpen<ResultOverlayView>())
+                {
+                    _paused = true;
+                    UIManager.OpenOverlayAsync<PauseOverlayView>(this).Forget();
+                }
                 return;
+            }
 
-            // 原版没有框选：左键按住头顶徽标拖动下令，左键单击建筑/空地选中，单击空地取消选择。
+            bool pointerOverUI = UIManager.IsPointerOverUI();
+            if (pointerOverUI && _dragSquad == null)
+            {
+                if (Input.GetMouseButtonDown(0)) _pressOverUI = true;
+                return;
+            }
+
+            // 原版没有框选：左键按住头顶徽标拖动下令（徽标 PointerDown 调 BeginBadgeDrag），
+            // 左键单击建筑/空地选中，单击空地取消选择。
             if (Input.GetMouseButtonDown(0))
             {
                 _pressScreen = Input.mousePosition;
-                _dragSquad = PickHumanSquadByBadge(_pressScreen);
-                if (_dragSquad != null)
-                {
-                    _selectedSquad = _dragSquad;
-                    _selected = null;
-                    MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
-                    // UpdateOrderPreview 内部自己做 逻辑->显示 转换，这里必须传逻辑坐标，
-                    // 否则起点会被转换两次（第二次是 600-y/2 的镜像折叠），曲线从错误的位置画出去。
-                    UpdateOrderPreview(_dragSquad.Pos,
-                        hover?.Pos ?? MouseWorldPosition(),
-                        hover?.Building != null && hover.Building.Owner != HumanFaction);
-                }
+                _pressOverUI = pointerOverUI;
             }
 
-            if (Input.GetMouseButton(0))
+            if (Input.GetMouseButton(0) && _dragSquad != null)
             {
-                if (_dragSquad != null)
-                {
-                    MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
-                    UpdateOrderPreview(_dragSquad.Pos,
-                        hover?.Pos ?? MouseWorldPosition(),
-                        hover?.Building != null && hover.Building.Owner != HumanFaction);
-                }
+                MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
+                // UpdateOrderPreview 内部自己做 逻辑->显示 转换，这里必须传逻辑坐标。
+                UpdateOrderPreview(_dragSquad.Pos,
+                    hover?.Pos ?? MouseWorldPosition(),
+                    hover?.Building != null && hover.Building.Owner != HumanFaction);
             }
 
             if (Input.GetMouseButtonUp(0))
@@ -992,13 +952,30 @@ namespace GameLogic.Takeover
                     else
                         Toast($"选中 {_dragSquad.Def.CnName}  {_dragSquad.AliveSoldiers}/{_dragSquad.MaxSoldiers} 人");
                 }
-                else if (dragDistance < 8f)
+                else if (!_pressOverUI && dragDistance < 8f)
                 {
                     HandleLeftClickAtMouse();
                 }
                 _dragSquad = null;
+                _pressOverUI = false;
                 if (_orderPreview != null) _orderPreview.enabled = false;
             }
+        }
+
+        /// <summary>由 UI Toolkit 的小队徽标在 PointerDown 时调用。</summary>
+        public void BeginBadgeDrag(Squad squad)
+        {
+            if (squad == null || squad.IsDead || _sim == null || !squad.Owner.IsHuman) return;
+            _dragSquad = squad;
+            _selectedSquad = squad;
+            _selected = null;
+            _pressScreen = Input.mousePosition;
+            _pressOverUI = false;
+
+            MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
+            UpdateOrderPreview(squad.Pos,
+                hover?.Pos ?? MouseWorldPosition(),
+                hover?.Building != null && hover.Building.Owner != HumanFaction);
         }
 
         private void IssueOrderAtMouse(Squad squad)
@@ -1049,28 +1026,6 @@ namespace GameLogic.Takeover
                 ClearSelection();
             }
             _selectedSquad = null;
-        }
-
-        /// <summary>选中/下令都走头顶徽标：点士兵本体不再生效（原版也是这样操作的）。</summary>
-        private Squad PickHumanSquadByBadge(Vector2 screen)
-        {
-            RectTransform layer = _battleUI != null ? _battleUI.SquadBadgeLayer : null;
-            if (layer == null) return null;
-            Canvas canvas = layer.GetComponentInParent<Canvas>();
-            Canvas root = canvas != null ? canvas.rootCanvas : null;
-            Camera uiCamera = root != null && root.renderMode != RenderMode.ScreenSpaceOverlay
-                ? root.worldCamera
-                : null;
-
-            Squad best = null;
-            foreach (TakeoverSquadBadgeWidget badge in _squadBadges.Values)
-            {
-                if (badge == null || badge.RectTransform == null || badge.Squad == null) continue;
-                if (!badge.Squad.Owner.IsHuman || badge.Squad.IsDead) continue;
-                if (badge.ContainsScreenPoint(screen, uiCamera))
-                    best = badge.Squad;
-            }
-            return best;
         }
 
         private MapNode FindNodeAtScreen(Vector2 screen, float maxDistance)
@@ -1128,9 +1083,7 @@ namespace GameLogic.Takeover
 
         private void UpdateCamera()
         {
-            bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null
-                                 && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
-            if (pointerOverUI) return;
+            if (UIManager.IsPointerOverUI()) return;
             float scroll = Input.mouseScrollDelta.y;
             if (Mathf.Abs(scroll) > 0.01f)
                 _cam.orthographicSize = Mathf.Clamp(_cam.orthographicSize - scroll * 40f, 60f, 700f);
@@ -1155,9 +1108,9 @@ namespace GameLogic.Takeover
 
         }
 
-        private void Toast(string msg)
+        private void Toast(string msg, float seconds = 2.5f)
         {
-            TakeoverToastUI.Show(msg);
+            UIManager.Toast(msg, seconds);
         }
 
         private static void PlayMusic(string location)
@@ -1189,7 +1142,20 @@ namespace GameLogic.Takeover
         public Squad SelectedSquad => _selectedSquad;
         public bool Paused => _paused;
         public float Speed => _speed;
-        public bool LevelSelectOpen => _levelSelectOpen;
+        public bool LevelSelectOpen => !_battleActive;
+        public Camera WorldCamera => _cam;
+
+        /// <summary>小队徽标的世界坐标（含头顶偏移）。</summary>
+        public Vector3 GetSquadBadgeWorldPosition(Squad squad)
+        {
+            return DisplayPosition(squad.Pos) + new Vector2(0f, BadgeWorldOffsetY);
+        }
+
+        /// <summary>建筑徽标的世界坐标（含头顶偏移）。</summary>
+        public Vector3 GetBuildingBadgeWorldPosition(MapNode node)
+        {
+            return DisplayPosition(node.Pos) + new Vector2(0f, BuildingBadgeWorldOffsetY);
+        }
 
         public void TogglePause() => _paused = !_paused;
         public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, 1f, MaxSpeed);
@@ -1267,7 +1233,8 @@ namespace GameLogic.Takeover
         {
             if (_sim == null) return;
             bool ok = _sim.ExecuteNow(BattleCommand.Upgrade(node.Id));
-            Toast(ok ? "升级成功" : "升级失败");
+            if (ok) Campaign.AddHonor(25);
+            Toast(ok ? "升级成功　荣誉 +25" : "升级失败");
         }
 
         public void Build(MapNode node, int buildingId)

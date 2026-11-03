@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="gm-panel" class="gm-panel">
+    <ui:Button name="gm-toggle" class="round-button gm-toggle" />
+    <ui:VisualElement name="gm-content" class="gm-content">
+      <ui:Label name="gm-title" class="gm-title" />
+      <ui:Label name="gm-hint" class="gm-hint" />
+      <ui:VisualElement class="gm-row">
+        <ui:Button name="gm-gold" text="金币 +1000" class="button button--small button--ghost" />
+        <ui:Button name="gm-mana" text="法力 +500" class="button button--small button--ghost" />
+        <ui:Button name="gm-win" text="胜利" class="button button--small button--gold" />
+        <ui:Button name="gm-lose" text="失败" class="button button--small button--ghost" />
+      </ui:VisualElement>
+      <ui:VisualElement class="gm-row">
+        <ui:Button name="gm-ai" class="button button--small button--ghost">
+          <ui:Label name="gm-ai-label" text="AI" class="gm-button-label" />
+        </ui:Button>
+      </ui:VisualElement>
+      <ui:VisualElement class="gm-speeds">
+        <ui:Button name="gm-speed-1" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-1-label" text="×1" class="gm-button-label" />
+        </ui:Button>
+        <ui:Button name="gm-speed-2" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-2-label" text="×2" class="gm-button-label" />
+        </ui:Button>
+        <ui:Button name="gm-speed-4" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-4-label" text="×4" class="gm-button-label" />
+        </ui:Button>
+        <ui:Button name="gm-speed-8" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-8-label" text="×8" class="gm-button-label" />
+        </ui:Button>
+        <ui:Button name="gm-speed-16" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-16-label" text="×16" class="gm-button-label" />
+        </ui:Button>
+        <ui:Button name="gm-speed-32" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-32-label" text="×32" class="gm-button-label" />
+        </ui:Button>
+        <ui:Button name="gm-speed-64" class="button button--small button--ghost">
+          <ui:Label name="gm-speed-64-label" text="×64" class="gm-button-label" />
+        </ui:Button>
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="skill-screen" class="skill-screen">
+    <ui:VisualElement class="skill-title">
+      <ui:Label text="THRONE ROOM" class="skill-title-label" />
+    </ui:VisualElement>
+    <ui:VisualElement name="skill-grid" class="skill-grid" />
+    <ui:VisualElement class="skill-footer">
+      <ui:Label name="points-label" class="skill-points" />
+      <ui:VisualElement class="skill-actions">
+        <ui:Button name="reset-button" class="button button--ghost button--small" />
+        <ui:Button name="ok-button" class="button button--gold button--wide" />
+      </ui:VisualElement>
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

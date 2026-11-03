@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="overlay-root" class="overlay-backdrop">
+    <ui:VisualElement class="overlay-panel">
+      <ui:Label name="title" class="overlay-title" />
+      <ui:Label name="body" class="overlay-body" />
+      <ui:VisualElement name="actions" class="overlay-actions" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

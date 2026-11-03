@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="battle-menu" class="battle-menu">
+    <ui:VisualElement name="tab-host" class="menu-tabs" />
+    <ui:VisualElement name="option-list" class="option-list" />
+  </ui:VisualElement>
+</ui:UXML>

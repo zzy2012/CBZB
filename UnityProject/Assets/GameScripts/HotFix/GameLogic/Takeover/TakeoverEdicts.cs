@@ -96,12 +96,8 @@ namespace GameLogic.Takeover
                 player.Mods[i] += mods[i];
         }
 
-        /// <summary>当前章节对应的玩家阵营（第一章是 Westaria）。</summary>
-        public static Faction CurrentFaction()
-        {
-            var level = Cfg.TbLevel.DataList.FirstOrDefault(value => value.AssetId == Campaign.LastLevel);
-            return level != null ? OriginalRules.FromConfigFaction(level.Chapter) : Faction.Westaria;
-        }
+        /// <summary>当前档案选择的玩家阵营（教令树按阵营分组）。</summary>
+        public static Faction CurrentFaction() => Campaign.SelectedFaction;
 
         /// <summary>面板标题里的阵营中文名。</summary>
         public static string FactionDisplayName(Faction faction)

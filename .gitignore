@@ -33,3 +33,10 @@ logs/
 
 # Office/WPS 打开表格时生成的临时锁文件
 ~$*
+
+# Takeover runtime CJK font copied from the local OS by TakeoverCjkFontSetup
+UnityProject/Assets/Resources/UI/Toolkit/Fonts/TakeoverCjk.*
+UnityProject/Assets/Resources/UI/Toolkit/Fonts/TakeoverCjk.*.meta
+
+# Unity-generated default UI Toolkit theme
+UnityProject/Assets/UnityDefaultRuntimeTheme.tss*

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="mission-detail" class="mission-detail">
+    <ui:Button name="close-button" class="close-button mission-close" />
+    <ui:VisualElement class="mission-preview">
+      <ui:Label name="mission-enemy" class="mission-enemy" />
+    </ui:VisualElement>
+    <ui:VisualElement class="mission-copy">
+      <ui:Label name="mission-title" class="mission-title" />
+      <ui:Label name="mission-reward" class="mission-reward" />
+      <ui:Label name="mission-description" class="mission-description" />
+      <ui:Label name="mission-stars" class="mission-stars" />
+      <ui:Button name="start-battle-button" class="button button--gold button--wide" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>
