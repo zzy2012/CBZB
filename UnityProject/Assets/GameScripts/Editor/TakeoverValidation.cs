@@ -208,6 +208,7 @@ public static class TakeoverValidation
         CheckCount(mapRoot, "takeover_map_*.png", 8, "地图底图", failures);
         CheckCount(audioRoot, "*.wav", 70, "原版音频", failures);
         CheckCount(fontRoot, "*.ttf", 10, "原版字体", failures);
+        CheckCount("Assets/AssetRaw/UI/Icons", "takeover_status_*.png", 5, "状态图标", failures);
 
         foreach (int buildingId in new[] { 1, 2, 3, 4, 5, 6, 7 })
         {
@@ -230,11 +231,14 @@ public static class TakeoverValidation
     {
         "BattleHUD/SquadBadgeLayer",
         "BattleHUD/SquadBadgeLayer/SquadBadgePrototype",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/HpFill",
         "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Ring",
         "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Portrait",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/HpBack",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/HpFill",
-        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/Count",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusFrozen",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusPoison",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusCharge",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusShield",
+        "BattleHUD/SquadBadgeLayer/SquadBadgePrototype/StatusFear",
         "BattleHUD/BottomBar",
         "BattleHUD/BottomBar/PortraitFrame",
         "BattleHUD/BottomBar/Top/Resources",

@@ -441,8 +441,10 @@ namespace GameLogic.Takeover
                 button.onClick.AddListener(delegate { _runner?.SetSpeed(speed); });
             }
 
+            // 设置按钮是原版底栏的位置占位：目前没有真正的设置面板，
+            // 只提示一下，不再顺手把 GM 面板打开（GM 有自己的「GM」开关）。
             FindRequired<Button>("TakeoverRuntimeUI/BattleHUD/BottomBar/Settings")
-                .onClick.AddListener(delegate { SetGmExpanded(true); });
+                .onClick.AddListener(delegate { ShowToast("设置面板还没做（音量 / 画质 / 退出）", 2.5f); });
             _bottomSpeedButtons.Clear();
             _bottomSpeedLabels.Clear();
             for (int i = 0; i < BottomSpeeds.Length; i++)

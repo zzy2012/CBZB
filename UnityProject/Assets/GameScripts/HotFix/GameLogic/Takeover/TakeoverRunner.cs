@@ -51,28 +51,43 @@ namespace GameLogic.Takeover
         private GameObject _squadBadgeTemplate;
         private bool _squadBadgeTemplateMissing;
         private bool _badgeProbeLogged;
+        private bool _badgeDisabled;
         private readonly Dictionary<int, SquadBadge> _squadBadges = new Dictionary<int, SquadBadge>();
 
         /// <summary>头顶徽标：一支 squad 一份，节点来自 HUD 预制体里的 SquadBadgePrototype。</summary>
         private sealed class SquadBadge
         {
+            public Squad Squad;
             public RectTransform Rect;
+            public Image HpFill;
             public Image Ring;
             public Image Portrait;
-            public Image HpFill;
-            public Text Count;
+            public Dictionary<string, Image> StatusIcons;
         }
 
         private const float BadgeWorldOffsetY = 34f;
-        private const float BadgeHpFillWidth = 58f;
-        private const float BadgeHpFillLeft = -5f;
-        private const float BadgeHpFillY = 4f;
-        private static readonly Color BadgeHpHigh = new Color(0.84f, 0.72f, 0.25f, 1f);
-        private static readonly Color BadgeHpMid = new Color(0.88f, 0.60f, 0.25f, 1f);
+        private static readonly Color BadgeHpHigh = new Color(0.42f, 0.80f, 0.42f, 1f);
+        private static readonly Color BadgeHpMid = new Color(0.88f, 0.78f, 0.30f, 1f);
         private static readonly Color BadgeHpLow = new Color(0.85f, 0.32f, 0.26f, 1f);
         private static readonly Color BadgeRingHuman = new Color(0.35f, 0.75f, 0.40f, 0.95f);
         private static readonly Color BadgeRingEnemy = new Color(0.85f, 0.35f, 0.32f, 0.95f);
         private static readonly Color BadgeRingSelected = new Color(1f, 0.85f, 0.35f, 0.98f);
+        private readonly List<string> _statusBuffer = new List<string>();
+
+        /// <summary>状态图标优先级；预制体里每个状态一个节点（sprite 已烘焙，不走运行时加载）。</summary>
+        private static readonly string[] StatusPriority =
+        {
+            "takeover_status_frozen",
+            "takeover_status_poison",
+            "takeover_status_charge",
+            "takeover_status_shield",
+            "takeover_status_fear",
+        };
+
+        private const int MaxVisibleStatus = 3;
+        private const float StatusIconRightX = 13f;
+        private const float StatusIconStep = 15f;
+        private const float StatusIconY = 15f;
 
         public int LevelAssetId = 1;
         public Faction HumanFaction = Faction.Westaria;
@@ -184,11 +199,11 @@ namespace GameLogic.Takeover
         {
             if (_ui == null) return;
             if (LevelAssetId == 1)
-                _ui.ShowToast("点击己方城堡招募，再按住部队拖到目标", 6f);
+                _ui.ShowToast("点击己方城堡招募，再按住头顶徽标拖到目标", 6f);
             else if (LevelAssetId == 2)
-                _ui.ShowToast("先建造农场增加补给；左键按住部队拖动下令", 6f);
+                _ui.ShowToast("先建造农场增加补给；左键按住头顶徽标拖动下令", 6f);
             else
-                _ui.ShowToast("左键按住部队拖动下令；左键点击建筑打开面板", 6f);
+                _ui.ShowToast("左键按住头顶徽标拖动下令；左键点击建筑打开面板", 6f);
         }
 
         public void RegisterUI(TakeoverUIWindow ui)
@@ -535,7 +550,7 @@ namespace GameLogic.Takeover
         /// <summary>头顶徽标：位置按屏幕坐标换算到 HUD 画布，尺寸不随镜头缩放（和原版一致）。</summary>
         private void SyncSquadBadges()
         {
-            if (!ShowSquadBadges)
+            if (!ShowSquadBadges || _badgeDisabled)
             {
                 if (_squadBadges.Count > 0) ClearSquadBadges();
                 return;
@@ -599,14 +614,11 @@ namespace GameLogic.Takeover
 
                 float maxHp = squad.HpPerSoldier * squad.MaxSoldiers;
                 float ratio = maxHp <= 0f ? 0f : Mathf.Clamp01(squad.Hp / maxHp);
-                RectTransform fill = badge.HpFill.rectTransform;
-                fill.sizeDelta = new Vector2(BadgeHpFillWidth * ratio, fill.sizeDelta.y);
-                // 原版布局：数字在左、头像居中、血条向右延伸，所以按左边缘对齐后按比例收窄
-                fill.anchoredPosition = new Vector2(
-                    BadgeHpFillLeft + BadgeHpFillWidth * ratio * 0.5f, BadgeHpFillY);
+                // 血量填的是头像背后的圆，头像本身保持完整（原版没有血条也没有人数）
+                badge.HpFill.fillAmount = ratio;
                 badge.HpFill.color = ratio > 0.6f ? BadgeHpHigh : ratio > 0.3f ? BadgeHpMid : BadgeHpLow;
+                UpdateSquadBadgeStatus(badge, squad);
 
-                badge.Count.text = $"{squad.AliveSoldiers}/{squad.MaxSoldiers}";
                 bool selected = squad == _selectedSquad;
                 badge.Ring.color = selected
                     ? BadgeRingSelected
@@ -641,15 +653,28 @@ namespace GameLogic.Takeover
             var rect = instance.transform as RectTransform;
             var badge = rect == null ? null : new SquadBadge
             {
+                Squad = null,
                 Rect = rect,
+                HpFill = BadgePart<Image>(rect, "HpFill"),
                 Ring = BadgePart<Image>(rect, "Ring"),
                 Portrait = BadgePart<Image>(rect, "Portrait"),
-                HpFill = BadgePart<Image>(rect, "HpFill"),
-                Count = BadgePart<Text>(rect, "Count"),
+                StatusIcons = new Dictionary<string, Image>
+                {
+                    { "takeover_status_frozen", BadgePart<Image>(rect, "StatusFrozen") },
+                    { "takeover_status_poison", BadgePart<Image>(rect, "StatusPoison") },
+                    { "takeover_status_charge", BadgePart<Image>(rect, "StatusCharge") },
+                    { "takeover_status_shield", BadgePart<Image>(rect, "StatusShield") },
+                    { "takeover_status_fear", BadgePart<Image>(rect, "StatusFear") },
+                },
             };
-            if (badge == null || badge.Ring == null || badge.Portrait == null ||
-                badge.HpFill == null || badge.Count == null)
+            if (badge == null || badge.HpFill == null || badge.Ring == null || badge.Portrait == null)
             {
+                if (!_squadBadgeTemplateMissing)
+                {
+                    _squadBadgeTemplateMissing = true;
+                    _badgeDisabled = true;
+                    Log.Error("[Takeover] SquadBadgePrototype 缺少 HpFill/Ring/Portrait 子节点，头顶 UI 不显示");
+                }
                 Destroy(instance);
                 return null;
             }
@@ -664,11 +689,52 @@ namespace GameLogic.Takeover
 
         private static void BindSquadBadgePortrait(SquadBadge badge, Squad squad)
         {
+            badge.Squad = squad;
             if (badge.Portrait == null) return;
             string location = TakeoverVisualCatalog.UnitLocation(squad.Def);
             if (string.IsNullOrEmpty(location)) return;
             badge.Portrait.SetSprite(location, false, null,
                 badge.Portrait.GetCancellationTokenOnDestroy());
+        }
+
+        /// <summary>右上角状态图标：冰冻 > 中毒 > 冲锋 > 护盾 > 恐惧，最多显示 3 个。</summary>
+        private void UpdateSquadBadgeStatus(SquadBadge badge, Squad squad)
+        {
+            if (badge.StatusIcons == null || badge.StatusIcons.Count == 0) return;
+            _statusBuffer.Clear();
+            bool frozen = false, poison = false, charge = false, shield = false, fear = false;
+            for (int i = 0; i < squad.Units.Count; i++)
+            {
+                CombatUnit unit = squad.Units[i];
+                if (unit.IsDead) continue;
+                if (unit.FrozenSeconds > 0f) frozen = true;
+                if (unit.PoisonSeconds > 0f) poison = true;
+                if (unit.ChargeSpeedSeconds > 0f || unit.DashSeconds > 0f) charge = true;
+                if (unit.DamageResistSeconds > 0f) shield = true;
+                if (unit.FearedSeconds > 0f) fear = true;
+            }
+            if (frozen) _statusBuffer.Add(StatusPriority[0]);
+            if (poison) _statusBuffer.Add(StatusPriority[1]);
+            if (charge) _statusBuffer.Add(StatusPriority[2]);
+            if (shield) _statusBuffer.Add(StatusPriority[3]);
+            if (fear) _statusBuffer.Add(StatusPriority[4]);
+
+            foreach (Image icon in badge.StatusIcons.Values)
+            {
+                if (icon != null && icon.gameObject.activeSelf) icon.gameObject.SetActive(false);
+            }
+            for (int i = 0; i < _statusBuffer.Count && i < MaxVisibleStatus; i++)
+            {
+                if (!badge.StatusIcons.TryGetValue(_statusBuffer[i], out Image icon) || icon == null)
+                    continue;
+                icon.gameObject.SetActive(true);
+                var iconRect = icon.transform as RectTransform;
+                if (iconRect != null)
+                {
+                    iconRect.anchoredPosition = new Vector2(
+                        StatusIconRightX - StatusIconStep * i, StatusIconY);
+                }
+            }
         }
 
         private void DestroySquadBadge(int squadId)
@@ -773,11 +839,11 @@ namespace GameLogic.Takeover
             if (pointerOverUI && _dragSquad == null)
                 return;
 
-            // 原版没有框选：左键按住部队拖动下令，左键单击建筑/空地选中，单击空地取消选择。
+            // 原版没有框选：左键按住头顶徽标拖动下令，左键单击建筑/空地选中，单击空地取消选择。
             if (Input.GetMouseButtonDown(0))
             {
                 _pressScreen = Input.mousePosition;
-                _dragSquad = FindHumanSquadAtScreen(_pressScreen);
+                _dragSquad = PickHumanSquadByBadge(_pressScreen);
                 if (_dragSquad != null)
                 {
                     _selectedSquad = _dragSquad;
@@ -870,20 +936,24 @@ namespace GameLogic.Takeover
             _selectedSquad = null;
         }
 
-        private Squad FindHumanSquadAtScreen(Vector2 screen)
+        /// <summary>选中/下令都走头顶徽标：点士兵本体不再生效（原版也是这样操作的）。</summary>
+        private Squad PickHumanSquadByBadge(Vector2 screen)
         {
+            RectTransform layer = _ui != null ? _ui.SquadBadgeLayer : null;
+            if (layer == null) return null;
+            Canvas canvas = layer.GetComponentInParent<Canvas>();
+            Canvas root = canvas != null ? canvas.rootCanvas : null;
+            Camera uiCamera = root != null && root.renderMode != RenderMode.ScreenSpaceOverlay
+                ? root.worldCamera
+                : null;
+
             Squad best = null;
-            float bestDistance = 24f;
-            foreach (Squad squad in _sim.Human.Squads.Where(value => !value.IsDead))
+            foreach (SquadBadge badge in _squadBadges.Values)
             {
-                foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead))
-                {
-                    Vector3 unitScreen = _cam.WorldToScreenPoint(DisplayPosition(unit.Pos));
-                    float distance = Vector2.Distance(screen, unitScreen);
-                    if (distance >= bestDistance) continue;
-                    bestDistance = distance;
-                    best = squad;
-                }
+                if (badge == null || badge.Rect == null || badge.Squad == null) continue;
+                if (!badge.Squad.Owner.IsHuman || badge.Squad.IsDead) continue;
+                if (RectTransformUtility.RectangleContainsScreenPoint(badge.Rect, screen, uiCamera))
+                    best = badge.Squad;
             }
             return best;
         }
