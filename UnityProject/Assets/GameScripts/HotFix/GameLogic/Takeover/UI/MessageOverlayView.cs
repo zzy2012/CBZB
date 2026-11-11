@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using GameLogic;
 using GameLogic.UI;
 using TEngine;
-using UnityEngine.UIElements;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace GameLogic.Takeover.UI
 {
@@ -32,37 +34,47 @@ namespace GameLogic.Takeover.UI
         public readonly List<OverlayButtonSpec> Buttons = new List<OverlayButtonSpec>();
     }
 
-    /// <summary>暂停/设置/结算共用的遮罩窗口。</summary>
     public abstract class MessageOverlayView : UIView
     {
         protected TakeoverRunner Runner { get; private set; }
 
-        protected override string UxmlLocation => "TakeoverMessageOverlayView";
-
         protected override void OnCreate(object args)
         {
-            Runner = ResolveRunner(args);
-            Require("title", "body", "actions");
+            Runner = args as TakeoverRunner ?? (args as OverlayArgs)?.Runner;
+            ClearContent();
 
-            OverlaySpec spec = BuildSpec(args) ?? new OverlaySpec { Title = string.Empty, Body = string.Empty };
+            Image scrim = TakeoverUiFactory.CreateImage(Root, "OverlayScrim",
+                new Color(0f, 0f, 0f, 0.72f), true);
+            TakeoverUiFactory.Stretch(scrim.rectTransform);
+            RectTransform panel = TakeoverUiFactory.CreatePanel(Root, "OverlayPanel",
+                new Vector2(620f, 400f), TakeoverUiFactory.Panel, true);
+            VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(34, 34, 24, 20);
+            layout.spacing = 12f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
 
-            Label title = Q<Label>("title");
-            if (title != null) title.text = spec.Title;
+            OverlaySpec spec = BuildSpec(args) ??
+                               new OverlaySpec { Title = string.Empty, Body = string.Empty };
+            TakeoverUiFactory.CreateText(panel, "OverlayTitle", spec.Title, 30,
+                TakeoverUiFactory.Accent, TextAnchor.MiddleCenter);
+            Text body = TakeoverUiFactory.CreateText(panel, "OverlayBody", spec.Body, 18,
+                Color.white, TextAnchor.MiddleCenter);
+            body.horizontalOverflow = HorizontalWrapMode.Wrap;
+            body.verticalOverflow = VerticalWrapMode.Overflow;
+            LayoutElement bodyLayout = body.gameObject.AddComponent<LayoutElement>();
+            bodyLayout.flexibleHeight = 1f;
+            RectTransform actions = TakeoverUiFactory.CreateRow(panel, "OverlayActions", 12f);
+            TakeoverUiFactory.SetPreferredHeight(actions, 54f);
 
-            Label body = Q<Label>("body");
-            if (body != null) body.text = spec.Body;
-
-            VisualElement actions = Q<VisualElement>("actions");
-            if (actions != null)
+            foreach (OverlayButtonSpec buttonSpec in spec.Buttons)
             {
-                actions.Clear();
-                foreach (OverlayButtonSpec buttonSpec in spec.Buttons)
-                {
-                    var button = new Button { text = buttonSpec.Label };
-                    button.AddToClassList("button");
-                    button.AddToClassList(buttonSpec.Primary ? "button--gold" : "button--ghost");
-                    OverlayButtonSpec captured = buttonSpec;
-                    button.clicked += () =>
+                OverlayButtonSpec captured = buttonSpec;
+                Button button = TakeoverUiFactory.CreateButton(actions, captured.Label,
+                    captured.Label, () =>
                     {
                         try
                         {
@@ -72,9 +84,11 @@ namespace GameLogic.Takeover.UI
                         {
                             Log.Error($"[TakeoverUI] 遮罩按钮 {captured.Label} 失败: {exception}");
                         }
-                    };
-                    actions.Add(button);
-                }
+                    }, 17, captured.Primary
+                        ? new Color(0.39f, 0.31f, 0.16f, 1f)
+                        : new Color(0.18f, 0.19f, 0.16f, 1f));
+                TakeoverUiFactory.SetPreferredWidth(button, 190f);
+                TakeoverUiFactory.SetPreferredHeight(button, 48f);
             }
 
             OnOverlayOpened();
@@ -83,11 +97,5 @@ namespace GameLogic.Takeover.UI
         protected abstract OverlaySpec BuildSpec(object args);
 
         protected virtual void OnOverlayOpened() { }
-
-        private static TakeoverRunner ResolveRunner(object args)
-        {
-            if (args is TakeoverRunner runner) return runner;
-            return (args as OverlayArgs)?.Runner;
-        }
     }
 }

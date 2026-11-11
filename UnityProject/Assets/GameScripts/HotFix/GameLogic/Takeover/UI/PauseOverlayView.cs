@@ -1,8 +1,9 @@
+using GameLogic;
 using GameLogic.UI;
 
 namespace GameLogic.Takeover.UI
 {
-    /// <summary>远征暂停遮罩。</summary>
+    [Window(UILayer.Top, location: "TakeoverUIWindow")]
     public sealed class PauseOverlayView : MessageOverlayView
     {
         protected override OverlaySpec BuildSpec(object args)

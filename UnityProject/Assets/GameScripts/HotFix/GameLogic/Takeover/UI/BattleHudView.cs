@@ -1,14 +1,13 @@
-using System.Linq;
 using Cysharp.Threading.Tasks;
+using System.Linq;
+using GameLogic;
 using GameLogic.UI;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 namespace GameLogic.Takeover.UI
 {
-    /// <summary>
-    /// 战斗 HUD：标题、控制按钮、资源、教程、检查器、法术栏、战斗菜单、GM 与头顶徽标。
-    /// </summary>
+    [Window(UILayer.UI, location: "TakeoverUIWindow", fullScreen: true)]
     public sealed class BattleHudView : UIView
     {
         private TakeoverRunner _runner;
@@ -18,23 +17,11 @@ namespace GameLogic.Takeover.UI
         private BattleMenuController _battleMenu;
         private GmPanelController _gmPanel;
         private TutorialController _tutorial;
-
-        private Label _title;
-        private Label _gold;
-        private Label _mana;
-        private Label _supply;
-        private Label _army;
-        private Label _honor;
-        private Label _enemy;
-        private Label _clock;
+        private Text _title;
+        private Text _resources;
+        private Text _clock;
         private Button _speedButton;
-        private Button _pauseButton;
         private float _refreshTimer;
-
-        protected override string UxmlLocation => "TakeoverBattleHudView";
-
-        protected override string[] ExtraStyleSheets =>
-            new[] { UIToolkitAssets.ScreenStyleLocation, UIToolkitAssets.BattleStyleLocation };
 
         protected override void OnCreate(object args)
         {
@@ -45,108 +32,87 @@ namespace GameLogic.Takeover.UI
                 return;
             }
 
-            Require("battle-title", "settings-button", "pause-button", "speed-button",
-                "badge-layer", "inspector", "inspector-title", "inspector-body",
-                "spell-list", "menu-host", "gm-host", "tutorial-text", "tutorial-avatar",
-                "tutorial-tag", "next-tutorial-button", "commander-name",
-                "gold-value", "mana-value", "supply-value", "army-value", "honor-value",
-                "enemy-value", "clock-label");
+            ClearContent();
+            var passThrough = Root.gameObject.AddComponent<CanvasGroup>();
+            passThrough.interactable = true;
+            passThrough.blocksRaycasts = true;
 
-            _title = Q<Label>("battle-title");
-            // HUD 根节点铺满全屏，但空白区域必须让世界点击穿透。
-            if (Root != null) Root.pickingMode = PickingMode.Ignore;
-            _gold = Q<Label>("gold-value");
-            _mana = Q<Label>("mana-value");
-            _supply = Q<Label>("supply-value");
-            _army = Q<Label>("army-value");
-            _honor = Q<Label>("honor-value");
-            _enemy = Q<Label>("enemy-value");
-            _clock = Q<Label>("clock-label");
-            _speedButton = Q<Button>("speed-button");
-            _pauseButton = Q<Button>("pause-button");
+            RectTransform status = TakeoverUiFactory.CreateRow(Root, "StatusBar", 12f);
+            TakeoverUiFactory.Anchor(status, new Vector2(0.015f, 0.91f),
+                new Vector2(0.985f, 0.99f), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
+            _title = TakeoverUiFactory.CreateText(status, "BattleTitle", string.Empty, 20,
+                TakeoverUiFactory.Accent);
+            _resources = TakeoverUiFactory.CreateText(status, "BattleResources", string.Empty, 16);
+            _clock = TakeoverUiFactory.CreateText(status, "BattleClock", string.Empty, 16,
+                Color.white, TextAnchor.MiddleRight);
+            TakeoverUiFactory.SetPreferredWidth(_title, 280f);
+            TakeoverUiFactory.SetPreferredWidth(_clock, 250f);
+            TakeoverUiFactory.SetPreferredHeight(status, 58f);
 
-            Label commander = Q<Label>("commander-name");
-            if (commander != null) commander.text = "边境统帅";
-
-            Button settings = Q<Button>("settings-button");
-            if (settings != null)
-            {
-                settings.text = "设置";
-                settings.clicked += () =>
-                    UIManager.OpenOverlayAsync<SettingsOverlayView>(_runner).Forget();
-            }
-
-            if (_pauseButton != null)
-            {
-                _pauseButton.text = "暂停";
-                _pauseButton.clicked += () =>
-                    UIManager.OpenOverlayAsync<PauseOverlayView>(_runner).Forget();
-            }
-
-            if (_speedButton != null)
-            {
-                _speedButton.clicked += () =>
+            RectTransform controls = TakeoverUiFactory.CreateRow(Root, "BattleControls", 6f);
+            TakeoverUiFactory.Anchor(controls, new Vector2(0.63f, 0.82f),
+                new Vector2(0.985f, 0.9f), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
+            Button settings = AddControl(controls, "Settings", "设置",
+                () => UIManager.OpenOverlayAsync<SettingsOverlayView>(_runner).Forget());
+            Button pause = AddControl(controls, "Pause", "暂停",
+                () => UIManager.OpenOverlayAsync<PauseOverlayView>(_runner).Forget());
+            _speedButton = AddControl(controls, "Speed", "×1",
+                () =>
                 {
                     _runner.CycleSpeed();
                     UIManager.Toast($"战斗速度：×{_runner.Speed:0}");
                     RefreshHud();
-                };
-            }
+                });
+            TakeoverUiFactory.SetPreferredWidth(settings, 110f);
+            TakeoverUiFactory.SetPreferredWidth(pause, 110f);
+            TakeoverUiFactory.SetPreferredWidth(_speedButton, 110f);
+            TakeoverUiFactory.SetPreferredHeight(controls, 44f);
 
-            _badgeLayer = new WorldBadgeLayer(_runner, Q<VisualElement>("badge-layer"));
-
-            VisualElement menuHost = Q<VisualElement>("menu-host");
-            if (menuHost != null) menuHost.pickingMode = PickingMode.Ignore;
-            VisualElement gmHost = Q<VisualElement>("gm-host");
-            if (gmHost != null) gmHost.pickingMode = PickingMode.Ignore;
+            RectTransform badgeRoot = TakeoverUiFactory.CreateRoot(Root, "WorldBadgeLayer");
+            _badgeLayer = new WorldBadgeLayer(_runner, badgeRoot);
 
             _inspector = new InspectorController();
-            _inspector.Bind(Q<VisualElement>("inspector"));
-
+            _inspector.Bind(Root);
             _spellBar = new SpellBarController(_runner);
-            _spellBar.Bind(Q<VisualElement>("spell-list"));
-
+            _spellBar.Bind(Root);
             _battleMenu = new BattleMenuController(_runner);
-            _battleMenu.LoadAsync(Q<VisualElement>("menu-host")).Forget();
-
+            _battleMenu.Bind(Root);
             _gmPanel = new GmPanelController(_runner);
-            _gmPanel.LoadAsync(Q<VisualElement>("gm-host")).Forget();
-
+            _gmPanel.Bind(Root);
             _tutorial = new TutorialController();
-            _tutorial.Bind(Q<Label>("tutorial-text"), Q<VisualElement>("tutorial-avatar"),
-                Q<Label>("tutorial-tag"), Q<Button>("next-tutorial-button"));
-
-            RefreshHud(true);
+            _tutorial.Bind(Root);
+            RefreshHud();
         }
 
         public override void Tick(float unscaledDelta)
         {
             if (_runner == null) return;
             _badgeLayer?.Sync();
-
             _refreshTimer -= unscaledDelta;
             if (_refreshTimer > 0f) return;
             _refreshTimer = 0.1f;
-            RefreshHud(false);
+            RefreshHud();
         }
 
-        private void RefreshHud(bool force = false)
+        private void RefreshHud()
         {
             BattleSimulation simulation = _runner != null ? _runner.Simulation : null;
             if (simulation == null) return;
-
             PlayerState human = simulation.Human;
             if (_title != null)
                 _title.text = $"{TakeoverUiContent.FactionName(_runner.HumanFaction)}战役 · 边境前线";
-
-            if (_gold != null) _gold.text = UIFormat.Number(human.Gold);
-            if (_mana != null) _mana.text = $"{Mathf.FloorToInt(human.Mana)}/500";
-            if (_supply != null) _supply.text = $"{human.SupplyUsed}/{human.SupplyCap}";
-            if (_army != null) _army.text = human.Squads.Count(squad => !squad.IsDead).ToString();
-            if (_honor != null) _honor.text = UIFormat.Number(Campaign.Honor);
-            if (_enemy != null) _enemy.text = CountEnemyKeyBuildings(simulation).ToString();
-            if (_clock != null) _clock.text = $"{UIFormat.Time(simulation.Time)} · 三星 < 05:30";
-            if (_speedButton != null) _speedButton.text = $"×{_runner.Speed:0}";
+            if (_resources != null)
+                _resources.text = $"金币 {UIFormat.Number(human.Gold)}  法力 {Mathf.FloorToInt(human.Mana)}/500  " +
+                                  $"补给 {human.SupplyUsed}/{human.SupplyCap}  " +
+                                  $"部队 {human.Squads.Count(squad => !squad.IsDead)}  " +
+                                  $"敌城 {CountEnemyKeyBuildings(simulation)}  荣誉 {UIFormat.Number(Campaign.Honor)}";
+            if (_clock != null)
+                _clock.text = $"{UIFormat.Time(simulation.Time)} · 三星 < 05:30";
+            if (_speedButton != null)
+            {
+                Text label = _speedButton.GetComponentInChildren<Text>();
+                if (label != null) label.text = $"×{_runner.Speed:0}";
+            }
 
             BattleActionPlan plan = TakeoverActionPlanner.Build(_runner);
             _inspector?.Refresh(plan);
@@ -156,6 +122,14 @@ namespace GameLogic.Takeover.UI
             _gmPanel?.RefreshAi(_runner.HumanAiControlled);
         }
 
+        private static Button AddControl(Transform parent, string name, string label,
+            System.Action click)
+        {
+            Button button = TakeoverUiFactory.CreateButton(parent, name, label, click, 15);
+            TakeoverUiFactory.SetPreferredHeight(button, 40f);
+            return button;
+        }
+
         private static int CountEnemyKeyBuildings(BattleSimulation simulation)
         {
             int count = 0;
@@ -163,9 +137,7 @@ namespace GameLogic.Takeover.UI
             {
                 if (player.IsHuman) continue;
                 foreach (MapNode node in player.OwnedNodes)
-                {
                     if (BattleSim.IsKeyBuilding(node.Building)) count++;
-                }
             }
             return count;
         }

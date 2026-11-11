@@ -1,105 +1,84 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using GameLogic.UI;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 namespace GameLogic.Takeover.UI
 {
-    /// <summary>
-    /// 原 TakeoverGmPanelWidget 的 UI Toolkit 版本：折叠面板、加钱/加蓝、胜负、AI 托管与 7 档调速。
-    /// 默认折叠；内容容器背景透明且不拦截地图操作，只有按钮/文本可点。
-    /// </summary>
     public sealed class GmPanelController
     {
         private static readonly float[] Speeds = { 1f, 2f, 4f, 8f, 16f, 32f, 64f };
 
         private readonly TakeoverRunner _runner;
-        private readonly List<Label> _speedLabels = new List<Label>(Speeds.Length);
-        private VisualElement _root;
-        private VisualElement _content;
+        private readonly List<Text> _speedLabels = new List<Text>();
+        private RectTransform _root;
+        private RectTransform _content;
         private Button _toggle;
-        private Label _aiLabel;
+        private Text _aiLabel;
         private bool _expanded;
 
-        public GmPanelController(TakeoverRunner runner)
+        public GmPanelController(TakeoverRunner runner) { _runner = runner; }
+
+        public void Bind(Transform host)
         {
-            _runner = runner;
-        }
+            _root = TakeoverUiFactory.CreatePanel(host, "GmPanel",
+                new Vector2(300f, 44f), new Color(0.055f, 0.065f, 0.055f, 0.88f));
+            TakeoverUiFactory.Anchor(_root, new Vector2(0.78f, 0.56f),
+                new Vector2(0.98f, 0.82f), Vector2.zero, Vector2.zero, new Vector2(1f, 1f));
+            _toggle = TakeoverUiFactory.CreateButton(_root, "GmToggle", "GM",
+                () => SetExpanded(!_expanded), 14);
+            TakeoverUiFactory.Anchor(_toggle.GetComponent<RectTransform>(),
+                new Vector2(0f, 0.84f), new Vector2(1f, 1f),
+                Vector2.zero, Vector2.zero, new Vector2(0.5f, 1f));
 
-        public async UniTask LoadAsync(VisualElement host)
-        {
-            if (host == null) return;
-            VisualTreeAsset tree = await UIToolkitAssets.LoadVisualTreeAsync("TakeoverGmPanelView");
-            if (tree == null)
+            _content = TakeoverUiFactory.CreateColumn(_root, "GmContent", 4f);
+            TakeoverUiFactory.Anchor(_content, new Vector2(0f, 0f),
+                new Vector2(1f, 0.82f), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0f));
+            _content.gameObject.AddComponent<Image>().color =
+                new Color(0.055f, 0.065f, 0.055f, 0.92f);
+            AddButton("Gold", "金币 +1000", () => _runner?.GrantResources(1000, 0));
+            AddButton("Mana", "法力 +500", () => _runner?.GrantResources(0, 500));
+            AddButton("Win", "强制胜利", () => _runner?.GmEndBattle(true));
+            AddButton("Lose", "强制失败", () => _runner?.GmEndBattle(false));
+            Button ai = AddButton("Ai", "AI", () => _runner?.ToggleHumanAi());
+            _aiLabel = ai.GetComponentInChildren<Text>();
+
+            RectTransform speedRow = TakeoverUiFactory.CreateRow(_content, "SpeedOptions", 3f);
+            foreach (float speed in Speeds)
             {
-                Debug.LogError("[TakeoverUI] 加载 GM 面板失败");
-                return;
+                float captured = speed;
+                Button button = TakeoverUiFactory.CreateButton(speedRow, $"Speed{speed:0}",
+                    $"×{speed:0}", () => _runner?.SetSpeed(captured), 11);
+                TakeoverUiFactory.SetPreferredWidth(button, 45f);
+                TakeoverUiFactory.SetPreferredHeight(button, 32f);
+                _speedLabels.Add(button.GetComponentInChildren<Text>());
             }
-
-            _root = UIToolkitAssets.InstantiateContent(tree);
-            if (_root == null) return;
-            _root.pickingMode = PickingMode.Ignore;
-            host.Add(_root);
-
-            _toggle = _root.Q<Button>("gm-toggle");
-            _content = _root.Q<VisualElement>("gm-content");
-            if (_content != null) _content.pickingMode = PickingMode.Ignore;
-            Label title = _root.Q<Label>("gm-title");
-            Label hint = _root.Q<Label>("gm-hint");
-            if (title != null) title.text = "GM 面板";
-            if (hint != null) hint.text = "调试用：资源、胜负与速度。折叠后不遮挡地图。";
-
-            if (_toggle != null)
-            {
-                _toggle.text = "GM";
-                _toggle.clicked += () => SetExpanded(!_expanded);
-            }
-
-            BindButton("gm-gold", () => _runner.GrantResources(1000, 0));
-            BindButton("gm-mana", () => _runner.GrantResources(0, 500));
-            BindButton("gm-win", () => _runner.GmEndBattle(true));
-            BindButton("gm-lose", () => _runner.GmEndBattle(false));
-
-            Button ai = _root.Q<Button>("gm-ai");
-            _aiLabel = _root.Q<Label>("gm-ai-label");
-            if (ai != null) ai.clicked += () => _runner.ToggleHumanAi();
-
-            for (int i = 0; i < Speeds.Length; i++)
-            {
-                float speed = Speeds[i];
-                string name = $"gm-speed-{speed:0}";
-                BindButton(name, () => _runner.SetSpeed(speed));
-                Label label = _root.Q<Label>(name + "-label");
-                if (label != null) _speedLabels.Add(label);
-            }
-
+            _root.gameObject.SetActive(true);
             SetExpanded(false);
             RefreshAi(_runner != null && _runner.HumanAiControlled);
-            UIFontProvider.ApplyToTree(_root);
-            UIToolkitTheme.Apply(_root);
         }
 
         public void SetExpanded(bool expanded)
         {
             _expanded = expanded;
-            if (_content != null)
-                _content.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_toggle != null) _toggle.text = expanded ? "GM ▾" : "GM";
+            if (_content != null) _content.gameObject.SetActive(expanded);
+            if (_toggle != null)
+            {
+                Text label = _toggle.GetComponentInChildren<Text>();
+                if (label != null) label.text = expanded ? "GM ▾" : "GM";
+            }
         }
 
         public void SetVisible(bool visible)
         {
-            if (_root != null) _root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_root != null) _root.gameObject.SetActive(visible);
         }
 
         public void RefreshSpeed(float speed)
         {
             for (int i = 0; i < _speedLabels.Count && i < Speeds.Length; i++)
-            {
-                string label = $"×{Speeds[i]:0}";
-                _speedLabels[i].text = Mathf.Approximately(speed, Speeds[i]) ? label + "*" : label;
-            }
+                _speedLabels[i].text = $"×{Speeds[i]:0}" +
+                                       (Mathf.Approximately(speed, Speeds[i]) ? "*" : string.Empty);
         }
 
         public void RefreshAi(bool controlled)
@@ -107,25 +86,12 @@ namespace GameLogic.Takeover.UI
             if (_aiLabel != null) _aiLabel.text = controlled ? "AI*" : "AI";
         }
 
-        private void BindButton(string name, System.Action action)
+        private Button AddButton(string name, string label, System.Action action)
         {
-            Button button = _root?.Q<Button>(name);
-            if (button == null)
-            {
-                Debug.LogError($"[TakeoverUI] GM 面板缺少按钮: {name}");
-                return;
-            }
-            button.clicked += () =>
-            {
-                try
-                {
-                    action?.Invoke();
-                }
-                catch (System.Exception exception)
-                {
-                    Debug.LogError($"[TakeoverUI] GM 按钮 {name} 失败: {exception}");
-                }
-            };
+            Button button = TakeoverUiFactory.CreateButton(_content, name, label,
+                action, 12, new Color(0.16f, 0.17f, 0.14f, 1f));
+            TakeoverUiFactory.SetPreferredHeight(button, 32f);
+            return button;
         }
     }
 }

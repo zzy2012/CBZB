@@ -10,7 +10,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>
-    /// 首章表现控制器：运行时生成地图与单位，界面由 UI Toolkit 的 UIManager 驱动。
+    /// 首章表现控制器：运行时生成地图与单位，界面由 TEngine UGUI UIManager 驱动。
     /// 逻辑全部在 BattleSim 中，Runner 只负责世界表现、输入与界面流程。
     /// </summary>
     public sealed class TakeoverRunner : MonoBehaviour
@@ -117,7 +117,7 @@ namespace GameLogic.Takeover
         private void OnGUI()
         {
             if (string.IsNullOrEmpty(_uiFatal)) return;
-            GUI.Box(new Rect(20f, 20f, Screen.width - 40f, 120f), "UI Toolkit");
+            GUI.Box(new Rect(20f, 20f, Screen.width - 40f, 120f), "UGUI");
             GUI.Label(new Rect(36f, 56f, Screen.width - 72f, 72f), _uiFatal);
         }
 
@@ -962,7 +962,7 @@ namespace GameLogic.Takeover
             }
         }
 
-        /// <summary>由 UI Toolkit 的小队徽标在 PointerDown 时调用。</summary>
+        /// <summary>由 UGUI 小队徽标在 PointerDown 时调用。</summary>
         public void BeginBadgeDrag(Squad squad)
         {
             if (squad == null || squad.IsDead || _sim == null || !squad.Owner.IsHuman) return;

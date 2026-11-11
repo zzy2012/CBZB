@@ -1,3 +1,4 @@
+using GameLogic;
 using GameLogic.UI;
 
 namespace GameLogic.Takeover.UI
@@ -10,12 +11,12 @@ namespace GameLogic.Takeover.UI
         public CampaignReward Reward;
     }
 
-    /// <summary>战斗结算遮罩。</summary>
+    [Window(UILayer.Top, location: "TakeoverUIWindow")]
     public sealed class ResultOverlayView : MessageOverlayView
     {
         protected override OverlaySpec BuildSpec(object args)
         {
-            var result = args as ResultOverlayArgs;
+            ResultOverlayArgs result = args as ResultOverlayArgs;
             bool victory = result != null && result.Victory;
             var spec = new OverlaySpec
             {
@@ -34,8 +35,7 @@ namespace GameLogic.Takeover.UI
         {
             if (result == null) return "战果已记录到当前远征档案。";
             string time = UIFormat.Time(result.Seconds);
-            if (!victory)
-                return $"用时 {time}\n重新部署后再次挑战。";
+            if (!victory) return $"用时 {time}\n重新部署后再次挑战。";
 
             CampaignReward reward = result.Reward;
             string body = $"用时 {time}　{UIFormat.Stars(result.Stars)}\n" +

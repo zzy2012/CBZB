@@ -34,9 +34,8 @@ namespace GameLogic.Takeover
         private void Apply()
         {
             string location = _locations[_frame];
-            if (!GameModule.Resource.CheckLocationValid(location)) return;
-            TakeoverSpriteCache.Apply(_renderer, location);
-            _renderer.enabled = true;
+            if (TakeoverSpriteCache.Apply(_renderer, location))
+                _renderer.enabled = true;
         }
     }
 }

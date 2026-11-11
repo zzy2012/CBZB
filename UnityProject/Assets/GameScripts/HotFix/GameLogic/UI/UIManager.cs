@@ -1,83 +1,49 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Cysharp.Threading.Tasks;
+using GameLogic.Takeover.UI;
 using TEngine;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.EventSystems;
 
 namespace GameLogic.UI
 {
-    /// <summary>
-    /// 简单的 UI Toolkit 管理器：
-    /// 创建一个运行时 PanelSettings + UIDocument，按层打开/关闭 UIView，提供 Toast 与 UI 命中检测。
-    /// 不依赖 TEngine 的 UIWindow/UIWidget 规范。
-    /// </summary>
+    /// <summary>Game-specific navigation facade backed by the TEngine UIModule.</summary>
     public static class UIManager
     {
-        private const string ThemeResourcePath = "UI/TakeoverRuntimeTheme";
-
-        private static UIDocument _document;
-        private static PanelSettings _panelSettings;
-        private static VisualElement _root;
-
-        private static readonly Dictionary<UILayerKind, VisualElement> Layers =
-            new Dictionary<UILayerKind, VisualElement>();
+        private static readonly Dictionary<Type, UIView> OpenViews = new Dictionary<Type, UIView>();
         private static readonly Dictionary<UILayerKind, UIView> Current =
             new Dictionary<UILayerKind, UIView>();
-        private static readonly List<UIView> OpenViews = new List<UIView>(16);
-
-        private static ToastView _toastView;
-        private static string _pendingToast;
-        private static float _pendingToastSeconds;
-        private static int _screenVersion;
 
         private static bool _initialized;
         private static bool _initializing;
-        private static bool _failed;
-        private static bool _shuttingDown;
+        private static bool _toastOpening;
+        private static string _pendingToast;
+        private static float _pendingToastSeconds;
 
         public static bool IsInitialized => _initialized;
 
-        public static VisualElement Root => _root;
-
-        public static async UniTask InitializeAsync(CancellationToken token = default)
+        public static async UniTask InitializeAsync(System.Threading.CancellationToken token = default)
         {
             if (_initialized) return;
             if (_initializing)
             {
-                await UniTask.WaitUntil(() => _initialized || _failed);
+                await UniTask.WaitUntil(() => _initialized || !_initializing, cancellationToken: token);
                 return;
             }
 
             _initializing = true;
-            _failed = false;
             try
             {
-                if (_document == null) CreateDocument();
-
-                // UIDocument 在 OnEnable 时创建面板；等一帧再取 rootVisualElement。
+                _ = GameModule.UI;
                 await UniTask.Yield(PlayerLoopTiming.Update, token);
-                _root = _document != null ? _document.rootVisualElement : null;
-                if (_root == null)
-                    throw new InvalidOperationException("UIDocument.rootVisualElement 为空");
-
-                _root.pickingMode = PickingMode.Ignore;
-                _root.style.flexGrow = 1;
-                _root.style.position = Position.Absolute;
-                _root.style.left = 0;
-                _root.style.top = 0;
-                _root.style.right = 0;
-                _root.style.bottom = 0;
-
-                BuildLayers();
-                UIFontProvider.Initialize(_root);
+                if (UIModule.UIRoot == null)
+                    throw new InvalidOperationException("TEngine UIRoot is unavailable.");
                 _initialized = true;
             }
             catch (Exception exception)
             {
-                _failed = true;
-                Log.Error($"[TakeoverUI] UIManager 初始化失败: {exception}");
+                Log.Error($"[TakeoverUI] TEngine UIModule 初始化失败: {exception}");
             }
             finally
             {
@@ -107,16 +73,11 @@ namespace GameLogic.UI
 
         public static bool Close<T>() where T : UIView
         {
-            bool closed = false;
-            for (int i = OpenViews.Count - 1; i >= 0; i--)
-            {
-                if (OpenViews[i] is T)
-                {
-                    CloseView(OpenViews[i]);
-                    closed = true;
-                }
-            }
-            return closed;
+            if (!OpenViews.ContainsKey(typeof(T)) && !GameModule.UI.HasWindow(typeof(T)))
+                return false;
+            GameModule.UI.CloseUI<T>();
+            ForgetView(typeof(T));
+            return true;
         }
 
         public static void ClosePopupAndOverlay()
@@ -127,263 +88,132 @@ namespace GameLogic.UI
 
         public static void CloseAll()
         {
-            for (int i = OpenViews.Count - 1; i >= 0; i--)
-                CloseView(OpenViews[i]);
-            Current.Clear();
+            var types = new List<Type>(OpenViews.Keys);
+            foreach (Type type in types)
+                GameModule.UI.CloseUI(type);
             OpenViews.Clear();
-            _toastView = null;
+            Current.Clear();
         }
 
         public static bool IsOpen<T>() where T : UIView
         {
-            for (int i = 0; i < OpenViews.Count; i++)
-            {
-                if (OpenViews[i] is T) return true;
-            }
-            return false;
+            return OpenViews.ContainsKey(typeof(T)) || GameModule.UI.HasWindow(typeof(T));
         }
 
         public static T Get<T>() where T : UIView
         {
-            for (int i = 0; i < OpenViews.Count; i++)
-            {
-                if (OpenViews[i] is T view) return view;
-            }
-            return null;
+            return OpenViews.TryGetValue(typeof(T), out UIView view) ? view as T : null;
         }
 
         public static void Toast(string message, float seconds = 2.3f)
         {
             if (string.IsNullOrEmpty(message)) return;
-            if (!_initialized || _shuttingDown)
+            if (!_initialized)
             {
                 Log.Info($"[TakeoverUI] {message}");
                 return;
             }
 
-            if (_toastView == null)
+            ToastView view = Get<ToastView>();
+            if (view != null)
             {
-                _pendingToast = message;
-                _pendingToastSeconds = seconds;
-                OpenToastAsync().Forget();
+                view.Show(message, seconds);
                 return;
             }
 
-            _toastView.Show(message, seconds);
+            _pendingToast = message;
+            _pendingToastSeconds = seconds;
+            OpenToastAsync().Forget();
         }
 
-        /// <summary>鼠标是否命中真正的 UI 控件（全屏层/根节点都是 Ignore）。</summary>
         public static bool IsPointerOverUI()
         {
-            if (!_initialized || _root == null) return false;
-            IPanel panel = _root.panel;
-            if (panel == null) return false;
-
-            var screen = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-            Vector2 panelPoint = RuntimePanelUtils.ScreenToPanel(panel, screen);
-            VisualElement picked = panel.Pick(panelPoint);
-            return picked != null && picked != panel.visualTree;
+            EventSystem eventSystem = EventSystem.current;
+            return eventSystem != null && eventSystem.IsPointerOverGameObject();
         }
 
-        public static void Tick(float unscaledDelta)
-        {
-            if (!_initialized) return;
-            for (int i = OpenViews.Count - 1; i >= 0; i--)
-            {
-                if (i < OpenViews.Count && OpenViews[i] != null)
-                    OpenViews[i].Tick(unscaledDelta);
-            }
-        }
+        public static void Tick(float unscaledDelta) { }
 
         public static void Shutdown()
         {
-            if (_shuttingDown) return;
-            _shuttingDown = true;
-            try
-            {
-                for (int i = OpenViews.Count - 1; i >= 0; i--)
-                    OpenViews[i]?.Destroy();
-                OpenViews.Clear();
-                Current.Clear();
-                _toastView = null;
-
-                UIFontProvider.Release();
-                UIToolkitTheme.Release();
-                UIToolkitAssets.ReleaseAll();
-                UISpriteCache.ReleaseAll();
-
-                if (_panelSettings != null)
-                {
-                    UnityEngine.Object.Destroy(_panelSettings);
-                    _panelSettings = null;
-                }
-                if (_document != null)
-                {
-                    UIDocument document = _document;
-                    _document = null;
-                    UnityEngine.Object.Destroy(document.gameObject);
-                }
-            }
-            finally
-            {
-                _root = null;
-                Layers.Clear();
-                _initialized = false;
-                _failed = false;
-                _shuttingDown = false;
-            }
+            CloseAll();
+            _initialized = false;
+            _initializing = false;
+            _pendingToast = null;
+            _toastOpening = false;
         }
 
-        internal static void OnHostDestroyed()
-        {
-            if (_document == null) return;
-            Shutdown();
-        }
-
-        private static void CreateDocument()
-        {
-            var go = new GameObject("TakeoverUIRuntime");
-            UnityEngine.Object.DontDestroyOnLoad(go);
-            go.SetActive(false);
-
-            _panelSettings = ScriptableObject.CreateInstance<PanelSettings>();
-            _panelSettings.name = "TakeoverPanelSettings(Runtime)";
-
-            ThemeStyleSheet theme = Resources.Load<ThemeStyleSheet>(ThemeResourcePath);
-#if UNITY_EDITOR
-            if (theme == null)
-            {
-                theme = UnityEditor.AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>(
-                    "Assets/Resources/UI/TakeoverRuntimeTheme.tss");
-                if (theme != null) Log.Warning("[TakeoverUI] 主题 Resources 加载失败，已用 AssetDatabase 回退。");
-            }
-#endif
-            if (theme != null)
-            {
-                _panelSettings.themeStyleSheet = theme;
-                Log.Info($"[TakeoverUI] 主题: {theme.name}");
-            }
-            else
-            {
-                Log.Error($"[TakeoverUI] 主题缺失: Resources/{ThemeResourcePath}.tss");
-            }
-
-            _panelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            _panelSettings.referenceResolution = new Vector2Int(1366, 768);
-            _panelSettings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            _panelSettings.match = 0.5f;
-            _panelSettings.sortingOrder = 100;
-            _panelSettings.targetTexture = null;
-            _panelSettings.clearColor = false;
-            _panelSettings.clearDepthStencil = false;
-
-            var document = go.AddComponent<UIDocument>();
-            document.panelSettings = _panelSettings;
-            go.AddComponent<UIManagerHost>();
-            go.SetActive(true);
-            _document = document;
-        }
-
-        private static void BuildLayers()
-        {
-            Layers.Clear();
-            UILayerKind[] kinds =
-            {
-                UILayerKind.Screen,
-                UILayerKind.Persistent,
-                UILayerKind.Popup,
-                UILayerKind.Overlay,
-                UILayerKind.Toast,
-            };
-
-            foreach (UILayerKind kind in kinds)
-            {
-                var layer = new VisualElement
-                {
-                    name = "layer-" + kind,
-                    pickingMode = PickingMode.Ignore,
-                };
-                layer.style.position = Position.Absolute;
-                layer.style.left = 0;
-                layer.style.top = 0;
-                layer.style.right = 0;
-                layer.style.bottom = 0;
-                layer.style.flexGrow = 1;
-                _root.Add(layer);
-                Layers[kind] = layer;
-            }
-        }
+        internal static void OnHostDestroyed() { }
 
         private static async UniTask<T> OpenViewAsync<T>(UILayerKind layer, object args)
             where T : UIView, new()
         {
             if (!_initialized) await InitializeAsync();
-            if (!_initialized || _shuttingDown) return null;
-            if (!Layers.TryGetValue(layer, out VisualElement container) || container == null)
-                return null;
+            if (!_initialized) return null;
 
-            int screenVersion = layer == UILayerKind.Screen ? ++_screenVersion : 0;
-
-            var view = new T { Layer = layer };
-            try
+            if (layer == UILayerKind.Screen)
             {
-                await view.CreateAsync(args, CancellationToken.None);
+                CloseCurrent(UILayerKind.Screen);
+                ClosePopupAndOverlay();
             }
-            catch (Exception exception)
+            else
             {
-                Log.Error($"[TakeoverUI] 打开 {typeof(T).Name} 失败: {exception}");
-                view.Destroy();
-                return null;
+                CloseCurrent(layer);
             }
 
-            if (!_initialized || _shuttingDown || view.Root == null)
+            T view = await GameModule.UI.ShowUIAsyncAwait<T>(args);
+            if (view == null)
             {
-                view.Destroy();
+                Log.Error($"[TakeoverUI] 打开 {typeof(T).Name} 失败。");
                 return null;
             }
 
-            if (layer == UILayerKind.Screen && screenVersion != _screenVersion)
-            {
-                view.Destroy();
-                return null;
-            }
-
-            if (layer == UILayerKind.Screen) ClosePopupAndOverlay();
-            CloseCurrent(layer);
-
-            container.Add(view.Root);
-            OpenViews.Add(view);
+            OpenViews[typeof(T)] = view;
             Current[layer] = view;
-            if (view is ToastView toast) _toastView = toast;
             return view;
         }
 
         private static void CloseCurrent(UILayerKind layer)
         {
             if (!Current.TryGetValue(layer, out UIView view) || view == null) return;
-            CloseView(view);
+            GameModule.UI.CloseUI(view.GetType());
+            ForgetView(view.GetType());
         }
 
-        private static void CloseView(UIView view)
+        private static void ForgetView(Type type)
         {
-            if (view == null) return;
-            if (Current.TryGetValue(view.Layer, out UIView current) && current == view)
-                Current.Remove(view.Layer);
-            OpenViews.Remove(view);
-            if (_toastView == view) _toastView = null;
-            view.Destroy();
+            OpenViews.Remove(type);
+            var layers = new List<UILayerKind>();
+            foreach (KeyValuePair<UILayerKind, UIView> pair in Current)
+                if (pair.Value == null || pair.Value.GetType() == type) layers.Add(pair.Key);
+            foreach (UILayerKind layer in layers) Current.Remove(layer);
         }
 
         private static async UniTaskVoid OpenToastAsync()
         {
-            ToastView view = await OpenViewAsync<ToastView>(UILayerKind.Toast, null);
-            if (view == null) return;
-            if (!string.IsNullOrEmpty(_pendingToast))
+            if (_toastOpening) return;
+            _toastOpening = true;
+            try
             {
-                view.Show(_pendingToast, _pendingToastSeconds);
+                ToastView view = await OpenViewAsync<ToastView>(UILayerKind.Toast, null);
+                if (view == null || string.IsNullOrEmpty(_pendingToast)) return;
+
+                string message = _pendingToast;
+                float seconds = _pendingToastSeconds;
                 _pendingToast = null;
+                view.Show(message, seconds);
+            }
+            finally
+            {
+                _toastOpening = false;
+                if (!string.IsNullOrEmpty(_pendingToast) && Get<ToastView>() != null)
+                {
+                    string message = _pendingToast;
+                    float seconds = _pendingToastSeconds;
+                    _pendingToast = null;
+                    Get<ToastView>().Show(message, seconds);
+                }
             }
         }
     }
-
 }

@@ -4,8 +4,8 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 从系统字体安装一个带 Font Data 的中文字体到 Resources，供 UI Toolkit 使用。
-/// UI Toolkit 无法使用 Font.CreateDynamicFontFromOSFont 的动态字体（会报 Include Font Data 错误），
+/// 从系统字体安装一个带 Font Data 的中文字体到 Resources，供 UGUI 使用。
+/// UGUI 使用资源字体，确保动态字体在不同运行环境中可用，
 /// 因此必须把 TTF/TTC 作为项目资源导入。
 ///
 /// 注意：从 Windows 系统字体目录复制字体仅用于本地开发验证；
@@ -13,7 +13,7 @@ using UnityEngine;
 /// </summary>
 public static class TakeoverCjkFontSetup
 {
-    private const string FontFolder = "Assets/Resources/UI/Toolkit/Fonts";
+    private const string FontFolder = "Assets/Resources/UI/Fonts";
     private const string FontBaseName = "TakeoverCjk";
 
     private static readonly string[] Candidates =

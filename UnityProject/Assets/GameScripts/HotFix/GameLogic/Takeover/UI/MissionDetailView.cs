@@ -1,6 +1,8 @@
 using System.Linq;
+using GameLogic;
 using GameLogic.UI;
-using UnityEngine.UIElements;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace GameLogic.Takeover.UI
 {
@@ -10,12 +12,10 @@ namespace GameLogic.Takeover.UI
         public int LevelId;
     }
 
-    /// <summary>关卡详情弹窗。</summary>
+    [Window(UILayer.Top, location: "TakeoverUIWindow")]
     public sealed class MissionDetailView : UIView
     {
         private MissionDetailArgs _args;
-
-        protected override string UxmlLocation => "TakeoverMissionDetailView";
 
         protected override void OnCreate(object args)
         {
@@ -26,50 +26,45 @@ namespace GameLogic.Takeover.UI
                 return;
             }
 
-            Require("mission-title", "mission-reward", "mission-description",
-                "mission-enemy", "mission-stars", "start-battle-button", "close-button");
-
+            ClearContent();
+            RectTransform panel = TakeoverUiFactory.CreateColumn(Root, "MissionDetailPanel", 14f);
+            TakeoverUiFactory.SetCentered(panel, new Vector2(580f, 460f));
+            panel.GetComponent<RectTransform>().gameObject.AddComponent<Image>().color =
+                TakeoverUiFactory.Panel;
             int levelId = _args.LevelId;
-            Label title = Q<Label>("mission-title");
-            if (title != null) title.text = TakeoverUiContent.LevelTitle(levelId);
-
-            Label reward = Q<Label>("mission-reward");
-            if (reward != null) reward.text = $"XP {UIFormat.Number(TakeoverUiContent.LevelXp(levelId))}";
-
-            Label enemy = Q<Label>("mission-enemy");
-            if (enemy != null) enemy.text = $"VS {TakeoverUiContent.EnemyFactionNames(levelId)}";
-
-            Label description = Q<Label>("mission-description");
-            if (description != null) description.text = TakeoverUiContent.LevelDescription(levelId);
-
-            int bestStars = Campaign.Data.Records
-                .FirstOrDefault(record => record.AssetId == levelId)?.BestStars ?? 0;
             LevelRecord record = Campaign.Data.Records.FirstOrDefault(value => value.AssetId == levelId);
-            Label stars = Q<Label>("mission-stars");
-            if (stars != null)
-            {
-                stars.text = bestStars > 0
-                    ? $"最佳 {UIFormat.Stars(bestStars)}　{UIFormat.Time(record?.BestSeconds ?? 0f)}"
-                    : "尚未通关";
-            }
 
-            Button start = Q<Button>("start-battle-button");
-            if (start != null)
-            {
-                start.text = "开始战斗";
-                start.clicked += () =>
+            TakeoverUiFactory.CreateText(panel, "MissionTitle",
+                TakeoverUiContent.LevelTitle(levelId), 28, TakeoverUiFactory.Accent,
+                TextAnchor.MiddleCenter);
+            TakeoverUiFactory.CreateText(panel, "Reward",
+                $"XP {UIFormat.Number(TakeoverUiContent.LevelXp(levelId))}", 20,
+                Color.white, TextAnchor.MiddleCenter);
+            TakeoverUiFactory.CreateText(panel, "Enemy",
+                $"VS {TakeoverUiContent.EnemyFactionNames(levelId)}", 18,
+                Color.white, TextAnchor.MiddleCenter);
+            TakeoverUiFactory.CreateText(panel, "Description",
+                TakeoverUiContent.LevelDescription(levelId), 16,
+                new Color(0.84f, 0.84f, 0.78f, 1f), TextAnchor.MiddleCenter);
+            int bestStars = record?.BestStars ?? 0;
+            TakeoverUiFactory.CreateText(panel, "Stars",
+                bestStars > 0
+                    ? $"最佳 {UIFormat.Stars(bestStars)}　{UIFormat.Time(record.BestSeconds)}"
+                    : "尚未通关", 18, TakeoverUiFactory.Accent, TextAnchor.MiddleCenter);
+
+            RectTransform actions = TakeoverUiFactory.CreateRow(panel, "Actions", 12f);
+            Button start = TakeoverUiFactory.CreateButton(actions, "StartBattle", "开始战斗",
+                () =>
                 {
                     UIManager.Close<MissionDetailView>();
                     _args?.Runner?.StartLevel(levelId);
-                };
-            }
-
-            Button close = Q<Button>("close-button");
-            if (close != null)
-            {
-                close.text = "×";
-                close.clicked += () => UIManager.Close<MissionDetailView>();
-            }
+                }, 19, new Color(0.39f, 0.31f, 0.16f, 1f));
+            Button close = TakeoverUiFactory.CreateButton(actions, "Close", "返回",
+                () => UIManager.Close<MissionDetailView>());
+            TakeoverUiFactory.SetPreferredWidth(start, 220f);
+            TakeoverUiFactory.SetPreferredWidth(close, 160f);
+            TakeoverUiFactory.SetPreferredHeight(start, 50f);
+            TakeoverUiFactory.SetPreferredHeight(close, 50f);
         }
     }
 }

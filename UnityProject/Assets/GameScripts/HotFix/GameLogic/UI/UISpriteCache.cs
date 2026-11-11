@@ -1,37 +1,72 @@
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 namespace GameLogic.UI
 {
-    /// <summary>Sprite（兵种/建筑/状态图标）加载的薄封装，资产缓存由 UIResourceLoader 统一管理。</summary>
     public static class UISpriteCache
     {
-        public static UniTask<Sprite> LoadAsync(string location, CancellationToken token = default)
+        private static readonly Dictionary<string, Sprite> Sprites =
+            new Dictionary<string, Sprite>();
+
+        public static async UniTask<Sprite> LoadAsync(string location,
+            CancellationToken token = default)
         {
-            return UIToolkitAssets.LoadSpriteAsync(location, token);
+            if (string.IsNullOrEmpty(location)) return null;
+            if (Sprites.TryGetValue(location, out Sprite sprite) && sprite != null)
+                return sprite;
+
+#if UNITY_EDITOR
+            sprite = LoadEditorSprite(location);
+            if (sprite != null)
+            {
+                Sprites[location] = sprite;
+                return sprite;
+            }
+#endif
+            sprite = await GameModule.Resource.LoadAssetAsync<Sprite>(location, token);
+            token.ThrowIfCancellationRequested();
+            if (sprite != null) Sprites[location] = sprite;
+            return sprite;
         }
 
-        /// <summary>把 Sprite 设为元素背景；失败保持原样（由调用方兜底颜色/文本）。</summary>
-        public static async UniTask ApplyBackgroundAsync(
-            VisualElement element, string location, CancellationToken token = default)
+        public static async UniTask ApplyAsync(Image image, string location,
+            CancellationToken token = default)
         {
-            if (element == null || string.IsNullOrEmpty(location)) return;
-            Sprite sprite = await UIToolkitAssets.LoadSpriteAsync(location, token);
-            if (sprite == null) return;
-            element.style.backgroundImage = new StyleBackground(sprite);
+            if (image == null || string.IsNullOrEmpty(location)) return;
+            Sprite sprite = await LoadAsync(location, token);
+            if (sprite != null && image != null) image.sprite = sprite;
         }
 
-        public static void SetTint(VisualElement element, Color color)
+        public static void SetTint(Image image, Color color)
         {
-            if (element == null) return;
-            element.style.unityBackgroundImageTintColor = new StyleColor(color);
+            if (image != null) image.color = color;
         }
 
         public static void ReleaseAll()
         {
-            // UIResourceLoader.ReleaseAll 会统一 UnloadAsset，这里不需要重复处理。
+            Sprites.Clear();
         }
+
+#if UNITY_EDITOR
+        private static Sprite LoadEditorSprite(string location)
+        {
+            foreach (string folder in new[]
+                     {
+                         "Assets/AssetRaw/Actor/Takeover/Sprites",
+                         "Assets/AssetRaw/Scenes/Takeover/Maps",
+                         "Assets/AssetRaw/UI/Icons",
+                     })
+            {
+                Sprite sprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(
+                    $"{folder}/{location}.png");
+                if (sprite != null) return sprite;
+            }
+
+            return null;
+        }
+#endif
     }
 }
