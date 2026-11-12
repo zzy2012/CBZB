@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="faction-screen" class="faction-screen">
+    <ui:VisualElement class="section-ribbon">
+      <ui:Label name="ribbon" class="ribbon-label" />
+    </ui:VisualElement>
+    <ui:VisualElement name="faction-grid" class="faction-grid" />
+    <ui:Button name="exit-button" class="button button--ghost button--wide faction-exit" />
+    <ui:Button name="continue-button" class="button button--gold button--wide faction-continue" />
+  </ui:VisualElement>
+</ui:UXML>

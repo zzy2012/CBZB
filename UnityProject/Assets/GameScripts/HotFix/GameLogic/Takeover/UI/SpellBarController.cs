@@ -3,37 +3,41 @@ using System.Text;
 using GameConfig.takeover;
 using GameLogic.UI;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace GameLogic.Takeover.UI
 {
+    /// <summary>战斗法术栏：列出当前可用法术，点击进入选点施法。</summary>
     public sealed class SpellBarController
     {
         private readonly TakeoverRunner _runner;
+        private VisualElement _list;
         private readonly List<Button> _buttons = new List<Button>();
+        private readonly List<Spell> _spells = new List<Spell>();
         private readonly StringBuilder _signatureBuilder = new StringBuilder(128);
-        private RectTransform _root;
         private string _signature;
 
-        public SpellBarController(TakeoverRunner runner) { _runner = runner; }
-
-        public void Bind(Transform host)
+        public SpellBarController(TakeoverRunner runner)
         {
-            _root = TakeoverUiFactory.CreateRow(host, "SpellBar", 6f);
-            TakeoverUiFactory.Anchor(_root, new Vector2(0.68f, 0.04f),
-                new Vector2(0.98f, 0.18f), Vector2.zero, Vector2.zero, new Vector2(1f, 0f));
-            _root.gameObject.SetActive(false);
+            _runner = runner;
+        }
+
+        public void Bind(VisualElement list)
+        {
+            _list = list;
+            if (_list != null) _list.pickingMode = PickingMode.Position;
         }
 
         public void Refresh()
         {
-            if (_root == null) return;
+            if (_list == null) return;
             BattleSimulation simulation = _runner != null ? _runner.Simulation : null;
             if (simulation == null)
             {
-                _root.gameObject.SetActive(false);
+                _list.style.display = DisplayStyle.None;
                 return;
             }
+
             PlayerState human = simulation.Human;
             List<Spell> spells = simulation.State.AvailableSpells(human);
             string signature = BuildSignature(spells, human);
@@ -46,51 +50,67 @@ namespace GameLogic.Takeover.UI
             {
                 UpdateEnabled(spells, human);
             }
-            _root.gameObject.SetActive(spells.Count > 0);
+
+            _list.style.display = spells.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         private void Rebuild(List<Spell> spells, PlayerState human)
         {
-            for (int i = _root.childCount - 1; i >= 0; i--)
-                Object.Destroy(_root.GetChild(i).gameObject);
+            _list.Clear();
             _buttons.Clear();
+            _spells.Clear();
+
             foreach (Spell spell in spells)
             {
                 Spell captured = spell;
                 int cost = SpellCost(spell, human);
                 bool ultimate = spell.SpellType == 2;
-                Button button = TakeoverUiFactory.CreateButton(_root, $"Spell{spell.Id}",
-                    $"{spell.CnName}\n{(ultimate ? "终极" : cost.ToString())}",
-                    () => _runner.BeginSpellTarget(captured), 13,
-                    new Color(0.15f, 0.2f, 0.18f, 0.96f));
-                button.interactable = CanCast(spell, human, cost);
-                TakeoverUiFactory.SetPreferredWidth(button, 94f);
-                TakeoverUiFactory.SetPreferredHeight(button, 66f);
+                var button = new Button
+                {
+                    text = $"{spell.CnName}\n{(ultimate ? "终极" : cost.ToString())}",
+                };
+                button.AddToClassList("spell-button");
+                button.SetEnabled(CanCast(spell, human, cost));
+                button.clicked += () => _runner.BeginSpellTarget(captured);
+                _list.Add(button);
                 _buttons.Add(button);
+                _spells.Add(spell);
             }
+
+            UIToolkitTheme.Apply(_list);
         }
 
         private void UpdateEnabled(List<Spell> spells, PlayerState human)
         {
             int count = Mathf.Min(spells.Count, _buttons.Count);
             for (int i = 0; i < count; i++)
-                _buttons[i].interactable = CanCast(spells[i], human, SpellCost(spells[i], human));
+            {
+                int cost = SpellCost(spells[i], human);
+                _buttons[i].SetEnabled(CanCast(spells[i], human, cost));
+            }
         }
 
-        private static int SpellCost(Spell spell, PlayerState human) =>
-            Mathf.RoundToInt(spell.Cost * human.ModMul(35));
+        private static int SpellCost(Spell spell, PlayerState human)
+        {
+            return Mathf.RoundToInt(spell.Cost * human.ModMul(35));
+        }
 
-        private static bool CanCast(Spell spell, PlayerState human, int cost) =>
-            spell.SpellType == 2
-                ? human.Ultimate + 0.0001f >= human.UltimateMax
-                : human.Mana >= cost;
+        private static bool CanCast(Spell spell, PlayerState human, int cost)
+        {
+            if (spell.SpellType == 2)
+                return human.Ultimate + 0.0001f >= human.UltimateMax;
+            return human.Mana >= cost;
+        }
 
         private string BuildSignature(List<Spell> spells, PlayerState human)
         {
             _signatureBuilder.Clear();
             foreach (Spell spell in spells)
-                _signatureBuilder.Append(spell.Id).Append(':').Append(spell.SpellType).Append(':')
+            {
+                _signatureBuilder.Append(spell.Id).Append(':')
+                    .Append(spell.SpellType).Append(':')
                     .Append(SpellCost(spell, human)).Append(';');
+            }
             return _signatureBuilder.ToString();
         }
     }

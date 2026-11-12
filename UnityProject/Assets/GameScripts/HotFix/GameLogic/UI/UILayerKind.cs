@@ -1,7 +1,7 @@
 namespace GameLogic.UI
 {
     /// <summary>
-    /// Game UI navigation layers. Higher values are drawn in front of lower values.
+    /// UI Toolkit 的层。数值即绘制顺序，越大约靠前。
     /// </summary>
     public enum UILayerKind
     {

@@ -1,0 +1,462 @@
+/* 战斗 HUD / 菜单 / GM / 徽标样式 */
+
+.battle-hud {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.badge-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.battle-top {
+    position: absolute;
+    top: 10px;
+    left: 18px;
+    right: 18px;
+}
+
+.battle-title {
+    color: #e6c470;
+    font-size: 19px;
+    -unity-font-style: bold;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: #311b10;
+}
+
+.battle-controls {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    flex-direction: row;
+}
+
+.battle-controls > .button {
+    margin-left: 6px;
+}
+
+.inspector {
+    position: absolute;
+    top: 110px;
+    right: 18px;
+    width: 280px;
+    padding: 10px;
+    border-width: 2px;
+    border-color: #886131;
+    border-radius: 12px;
+    background-color: rgba(34, 26, 20, 0.9);
+}
+
+.inspector-title {
+    font-size: 14px;
+    color: #ffd579;
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.inspector-body {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #e4d4b8;
+    white-space: normal;
+}
+
+.battle-hud-left {
+    position: absolute;
+    left: 14px;
+    bottom: 150px;
+}
+
+.commander {
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+.commander-portrait {
+    width: 64px;
+    height: 64px;
+    border-width: 3px;
+    border-color: #e9bd50;
+    border-radius: 32px;
+    background-color: #314b38;
+}
+
+.commander-copy {
+    margin-left: 8px;
+}
+
+.commander-name {
+    font-size: 13px;
+    color: #f4d890;
+    margin-bottom: 4px;
+}
+
+.battle-hud-right {
+    position: absolute;
+    right: 12px;
+    bottom: 92px;
+    align-items: flex-end;
+}
+
+.battle-resources {
+    flex-direction: row;
+    padding: 6px;
+    border-width: 2px;
+    border-color: #b78a3e;
+    border-radius: 12px;
+    background-color: rgba(33, 28, 20, 0.88);
+}
+
+.resource {
+    min-width: 78px;
+    margin-right: 4px;
+    padding: 3px 6px;
+    border-width: 1px;
+    border-color: #b79753;
+    border-radius: 7px;
+    background-color: #6b4d1f;
+    align-items: center;
+}
+
+.resource--green {
+    background-color: #315c38;
+}
+
+.resource--blue {
+    background-color: #285269;
+}
+
+.resource-label {
+    font-size: 9px;
+    color: #d0c29f;
+}
+
+.resource-value {
+    font-size: 13px;
+    color: #ffe08a;
+    -unity-font-style: bold;
+}
+
+.clock-label {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #f3d488;
+}
+
+.spell-list {
+    flex-direction: row;
+    margin-top: 6px;
+}
+
+Button.spell-button {
+    width: 82px;
+    height: 40px;
+    margin-left: 4px;
+    border-width: 2px;
+    border-color: #5895b4;
+    border-radius: 8px;
+    background-color: #285269;
+    color: #d7efff;
+    font-size: 10px;
+    white-space: normal;
+}
+
+Button.spell-button:disabled {
+    opacity: 0.45;
+}
+
+.tutorial-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 78px;
+    padding: 10px 20px 10px 150px;
+    background-color: rgba(13, 13, 13, 0.9);
+}
+
+.tutorial-text {
+    font-size: 13px;
+    color: #fff4d4;
+    white-space: normal;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: #000000;
+}
+
+.tutorial-avatar {
+    position: absolute;
+    left: 18px;
+    bottom: 12px;
+    width: 92px;
+    height: 92px;
+    border-width: 4px;
+    border-color: #e5bd51;
+    border-radius: 46px;
+    background-color: #49654a;
+}
+
+.tutorial-tag {
+    position: absolute;
+    left: 16px;
+    bottom: 6px;
+    padding: 3px 10px;
+    border-width: 2px;
+    border-color: #edc449;
+    border-radius: 12px;
+    background-color: #5a2387;
+    color: #fff3c1;
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.menu-host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.battle-menu {
+    position: absolute;
+    left: 50%;
+    bottom: 178px;
+    min-width: 600px;
+    margin-left: -300px;
+    padding: 12px 16px;
+    border-width: 4px;
+    border-color: #56862d;
+    border-radius: 22px;
+    background-color: rgba(20, 53, 31, 0.94);
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.menu-tabs {
+    position: relative;
+    top: 0;
+    left: 0;
+    flex-direction: row;
+    margin-bottom: 6px;
+}
+
+Button.tab {
+    min-width: 92px;
+    height: 26px;
+    margin-right: 3px;
+    border-width: 2px;
+    border-color: #c29540;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-width: 0;
+    background-color: #63451e;
+    color: #fff4d0;
+    font-size: 12px;
+    -unity-text-align: middle-center;
+}
+
+Button.tab.is-active {
+    background-color: #316532;
+}
+
+.option-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+Button.unit-option {
+    min-width: 96px;
+    height: 60px;
+    margin: 3px;
+    border-width: 2px;
+    border-color: #859299;
+    border-radius: 9px;
+    background-color: #3a4348;
+    color: #e4e9e9;
+    font-size: 11px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+Button.unit-option:hover {
+    border-color: #ffe37a;
+}
+
+Button.unit-option:disabled {
+    opacity: 0.5;
+}
+
+.gm-host {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.gm-panel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+Button.gm-toggle {
+    position: absolute;
+    left: 12px;
+    bottom: 84px;
+    width: 44px;
+    height: 44px;
+    font-size: 12px;
+}
+
+.gm-content {
+    position: absolute;
+    left: 12px;
+    bottom: 136px;
+    width: 430px;
+    padding: 10px;
+    border-width: 2px;
+    border-color: #7d5f2b;
+    border-radius: 12px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.gm-title {
+    font-size: 14px;
+    color: #ffe095;
+    -unity-font-style: bold;
+}
+
+.gm-hint {
+    margin-top: 2px;
+    font-size: 10px;
+    color: #d9c8a9;
+    white-space: normal;
+}
+
+.gm-row {
+    flex-direction: row;
+    margin-top: 6px;
+}
+
+.gm-speeds {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.gm-speeds > Button.button {
+    margin-right: 4px;
+    margin-bottom: 4px;
+    min-width: 54px;
+}
+
+.gm-button-label {
+    font-size: 11px;
+    color: #fff3d4;
+}
+
+.squad-badge {
+    position: absolute;
+    width: 42px;
+    height: 42px;
+}
+
+.squad-badge-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 42px;
+    height: 42px;
+    border-width: 2px;
+    border-color: #35bf66;
+    border-radius: 21px;
+    background-color: rgba(33, 26, 23, 0.8);
+}
+
+.squad-badge-hp {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    height: 0;
+    background-color: #73bc42;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+}
+
+.squad-badge-portrait {
+    position: absolute;
+    left: 6px;
+    top: 6px;
+    width: 30px;
+    height: 30px;
+}
+
+.squad-badge-status {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -13px;
+    height: 13px;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.squad-badge-status-icon {
+    width: 12px;
+    height: 12px;
+    margin-left: 2px;
+}
+
+.squad-badge.is-selected .squad-badge-ring {
+    border-width: 3px;
+    border-color: #ffd95a;
+}
+
+.building-badge {
+    position: absolute;
+    width: 58px;
+    height: 26px;
+}
+
+.building-badge-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-width: 2px;
+    border-color: #35bf66;
+    border-radius: 13px;
+    background-color: rgba(33, 26, 23, 0.85);
+}
+
+.building-badge-level {
+    position: absolute;
+    left: 6px;
+    top: 4px;
+    font-size: 13px;
+    color: #ffffff;
+    -unity-font-style: bold;
+}
+
+.building-badge-hp {
+    position: absolute;
+    left: 22px;
+    right: 5px;
+    bottom: 5px;
+    height: 6px;
+    background-color: #73bc42;
+    border-radius: 3px;
+}

@@ -27,7 +27,7 @@ namespace GameLogic.Takeover.UI
     {
         public const string GameTitle = "城邦争霸";
         public const string StudioMark = "* IRON OAK *";
-        public const string StudioSubMark = "边境远征";
+        public const string StudioSubMark = "边境远征 · UI Toolkit 重构版";
 
         private static readonly string[] LevelNames =
         {
@@ -218,6 +218,6 @@ namespace GameLogic.Takeover.UI
             return numerals[index];
         }
 
-        public static string VersionText => $"版本 {Application.version}";
+        public static string VersionText => $"版本 {Application.version} · UI Toolkit 重构";
     }
 }

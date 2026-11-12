@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="toast-layer" class="toast-layer">
+    <ui:VisualElement name="toast-panel" class="toast-panel">
+      <ui:Label name="toast-label" class="toast-label" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

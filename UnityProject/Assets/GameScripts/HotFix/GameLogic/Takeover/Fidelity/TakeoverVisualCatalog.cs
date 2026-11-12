@@ -52,13 +52,16 @@ namespace GameLogic.Takeover
         public static bool Bind(SpriteRenderer renderer, string location)
         {
             if (renderer == null || string.IsNullOrEmpty(location)) return false;
-            return TakeoverSpriteCache.Apply(renderer, location);
+            if (!GameModule.Resource.CheckLocationValid(location)) return false;
+            TakeoverSpriteCache.Apply(renderer, location);
+            return true;
         }
 
         public static void BindMapBackground(SpriteRenderer renderer, int levelId, Vector2 targetSize)
         {
             if (renderer == null) return;
             string location = $"takeover_map_{levelId}";
+            if (!GameModule.Resource.CheckLocationValid(location)) return;
             TakeoverSpriteCache.Apply(renderer, location, spriteRenderer =>
             {
                 if (spriteRenderer.sprite == null) return;

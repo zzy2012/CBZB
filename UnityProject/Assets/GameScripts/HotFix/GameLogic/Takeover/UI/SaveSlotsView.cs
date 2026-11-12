@@ -1,63 +1,89 @@
 using System.Linq;
-using GameLogic;
 using GameLogic.UI;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace GameLogic.Takeover.UI
 {
-    [Window(UILayer.Top, location: "TakeoverUIWindow")]
+    /// <summary>三个远征档案槽。</summary>
     public sealed class SaveSlotsView : UIView
     {
         private TakeoverRunner _runner;
 
+        protected override string UxmlLocation => "TakeoverSaveSlotsView";
+
         protected override void OnCreate(object args)
         {
             _runner = args as TakeoverRunner;
-            ClearContent();
-            RectTransform panel = TakeoverUiFactory.CreatePanel(Root, "SaveSlotsPanel",
-                new Vector2(820f, 620f), TakeoverUiFactory.Panel, true);
-            RectTransform column = TakeoverUiFactory.CreateColumn(panel, "SaveSlotsContent", 14f);
-            TakeoverUiFactory.Anchor(column, Vector2.zero, Vector2.one,
-                new Vector2(-72f, -56f), Vector2.zero, new Vector2(0.5f, 0.5f));
+            Require("slot-list", "close-button");
 
-            RectTransform heading = TakeoverUiFactory.CreateRow(column, "Heading");
-            TakeoverUiFactory.CreateText(heading, "Title", "远征档案", 32,
-                TakeoverUiFactory.Accent, TextAnchor.MiddleLeft);
-            Button close = TakeoverUiFactory.CreateButton(heading, "Close", "×",
-                () => UIManager.Close<SaveSlotsView>(), 24);
-            TakeoverUiFactory.SetPreferredWidth(close, 48f);
-            TakeoverUiFactory.SetPreferredHeight(close, 42f);
-            TakeoverUiFactory.SetPreferredHeight(heading, 48f);
+            Button close = Q<Button>("close-button");
+            if (close != null)
+            {
+                close.text = "×";
+                close.clicked += () => UIManager.Close<SaveSlotsView>();
+            }
 
-            RectTransform list = TakeoverUiFactory.CreateColumn(column, "SlotList", 12f);
+            VisualElement list = Q<VisualElement>("slot-list");
+            if (list == null) return;
+            list.Clear();
+
             for (int slot = 0; slot < Campaign.SlotCount; slot++)
-                AddSlot(list, slot);
+                list.Add(CreateSlotCard(slot));
         }
 
-        private void AddSlot(Transform parent, int slot)
+        private Button CreateSlotCard(int slot)
         {
             bool hasSave = CampaignSaveService.TryProbe(slot, out CampaignSave save, out string warning);
-            string title = hasSave
+
+            var card = new Button { text = string.Empty };
+            card.AddToClassList("save-card");
+
+            var lines = new VisualElement();
+            lines.AddToClassList("save-card-copy");
+
+            var title = new Label();
+            title.AddToClassList("save-card-title");
+            title.text = hasSave
                 ? $"远征档案 {slot + 1} · {TakeoverUiContent.FactionName(save.SelectedFaction)}"
                 : $"远征档案 {slot + 1}";
-            string detail = hasSave
-                ? $"等级 {Campaign.BasePlayerLevel + save.Xp / Campaign.XpPerLevel}　进度 " +
-                  $"{save.Records.Count(record => record.BestStars > 0)}/" +
-                  $"{TakeoverFactions.LevelsOf(save.SelectedFaction).Count}　" +
-                  $"{save.Medals}/{TakeoverFactions.LevelsOf(save.SelectedFaction).Count} 徽章"
-                : "空档案 · 点击开始新战役";
-            if (!string.IsNullOrEmpty(warning)) detail += $"\n{warning}";
 
-            Button card = TakeoverUiFactory.CreateButton(parent, $"SaveSlot{slot + 1}",
-                $"{title}\n{detail}\n{(hasSave ? "继续 ›" : "＋")}",
-                () =>
+            var detail = new Label();
+            detail.AddToClassList("save-card-detail");
+            if (hasSave)
+            {
+                int cleared = save.Records.Count(record => record.BestStars > 0);
+                int level = Campaign.BasePlayerLevel + save.Xp / Campaign.XpPerLevel;
+                detail.text = $"等级 {level}　进度 {cleared}/{TakeoverFactions.LevelsOf(save.SelectedFaction).Count}" +
+                              $"　{save.Medals}/{TakeoverFactions.LevelsOf(save.SelectedFaction).Count} 徽章";
+                if (!string.IsNullOrEmpty(warning))
                 {
-                    UIManager.Close<SaveSlotsView>();
-                    _runner?.EnterCampaignSlot(slot);
-                }, 18, new Color(0.15f, 0.16f, 0.12f, 1f));
-            card.GetComponentInChildren<Text>().alignment = TextAnchor.MiddleLeft;
-            TakeoverUiFactory.SetPreferredHeight(card, 108f);
+                    var warningLabel = new Label(warning);
+                    warningLabel.AddToClassList("save-card-warning");
+                    lines.Add(warningLabel);
+                }
+            }
+            else
+            {
+                detail.text = "空档案 · 点击开始新战役";
+            }
+
+            lines.Add(title);
+            lines.Add(detail);
+
+            var action = new Label();
+            action.AddToClassList("save-card-action");
+            action.text = hasSave ? "继续 ›" : "＋";
+
+            card.Add(lines);
+            card.Add(action);
+
+            card.clicked += () =>
+            {
+                UIManager.Close<SaveSlotsView>();
+                _runner?.EnterCampaignSlot(slot);
+            };
+            return card;
         }
     }
 }

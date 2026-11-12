@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="map-screen" class="map-screen">
+    <ui:VisualElement name="map-background" class="map-background" />
+    <ui:VisualElement class="map-heading">
+      <ui:Label text="战役" class="map-crest" />
+      <ui:Label name="faction-heading" class="map-heading-text" />
+    </ui:VisualElement>
+    <ui:VisualElement name="mission-nodes" class="mission-nodes" />
+    <ui:VisualElement class="map-bottom">
+      <ui:Button name="exit-button" class="button button--wide map-exit" />
+      <ui:Label name="medal-label" class="medal-counter" />
+      <ui:VisualElement class="map-level">
+        <ui:VisualElement class="level-badge">
+          <ui:Label name="level-label" class="level-value" />
+          <ui:Label text="级别" class="level-caption" />
+        </ui:VisualElement>
+        <ui:VisualElement class="xp-progress">
+          <ui:Label name="xp-label" class="xp-label" />
+          <ui:VisualElement class="xp-bar">
+            <ui:VisualElement name="xp-fill" class="xp-fill" />
+          </ui:VisualElement>
+        </ui:VisualElement>
+      </ui:VisualElement>
+      <ui:Button name="skills-button" class="button button--gold button--wide skill-map-button" />
+      <ui:Label name="gold-label" class="gold-counter" />
+    </ui:VisualElement>
+  </ui:VisualElement>
+</ui:UXML>

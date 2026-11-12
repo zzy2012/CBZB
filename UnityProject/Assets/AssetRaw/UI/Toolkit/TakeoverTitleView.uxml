@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+  <ui:VisualElement name="title-screen" class="title-screen">
+    <ui:VisualElement name="title-backdrop" class="title-backdrop" />
+    <ui:VisualElement name="title-art" class="title-art" />
+    <ui:VisualElement class="title-content">
+      <ui:Label name="title-label" class="game-title" />
+      <ui:Label name="beta-label" class="beta-badge" />
+    </ui:VisualElement>
+    <ui:Label name="studio-label" class="studio-mark" />
+    <ui:Button name="start-button" class="button button--gold button--wide title-start" />
+    <ui:Label name="version-label" class="version-label" />
+  </ui:VisualElement>
+</ui:UXML>

@@ -1,60 +1,68 @@
+using System.Collections.Generic;
 using GameConfig.takeover;
-using GameLogic;
 using GameLogic.UI;
-using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace GameLogic.Takeover.UI
 {
-    [Window(UILayer.UI, location: "TakeoverUIWindow", fullScreen: true)]
+    /// <summary>教令（技能）树：按当前阵营展示 9 条教令，点击购买下一档。</summary>
     public sealed class SkillTreeView : UIView
     {
         private TakeoverRunner _runner;
-        private RectTransform _list;
+        private VisualElement _grid;
+
+        protected override string UxmlLocation => "TakeoverSkillTreeView";
 
         protected override void OnCreate(object args)
         {
             _runner = args as TakeoverRunner;
-            ClearContent();
-            Image backdrop = TakeoverUiFactory.CreateImage(Root, "SkillBackdrop",
-                new Color(0.06f, 0.07f, 0.06f, 1f));
-            TakeoverUiFactory.Stretch(backdrop.rectTransform);
+            Require("skill-grid", "points-label", "reset-button", "ok-button");
 
-            RectTransform panel = TakeoverUiFactory.CreateColumn(Root, "SkillPanel", 12f);
-            TakeoverUiFactory.Anchor(panel, new Vector2(0.08f, 0.06f),
-                new Vector2(0.92f, 0.94f), Vector2.zero, Vector2.zero, new Vector2(0.5f, 0.5f));
-            RectTransform heading = TakeoverUiFactory.CreateRow(panel, "Heading", 12f);
-            TakeoverUiFactory.CreateText(heading, "Title", "教令树", 30,
-                TakeoverUiFactory.Accent);
-            TakeoverUiFactory.CreateText(heading, "Points", $"技能点：{Campaign.EdictPoints}", 18,
-                Color.white);
-            Button reset = TakeoverUiFactory.CreateButton(heading, "Reset", "重选", OnResetClicked);
-            Button ok = TakeoverUiFactory.CreateButton(heading, "Ok", "完成",
-                () => _runner?.ShowCampaignMap());
-            TakeoverUiFactory.SetPreferredWidth(reset, 110f);
-            TakeoverUiFactory.SetPreferredWidth(ok, 110f);
-            TakeoverUiFactory.SetPreferredHeight(heading, 46f);
+            Button reset = Q<Button>("reset-button");
+            if (reset != null)
+            {
+                reset.text = "重选";
+                reset.clicked += OnResetClicked;
+            }
 
-            RectTransform scroll = TakeoverUiFactory.CreateScrollView(panel, "EdictScroll", out _list);
-            LayoutElement scrollLayout = scroll.gameObject.AddComponent<LayoutElement>();
-            scrollLayout.flexibleHeight = 1f;
+            Button ok = Q<Button>("ok-button");
+            if (ok != null)
+            {
+                ok.text = "OK";
+                ok.clicked += () => _runner?.ShowCampaignMap();
+            }
+
+            _grid = Q<VisualElement>("skill-grid");
             Refresh();
         }
 
         private void Refresh()
         {
-            if (_list == null) return;
-            for (int i = _list.childCount - 1; i >= 0; i--)
-                UnityEngine.Object.Destroy(_list.GetChild(i).gameObject);
+            if (_grid == null) return;
+            _grid.Clear();
 
-            foreach (int edictId in TakeoverEdicts.EdictIdsOf(Campaign.SelectedFaction))
-                AddEdict(edictId);
+            Label points = Q<Label>("points-label");
+            if (points != null)
+                points.text = $"已获得技能点：{Campaign.EdictPoints}";
 
-            if (_list.childCount == 0)
-                TakeoverUiFactory.CreateText(_list, "NoEdicts", "该阵营暂无教令数据", 18);
+            IReadOnlyList<int> ids = TakeoverEdicts.EdictIdsOf(Campaign.SelectedFaction);
+            foreach (int edictId in ids)
+            {
+                _grid.Add(CreateCard(edictId));
+            }
+
+            if (ids.Count == 0)
+            {
+                var empty = new Label("该阵营暂无教令数据");
+                empty.AddToClassList("muted");
+                _grid.Add(empty);
+            }
+
+            UIFontProvider.ApplyToTree(Root);
+            UIToolkitTheme.Apply(Root);
         }
 
-        private void AddEdict(int edictId)
+        private Button CreateCard(int edictId)
         {
             int tier = Campaign.EdictTier(edictId);
             bool maxed = tier >= TakeoverEdicts.MaxTier;
@@ -63,27 +71,43 @@ namespace GameLogic.Takeover.UI
             Edict next = maxed ? null : TakeoverEdicts.TierRow(edictId, tier + 1);
             Edict current = tier > 0 ? TakeoverEdicts.TierRow(edictId, tier) : null;
 
-            Button card = TakeoverUiFactory.CreateButton(_list, $"Edict{edictId}",
-                BuildEdictText(edictId, tier, next, current, maxed, cost),
-                () => OnBuyClicked(edictId), 15,
-                available ? new Color(0.18f, 0.21f, 0.15f, 1f) :
-                    new Color(0.14f, 0.15f, 0.13f, 1f));
-            card.GetComponentInChildren<Text>().alignment = TextAnchor.MiddleLeft;
-            TakeoverUiFactory.SetPreferredHeight(card, 118f);
-            card.interactable = !maxed;
-        }
+            var card = new Button { text = string.Empty };
+            card.AddToClassList("skill-card");
+            if (available) card.AddToClassList("is-available");
+            else card.AddToClassList("is-locked");
 
-        private static string BuildEdictText(int id, int tier, Edict next, Edict current,
-            bool maxed, int cost)
-        {
-            string title = next?.CnName ?? current?.CnName ?? $"教令 {id}";
-            string text = $"{TakeoverUiContent.EdictIcon(id)}　{title}　Lv.{tier}/{TakeoverEdicts.MaxTier}";
+            var icon = new Label(TakeoverUiContent.EdictIcon(edictId));
+            icon.AddToClassList("skill-icon");
+            card.Add(icon);
+
+            var info = new VisualElement();
+            info.AddToClassList("skill-info");
+
+            var title = new Label(next?.CnName ?? current?.CnName ?? $"教令 {edictId}");
+            title.AddToClassList("skill-name");
+            info.Add(title);
+
+            var rank = new Label($"Lv.{tier}/{TakeoverEdicts.MaxTier}");
+            rank.AddToClassList("skill-rank");
+            info.Add(rank);
+
             for (int t = 1; t <= TakeoverEdicts.MaxTier; t++)
             {
-                Edict row = TakeoverEdicts.TierRow(id, t);
-                if (row != null) text += $"\n{t}　{row.CnDesc}";
+                Edict row = TakeoverEdicts.TierRow(edictId, t);
+                if (row == null) continue;
+                var effect = new Label($"{t}　{row.CnDesc}");
+                effect.AddToClassList("skill-effect");
+                if (t <= tier) effect.AddToClassList("is-owned");
+                info.Add(effect);
             }
-            return text + (maxed ? "\n已满级" : $"\n下一档：{cost} 点");
+
+            var costLabel = new Label(maxed ? "已满级" : $"{cost} 点");
+            costLabel.AddToClassList("skill-cost");
+            info.Add(costLabel);
+            card.Add(info);
+
+            card.clicked += () => OnBuyClicked(edictId);
+            return card;
         }
 
         private void OnBuyClicked(int edictId)
@@ -93,12 +117,14 @@ namespace GameLogic.Takeover.UI
                 UIManager.Toast("已经满级。");
                 return;
             }
+
             string error = Campaign.TryBuyEdict(edictId);
             if (error != null)
             {
                 UIManager.Toast(error);
                 return;
             }
+
             int tier = Campaign.EdictTier(edictId);
             Edict row = TakeoverEdicts.TierRow(edictId, tier);
             UIManager.Toast($"已解锁 {row?.CnName ?? "教令"} 第 {tier} 档");

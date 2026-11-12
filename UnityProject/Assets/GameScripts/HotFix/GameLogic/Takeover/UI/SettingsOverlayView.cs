@@ -1,9 +1,8 @@
-using GameLogic;
 using GameLogic.UI;
 
 namespace GameLogic.Takeover.UI
 {
-    [Window(UILayer.Top, location: "TakeoverUIWindow")]
+    /// <summary>战场设置遮罩：与 index.html 一致，只展示说明并提供返回。</summary>
     public sealed class SettingsOverlayView : MessageOverlayView
     {
         private bool _wasPaused;

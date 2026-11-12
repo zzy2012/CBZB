@@ -1,35 +1,34 @@
-using GameLogic;
 using GameLogic.UI;
-using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace GameLogic.Takeover.UI
 {
-    [Window(UILayer.Top, location: "TakeoverUIWindow")]
+    /// <summary>右上角常驻的音效/音乐开关（对应 index.html 的 top-controls）。</summary>
     public sealed class AudioControlsView : UIView
     {
         private Button _soundButton;
         private Button _musicButton;
 
+        protected override string UxmlLocation => "TakeoverAudioControlsView";
+
         protected override void OnCreate(object args)
         {
-            ClearContent();
-            RectTransform controls = TakeoverUiFactory.CreateRow(Root, "AudioControls", 6f);
-            TakeoverUiFactory.Anchor(controls, new Vector2(0.82f, 0.92f),
-                new Vector2(0.98f, 0.99f), Vector2.zero, Vector2.zero, new Vector2(1f, 1f));
-            _soundButton = AddButton(controls, "Sound", OnSoundClicked);
-            _musicButton = AddButton(controls, "Music", OnMusicClicked);
+            _soundButton = Q<Button>("sound-button");
+            _musicButton = Q<Button>("music-button");
+
+            if (_soundButton != null)
+            {
+                _soundButton.text = "SFX";
+                _soundButton.clicked += OnSoundClicked;
+            }
+            if (_musicButton != null)
+            {
+                _musicButton.text = "BGM";
+                _musicButton.clicked += OnMusicClicked;
+            }
+
             UIAudioSettings.Load();
             Refresh();
-        }
-
-        private Button AddButton(Transform parent, string name, System.Action action)
-        {
-            Button button = TakeoverUiFactory.CreateButton(parent, name, name, action, 12,
-                new Color(0.18f, 0.19f, 0.16f, 0.95f));
-            TakeoverUiFactory.SetPreferredWidth(button, 76f);
-            TakeoverUiFactory.SetPreferredHeight(button, 32f);
-            return button;
         }
 
         private void OnSoundClicked()
@@ -48,19 +47,15 @@ namespace GameLogic.Takeover.UI
 
         private void Refresh()
         {
-            SetState(_soundButton, "SFX", UIAudioSettings.SoundEnabled);
-            SetState(_musicButton, "BGM", UIAudioSettings.MusicEnabled);
+            SetState(_soundButton, UIAudioSettings.SoundEnabled);
+            SetState(_musicButton, UIAudioSettings.MusicEnabled);
         }
 
-        private static void SetState(Button button, string name, bool enabled)
+        private static void SetState(Button button, bool enabled)
         {
             if (button == null) return;
-            Text label = button.GetComponentInChildren<Text>();
-            if (label != null) label.text = enabled ? name : $"{name} OFF";
-            Image image = button.GetComponent<Image>();
-            if (image != null)
-                image.color = enabled ? new Color(0.18f, 0.25f, 0.17f, 0.95f) :
-                    new Color(0.22f, 0.13f, 0.12f, 0.95f);
+            if (enabled) button.RemoveFromClassList("is-off");
+            else button.AddToClassList("is-off");
         }
     }
 }

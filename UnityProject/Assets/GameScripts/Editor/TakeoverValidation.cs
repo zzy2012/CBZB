@@ -161,8 +161,8 @@ public static class TakeoverValidation
         }
 
         bool resultOpen = UIManager.IsOpen<ResultOverlayView>();
-        if (resultOpen)
-            FinishPlaySmoke(true, string.Empty);
+        FinishPlaySmoke(resultOpen,
+            resultOpen ? string.Empty : "BattleHudView 或 ResultOverlayView 未创建");
     }
 
     private static void FinishPlaySmoke(bool success, string message)
