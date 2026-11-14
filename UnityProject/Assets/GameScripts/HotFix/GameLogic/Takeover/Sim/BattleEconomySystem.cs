@@ -110,7 +110,7 @@ namespace GameLogic.Takeover
                     BaseMaxHp = UnitHp(owner, def),
                     AttackTimer = 0f,
                     MoraleBase = Mathf.Round(def.Morale * owner.ModMul(15)) * 10f,
-                    ChargeAvailable = (abilities & AbilityMask.Charge) != 0,
+                    ChargeAvailable = (abilities & AbilityMask.Charge) != 0,//
                 };
                 unit.Hp = unit.MaxHp;
                 unit.MoraleCurrent = unit.MoraleBase;
