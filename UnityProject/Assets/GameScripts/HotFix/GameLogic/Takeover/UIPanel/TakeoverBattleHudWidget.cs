@@ -30,8 +30,8 @@ namespace GameLogic.Takeover
         private static readonly Color AiIdleColor = new Color(0.18f, 0.15f, 0.10f, 0.95f);
         private static readonly Color AiActiveColor = new Color(0.30f, 0.52f, 0.30f, 0.98f);
         private RectTransform _squadBadgeLayer;
-        private RectTransform _squadBadgePrototype;
-        private RectTransform _buildingBadgePrototype;
+        private readonly List<TakeoverSquadBadgeWidget> _squadSlots = new List<TakeoverSquadBadgeWidget>();
+        private readonly List<TakeoverBuildingBadgeWidget> _buildingSlots = new List<TakeoverBuildingBadgeWidget>();
         private int _timerId;
 
         public RectTransform SquadBadgeLayer => _squadBadgeLayer;
@@ -47,10 +47,7 @@ namespace GameLogic.Takeover
             _aiButton = Required<Button>("m_rect_BottomBar/m_btn_AiToggle");
             _aiLabel = Required<Text>("m_rect_BottomBar/m_btn_AiToggle/m_text_Label");
             _squadBadgeLayer = Required<RectTransform>("m_rect_SquadBadgeLayer");
-            _squadBadgePrototype = Required<RectTransform>(
-                "m_rect_SquadBadgeLayer/m_item_SquadBadgePrototype");
-            _buildingBadgePrototype = Required<RectTransform>(
-                "m_rect_SquadBadgeLayer/m_item_BuildingBadgePrototype");
+
 
             _bottomSpeedButtons.Clear();
             _bottomSpeedLabels.Clear();
@@ -118,20 +115,32 @@ namespace GameLogic.Takeover
 
         public TakeoverSquadBadgeWidget CreateSquadBadge()
         {
-            if (_squadBadgePrototype == null || _squadBadgeLayer == null)
-                return null;
-            return CreateWidgetByPrefab<TakeoverSquadBadgeWidget>(
-                _squadBadgePrototype.gameObject, _squadBadgeLayer);
+            return AcquireBadge(_squadSlots, "SquadBadgeSlot");
         }
 
         public TakeoverBuildingBadgeWidget CreateBuildingBadge()
         {
-            if (_buildingBadgePrototype == null || _squadBadgeLayer == null)
-                return null;
-            return CreateWidgetByPrefab<TakeoverBuildingBadgeWidget>(
-                _buildingBadgePrototype.gameObject, _squadBadgeLayer);
+            return AcquireBadge(_buildingSlots, "BuildingBadgeSlot");
         }
 
+        private T AcquireBadge<T>(List<T> slots, string prefix) where T : UIWidget, new()
+        {
+            if (slots.Count == 0)
+            {
+                foreach (Transform child in _squadBadgeLayer)
+                    if (child.name.StartsWith(prefix, StringComparison.Ordinal))
+                        slots.Add(CreateWidget<T>(child.gameObject, false));
+            }
+
+            foreach (T slot in slots)
+            {
+                if (slot.Visible) continue;
+                slot.Visible = true;
+                return slot;
+            }
+
+            return null;
+        }
         private void OnUiTick(object[] args)
         {
             if (gameObject.activeInHierarchy)

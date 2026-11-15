@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -721,10 +721,10 @@ namespace GameLogic.Takeover
                 if (!_squadBadges.TryGetValue(squad.Id, out TakeoverSquadBadgeWidget badge))
                 {
                     badge = _battleUI.CreateSquadBadgeWidget();
-                    if (badge == null || !badge.IsValid)
+                    if (badge == null) continue;
+                    if (!badge.IsValid)
                     {
-                        if (badge != null)
-                            badge.Destroy();
+                        badge.Visible = false;
                         _badgeDisabled = true;
                         if (!_badgeCreateErrorLogged)
                         {
@@ -769,7 +769,7 @@ namespace GameLogic.Takeover
         private void DestroySquadBadge(int squadId)
         {
             if (!_squadBadges.TryGetValue(squadId, out TakeoverSquadBadgeWidget badge)) return;
-            badge.Destroy();
+            badge.Visible = false;
             _squadBadges.Remove(squadId);
         }
 
@@ -800,9 +800,10 @@ namespace GameLogic.Takeover
                 if (!_buildingBadges.TryGetValue(node.Id, out TakeoverBuildingBadgeWidget badge))
                 {
                     badge = _battleUI.CreateBuildingBadgeWidget();
-                    if (badge == null || !badge.IsValid)
+                    if (badge == null) continue;
+                    if (!badge.IsValid)
                     {
-                        if (badge != null) badge.Destroy();
+                        if (badge != null) badge.Visible = false;
                         _buildingBadgeDisabled = true;
                         if (!_buildingBadgeErrorLogged)
                         {
@@ -854,7 +855,7 @@ namespace GameLogic.Takeover
         private void DestroyBuildingBadge(int nodeId)
         {
             if (!_buildingBadges.TryGetValue(nodeId, out TakeoverBuildingBadgeWidget badge)) return;
-            badge.Destroy();
+            badge.Visible = false;
             _buildingBadges.Remove(nodeId);
         }
 

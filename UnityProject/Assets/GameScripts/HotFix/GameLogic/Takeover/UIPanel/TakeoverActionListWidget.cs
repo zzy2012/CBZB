@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -20,13 +19,11 @@ namespace GameLogic.Takeover
 
     public abstract class TakeoverActionListWidget : UIWidget
     {
-        private const string ActionButtonPrefabLocation = "TakeoverUIActionButton";
 
         private readonly List<TakeoverActionButtonWidget> _buttons =
             new List<TakeoverActionButtonWidget>();
         private readonly StringBuilder _signatureBuilder = new StringBuilder(256);
         private string _lastSignature;
-        private int _reconcileVersion;
 
         protected virtual Transform ActionButtonParent => transform;
 
@@ -37,11 +34,7 @@ namespace GameLogic.Takeover
             if (signature != _lastSignature)
             {
                 _lastSignature = signature;
-                int version = ++_reconcileVersion;
-                var snapshot = new TakeoverActionPlan[plans.Count];
-                for (int i = 0; i < plans.Count; i++)
-                    snapshot[i] = plans[i];
-                ReconcileActionButtonsAsync(snapshot, version, stateTint).Forget();
+                BindSlots(plans, stateTint);
                 return;
             }
 
@@ -56,12 +49,7 @@ namespace GameLogic.Takeover
         protected void InvalidateActionButtons()
         {
             _lastSignature = null;
-            _reconcileVersion++;
-        }
 
-        protected override void OnDestroy()
-        {
-            _reconcileVersion++;
         }
 
         private string BuildSignature(
@@ -81,49 +69,28 @@ namespace GameLogic.Takeover
             return _signatureBuilder.ToString();
         }
 
-        private async UniTask ReconcileActionButtonsAsync(
-            TakeoverActionPlan[] plans, int version, bool stateTint)
+        private void BindSlots(IReadOnlyList<TakeoverActionPlan> plans, bool stateTint)
         {
-            Transform parent = ActionButtonParent;
-            if (parent == null)
-                throw new InvalidOperationException($"{GetType().Name} has no action button parent.");
-
-            for (int i = 0; i < _buttons.Count; i++)
-                _buttons[i].Visible = false;
-
-            for (int i = 0; i < plans.Length; i++)
+            if (_buttons.Count == 0)
             {
-                if (version != _reconcileVersion) return;
-                if (i >= _buttons.Count)
+                Transform parent = ActionButtonParent;
+                for (int index = 0; index < parent.childCount; index++)
                 {
-                    TakeoverActionButtonWidget button =
-                        await CreateWidgetByPathAsync<TakeoverActionButtonWidget>(
-                            parent, ActionButtonPrefabLocation, false);
-                    if (button == null)
-                        throw new InvalidOperationException(
-                            $"Failed to create action button widget: {ActionButtonPrefabLocation}");
-                    if (version != _reconcileVersion)
-                    {
-                        button.Destroy();
-                        return;
-                    }
-                    _buttons.Add(button);
+                    Transform slot = parent.GetChild(index);
+                    if (slot.name.StartsWith("ActionSlot", StringComparison.Ordinal))
+                        _buttons.Add(CreateWidget<TakeoverActionButtonWidget>(slot.gameObject, false));
                 }
             }
 
-            if (version != _reconcileVersion) return;
-            for (int i = _buttons.Count - 1; i >= plans.Length; i--)
-            {
-                TakeoverActionButtonWidget button = _buttons[i];
-                _buttons.RemoveAt(i);
-                button.Destroy();
-            }
+            if (plans.Count > _buttons.Count)
+                throw new InvalidOperationException($"{GetType().Name} needs {plans.Count} action slots.");
 
-            for (int i = 0; i < plans.Length; i++)
+            for (int index = 0; index < _buttons.Count; index++)
             {
-                if (version != _reconcileVersion) return;
-                _buttons[i].Configure(plans[i], stateTint);
-                _buttons[i].Visible = true;
+                bool visible = index < plans.Count;
+                if (visible)
+                    _buttons[index].Configure(plans[index], stateTint);
+                _buttons[index].Visible = visible;
             }
         }
     }

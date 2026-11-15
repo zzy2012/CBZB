@@ -15,6 +15,13 @@ namespace GameLogic.Takeover
         private TakeoverEdictPanelWidget _edictPanel;
         private TakeoverRunner _runner;
         private bool _resetArmed;
+        private RectTransform _details;
+        private Text _detailsTitle;
+        private Text _detailsRecord;
+        private Text _detailsHint;
+        private Button _fightButton;
+        private Button _closeDetailsButton;
+        private int _selectedLevel;
 
         protected override void ScriptGenerator()
         {
@@ -23,12 +30,22 @@ namespace GameLogic.Takeover
             _resetButton = Required<Button>("m_rect_ChapterPanel/m_btn_ResetSave");
             _resetLabel = Required<Text>("m_rect_ChapterPanel/m_btn_ResetSave/m_text_Label");
             _edictsButton = Required<Button>("m_rect_ChapterPanel/m_btn_Edicts");
+            _details = Required<RectTransform>("m_rect_LevelDetails");
+            _detailsTitle = Required<Text>("m_rect_LevelDetails/m_text_EdictTitle");
+            _detailsRecord = Required<Text>("m_rect_LevelDetails/m_text_EdictPoints");
+            _detailsHint = Required<Text>("m_rect_LevelDetails/m_text_EdictHint");
+            _fightButton = Required<Button>("m_rect_LevelDetails/m_btn_Fight");
+            _closeDetailsButton = Required<Button>("m_rect_LevelDetails/m_btn_EdictClose");
+            _fightButton.GetComponentInChildren<Text>().text = "去战斗";
+            _closeDetailsButton.GetComponentInChildren<Text>().text = "返回";
         }
 
         protected override void RegisterEvent()
         {
             _resetButton.onClick.AddListener(HandleResetSave);
             _edictsButton.onClick.AddListener(HandleOpenEdicts);
+            _closeDetailsButton.onClick.AddListener(CloseDetails);
+            _fightButton.onClick.AddListener(StartSelectedLevel);
         }
 
         /// <summary>教令面板由窗口创建（和本章面板同级），这里只负责打开。</summary>
@@ -69,7 +86,34 @@ namespace GameLogic.Takeover
 
         private void HandleLevelClicked(int levelId)
         {
-            _runner?.StartLevel(levelId);
+            if (!Campaign.IsUnlocked(levelId)) return;
+
+            _selectedLevel = levelId;
+            var record = Campaign.Record(levelId);
+            _detailsTitle.text = $"西利亚公国 · 第 {levelId} 关";
+            _detailsRecord.text = record.BestStars > 0
+                ? new string('★', record.BestStars)
+                : "尚未通关";
+            _detailsHint.text = record.BestSeconds >= 0f
+                ? $"最快通关 {record.BestSeconds:F0} 秒"
+                : "占领敌方城堡，赢得战斗。";
+            _details.gameObject.SetActive(true);
+        }
+
+        private void CloseDetails()
+        {
+            _selectedLevel = 0;
+            _details.gameObject.SetActive(false);
+        }
+
+        private void StartSelectedLevel()
+        {
+            if (_runner == null || _selectedLevel == 0 || !Campaign.IsUnlocked(_selectedLevel))
+                return;
+
+            int levelId = _selectedLevel;
+            CloseDetails();
+            _runner.StartLevel(levelId);
         }
 
         private void HandleResetSave()
