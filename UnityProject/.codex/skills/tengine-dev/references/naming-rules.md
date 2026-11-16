@@ -34,6 +34,18 @@ public async UniTask LoadDataAsync() { }
 private void OnHpChanged(int hp) { }
 ```
 
+### 类文件与注释规范
+
+- 新增类尽量使用独立文件；仅很小、专门用于传参的数据类可以例外。
+- 所有类及类成员都必须添加 XML `/// <summary>` 注释，说明用途或语义；唯一例外是被属性封装的 backing field，该字段不需要注释。
+- 转发属性也需要注释；与对应的 `private` backing field 相邻放置时，先写 `internal` 属性及其注释，再写 `private` 字段。
+
+```csharp
+/// <summary>当前模拟使用的地图系统。</summary>
+internal BattleMapSystem MapSystem => _mapSystem;
+private readonly BattleMapSystem _mapSystem;
+```
+
 ---
 
 ### UI 节点命名规范

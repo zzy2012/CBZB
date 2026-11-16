@@ -49,6 +49,7 @@ bash Configs/GameConfig/gen_code_bin_to_project_lazyload.sh
 
 ### 配置管理红线
 
+- 修改配置时先编辑源 Excel / Schema，再运行上方导出脚本更新生成代码和数据；不要手动修改导出的配置文件。
 - **不要直接修改** `GameProto/GameConfig/` 下的生成代码
 - 复杂模块封装 `XxxConfigMgr`，业务代码通过管理器访问
 - 新增字段前向兼容，删除/改名字段不兼容
