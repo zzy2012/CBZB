@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>处理士兵和建筑之间的战斗。</summary>
-    internal sealed class BattleCombatSystem : BattleSimSystem
+    internal sealed class BattleCombatSystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的战斗系统。</summary>
         internal BattleCombatSystem(BattleSim sim) : base(sim) { }
@@ -14,9 +14,9 @@ namespace GameLogic.Takeover
         /// <summary>推进部队和士兵的战斗、移动及状态更新。</summary>
         internal void TickSquads(float dt)
         {
-            for (int squadIndex = 0; squadIndex < Squads.Count; squadIndex++)
+            for (int squadIndex = 0; squadIndex < Sim.Squads.Count; squadIndex++)
             {
-                SquadEntity squad = Squads[squadIndex];
+                SquadEntity squad = Sim.Squads[squadIndex];
                 if (squad.IsDead) continue;
                 bool squadEngaged = false;
                 foreach (CombatUnitEntity unit in squad.Units)
@@ -68,32 +68,32 @@ namespace GameLogic.Takeover
                     squad.Units.Where(unit => !unit.IsDead).Any(unit =>
                         Vector2.Distance(unit.Pos, squad.TargetNode.Pos) <= 70f))
                 {
-                    MapSystem.Capture(squad.TargetNode, squad);
+                    Sim.MapSystem.Capture(squad.TargetNode, squad);
                 }
             }
 
             ApplyDivinePresence(dt);
-            for (int i = Squads.Count - 1; i >= 0; i--)
+            for (int i = Sim.Squads.Count - 1; i >= 0; i--)
             {
-                if (!Squads[i].IsDead) continue;
-                KillSquad(Squads[i]);
+                if (!Sim.Squads[i].IsDead) continue;
+                KillSquad(Sim.Squads[i]);
             }
         }
 
         /// <summary>应用 Divine Presence 能力对周围单位的影响。</summary>
         internal void ApplyDivinePresence(float dt)
         {
-            foreach (SquadEntity source in Squads)
+            foreach (SquadEntity source in Sim.Squads)
             {
                 if (source.IsDead) continue;
                 if (!OriginalRules.TryAbility(source.Def.Abilities, "DivinePresence", out int power) || power <= 0)
                     continue;
-                foreach (SquadEntity allySquad in Squads)
+                foreach (SquadEntity allySquad in Sim.Squads)
                 {
                     if (allySquad.IsDead || allySquad.Faction != source.Faction) continue;
                     foreach (CombatUnitEntity ally in allySquad.Units)
                     {
-                        if (ally.IsDead || HasMoraleLock(allySquad) ||
+                        if (ally.IsDead || BattleSim.HasMoraleLock(allySquad) ||
                             Vector2.Distance(ally.Pos, source.Pos) > 100f)
                             continue;
                         ally.MoraleCurrent = Mathf.Min(ally.MoraleBase,
@@ -126,7 +126,7 @@ namespace GameLogic.Takeover
             unit.ProjectileDamage = 0f;
             if (unitId >= 0)
             {
-                CombatUnitEntity target = FindUnitById(unitId);
+                CombatUnitEntity target = Sim.FindUnitById(unitId);
                 if (target != null && !target.IsDead)
                 {
                     ApplyDamage(target, damage, unit.Squad, false);
@@ -135,11 +135,11 @@ namespace GameLogic.Takeover
             }
             else if (nodeId >= 0)
             {
-                MapNodeEntity node = FindNode(nodeId);
+                MapNodeEntity node = Sim.FindNode(nodeId);
                 if (node?.Building != null && node.Building.Hp > 0)
                     ApplyBuildingDamage(node.Building, damage, unit.Squad);
             }
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = "ProjectileHit",
                 ActorId = unit.Id,
@@ -176,7 +176,7 @@ namespace GameLogic.Takeover
             {
                 CombatUnitEntity unit = squad.Units[i];
                 if (unit.IsDead) continue;
-                Vector2 formationOffset = FormationOffset(i, squad.Units.Count, facing);
+                Vector2 formationOffset = BattleSim.FormationOffset(i, squad.Units.Count, facing);
                 Vector2 desired = newCenter + formationOffset;
                 Vector2 unitDelta = desired - unit.Pos;
                 float unitDistance = unitDelta.magnitude;
@@ -241,7 +241,7 @@ namespace GameLogic.Takeover
                 return;
             foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead && value.Hp < value.MaxHp))
             {
-                if (HasMechanism(squad)) continue;
+                if (BattleSim.HasMechanism(squad)) continue;
                 float repair = unit.MaxHp / 4f + 1f;
                 unit.Hp = Mathf.Min(unit.MaxHp, unit.Hp + repair * dt * 2f);
             }
@@ -252,13 +252,13 @@ namespace GameLogic.Takeover
         {
             foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead))
             {
-                MapNodeEntity node = Nodes.FirstOrDefault(value => value.Kind == NodeKind.Chest &&
+                MapNodeEntity node = Sim.Nodes.FirstOrDefault(value => value.Kind == NodeKind.Chest &&
                                                              !value.ChestCollected &&
                                                              Vector2.Distance(value.Pos, unit.Pos) <= 30f);
                 if (node == null) continue;
                 node.ChestCollected = true;
                 squad.Owner.Gold += 500f;
-                _events.Add(new BattleEvent
+                Sim.EventBuffer.Add(new BattleEvent
                 {
                     Kind = "ChestCollected",
                     ActorId = squad.Id,
@@ -275,14 +275,14 @@ namespace GameLogic.Takeover
         {
             CombatUnitEntity best = null;
             float bestDistance = float.MaxValue;
-            foreach (SquadEntity squad in Squads)
+            foreach (SquadEntity squad in Sim.Squads)
             {
                 if (squad.IsDead || squad.Faction == unit.Squad.Faction) continue;
                 foreach (CombatUnitEntity candidate in squad.Units)
                 {
                     if (candidate.IsDead) continue;
                     float distance = Vector2.Distance(unit.Pos, candidate.Pos);
-                    float reach = Mathf.Max(90f, unit.Squad.Def.Range) + UnitRadius(candidate.Squad);
+                    float reach = Mathf.Max(90f, unit.Squad.Def.Range) + BattleSim.UnitRadius(candidate.Squad);
                     if (distance > reach || distance >= bestDistance) continue;
                     best = candidate;
                     bestDistance = distance;
@@ -296,7 +296,7 @@ namespace GameLogic.Takeover
         {
             CombatUnitEntity best = null;
             float bestDistance = 160f * 160f;
-            foreach (SquadEntity squad in Squads)
+            foreach (SquadEntity squad in Sim.Squads)
             {
                 if (squad.Faction == self.Faction) continue;
                 foreach (CombatUnitEntity candidate in squad.Units)
@@ -314,7 +314,7 @@ namespace GameLogic.Takeover
         /// <summary>为攻击者查找可攻击的敌方建筑目标。</summary>
         internal MapNodeEntity FindTargetBuilding(CombatUnitEntity unit, SquadEntity squad)
         {
-            if (!IsKeyBuilding(squad.TargetNode?.Building) || squad.TargetNode.Building.Owner == squad.Faction ||
+            if (!BattleSim.IsKeyBuilding(squad.TargetNode?.Building) || squad.TargetNode.Building.Owner == squad.Faction ||
                 squad.TargetNode.Building.Hp <= 0)
                 return null;
             if (Vector2.Distance(unit.Pos, squad.TargetNode.Pos) >
@@ -330,7 +330,7 @@ namespace GameLogic.Takeover
             if (attacker.AttackTimer > 0f) return;
             float slowMultiplier = attacker.SlowSeconds > 0f ? 2f : 1f;
             attacker.AttackTimer = Mathf.Max(0.1f, attacker.Squad.Def.AttackSpeed * 0.1f * slowMultiplier);
-            EconomySystem.AddSquadXp(attacker.Squad,
+            Sim.EconomySystem.AddSquadXp(attacker.Squad,
                 Mathf.Max(0.01f, attacker.Squad.Def.AttackSpeed * 0.1f /
                                  Mathf.Max(1, attacker.Squad.MaxSoldiers)));
             float damage = RollDamage(attacker, target);
@@ -341,7 +341,7 @@ namespace GameLogic.Takeover
                 attacker.ProjectileOrigin = attacker.Pos;
                 attacker.ProjectilePoint = target.Pos;
                 attacker.ProjectileDamage = damage;
-                attacker.ProjectileRemaining = attacker.Squad.Profile.ProjectileTravel / 10f * (0.5f + (float)_rng.NextDouble());
+                attacker.ProjectileRemaining = attacker.Squad.Profile.ProjectileTravel / 10f * (0.5f + (float)Sim.RandomSource.NextDouble());
             }
             else
             {
@@ -365,7 +365,7 @@ namespace GameLogic.Takeover
                 attacker.ProjectileOrigin = attacker.Pos;
                 attacker.ProjectilePoint = node.Pos;
                 attacker.ProjectileDamage = damage;
-                attacker.ProjectileRemaining = attacker.Squad.Profile.ProjectileTravel / 10f * (0.5f + (float)_rng.NextDouble());
+                attacker.ProjectileRemaining = attacker.Squad.Profile.ProjectileTravel / 10f * (0.5f + (float)Sim.RandomSource.NextDouble());
             }
             else
             {
@@ -380,8 +380,8 @@ namespace GameLogic.Takeover
             GameConfig.takeover.Unit def = attacker.Squad.Def;
             float roll = attacker.MaxDamageSeconds > 0f
                 ? def.DmgMax
-                : Mathf.Lerp(def.DmgMin, def.DmgMax, (float)_rng.NextDouble());
-            float levelMultiplier = 1f + LevelTier(attacker.Squad) * 0.1f;
+                : Mathf.Lerp(def.DmgMin, def.DmgMax, (float)Sim.RandomSource.NextDouble());
+            float levelMultiplier = 1f + BattleSim.LevelTier(attacker.Squad) * 0.1f;
             roll *= levelMultiplier;
             if (def.UnitType == (int)UnitKind.Archers || def.UnitType == (int)UnitKind.Siege)
                 roll *= attacker.Squad.Owner.ModMul(13);
@@ -414,7 +414,7 @@ namespace GameLogic.Takeover
                     roll -= Mathf.RoundToInt(roll * shield / 100f);
                 }
                 if (def.Range > 0 &&
-                    Vector2.Distance(attacker.Pos, target.Pos) <= UnitRadius(target.Squad) + 10f &&
+                    Vector2.Distance(attacker.Pos, target.Pos) <= BattleSim.UnitRadius(target.Squad) + 10f &&
                     (attackerAbilities & AbilityMask.MartialArtists) == 0)
                 {
                     roll *= Mathf.Max(0f, (100f - def.MeleePenalty) / 100f);
@@ -431,7 +431,7 @@ namespace GameLogic.Takeover
                 }
             }
             if ((attackerAbilities & AbilityMask.Mechanism) != 0 &&
-                _rng.NextDouble() < attacker.Squad.Owner.Mods[32] / 100d)
+                Sim.RandomSource.NextDouble() < attacker.Squad.Owner.Mods[32] / 100d)
                 roll *= 2f;
 
             if (target == null && def.UnitType != (int)UnitKind.Siege)
@@ -458,7 +458,7 @@ namespace GameLogic.Takeover
             {
                 target.FrozenSeconds = Mathf.Max(target.FrozenSeconds, 3f + attacker.Squad.Owner.Mods[30]);
             }
-            if (_rng.NextDouble() < attacker.Squad.Owner.Mods[33] / 100d)
+            if (Sim.RandomSource.NextDouble() < attacker.Squad.Owner.Mods[33] / 100d)
                 target.FrozenSeconds = Mathf.Max(target.FrozenSeconds, 3f + attacker.Squad.Owner.Mods[30]);
             if ((abilities & AbilityMask.Intimidiation) != 0 &&
                 (targetAbilities & (AbilityMask.Discipline | (AbilityMask.Mechanism | AbilityMask.Undead))) == 0)
@@ -469,7 +469,7 @@ namespace GameLogic.Takeover
             if (allowSplash && (abilities & AbilityMask.SplashDamage) != 0)
             {
                 OriginalRules.TryAbility(attacker.Squad.Def.Abilities, "SplashDamage", out int radius);
-                foreach (SquadEntity squad in Squads)
+                foreach (SquadEntity squad in Sim.Squads)
                 {
                     if (squad.Faction == attacker.Squad.Faction || squad.IsDead) continue;
                     foreach (CombatUnitEntity unit in squad.Units)
@@ -492,11 +492,11 @@ namespace GameLogic.Takeover
             if (magic && target.MagicImmunitySeconds > 0f) return;
             if (target.DamageResistSeconds > 0f) damage *= 1f - target.DamageResist / 100f;
             target.Hp = Mathf.Max(0f, target.Hp - damage);
-            if (!HasMoraleLock(target.Squad))
+            if (!BattleSim.HasMoraleLock(target.Squad))
                 target.MoraleCurrent = Mathf.Max(0f, target.MoraleCurrent - damage * 0.5f);
             if (!target.IsDead)
             {
-                _events.Add(new BattleEvent
+                Sim.EventBuffer.Add(new BattleEvent
                 {
                     Kind = "UnitDamaged",
                     ActorId = source?.Id ?? -1,
@@ -508,7 +508,7 @@ namespace GameLogic.Takeover
             }
             target.Hp = 0f;
             target.Action = UnitAction.Dead;
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = "UnitKilled",
                 ActorId = source?.Id ?? -1,
@@ -523,7 +523,7 @@ namespace GameLogic.Takeover
         {
             if (building == null || building.Hp <= 0) return;
             building.Hp = Mathf.Max(0, building.Hp - Mathf.RoundToInt(damage));
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = building.Hp <= 0 ? "BuildingDestroyed" : "BuildingDamaged",
                 ActorId = source?.Id ?? -1,
@@ -532,24 +532,24 @@ namespace GameLogic.Takeover
                 Position = building.Node.Pos,
             });
             if (building.Hp <= 0)
-                MapSystem.RefreshOwnership();
+                Sim.MapSystem.RefreshOwnership();
         }
 
         /// <summary>更新战斗中的建筑生命、占领和修复状态。</summary>
         internal void TickBuildings(float dt)
         {
-            foreach (MapNodeEntity node in Nodes.Where(value => value.Building != null))
+            foreach (MapNodeEntity node in Sim.Nodes.Where(value => value.Building != null))
             {
                 BuildingState building = node.Building;
                 if (building.Hp <= 0 || building.LastAttackerUnitId < 0) continue;
-                CombatUnitEntity attacker = FindUnitById(building.LastAttackerUnitId);
+                CombatUnitEntity attacker = Sim.FindUnitById(building.LastAttackerUnitId);
                 if (attacker == null || attacker.IsDead) continue;
-                PlayerStateEntity owner = PlayerOf(building.Owner);
+                PlayerStateEntity owner = Sim.PlayerOf(building.Owner);
                 if (owner == null) continue;
                 foreach (SquadEntity defender in owner.Squads.Where(value => !value.IsDead && value.HomeNode == node))
                 {
                     if (defender.Path == null && defender.TargetNode != node)
-                        MapSystem.OrderMove(defender, attacker.Pos, null);
+                        Sim.MapSystem.OrderMove(defender, attacker.Pos, null);
                 }
                 building.LastAttackerUnitId = -1;
             }
@@ -559,7 +559,7 @@ namespace GameLogic.Takeover
         internal void KillSquad(SquadEntity squad)
         {
             squad.Owner.Squads.Remove(squad);
-            Squads.Remove(squad);
+            Sim.Squads.Remove(squad);
             Sim.RemoveSquadEntities(squad);
             if (squad.Owner != null && squad.Owner.Mods[26] > 0)
                 squad.Owner.Ultimate = Mathf.Min(squad.Owner.UltimateMax,
@@ -579,7 +579,7 @@ namespace GameLogic.Takeover
                     if (b.IsDead) continue;
                     Vector2 delta = b.Pos - a.Pos;
                     float distance = delta.magnitude;
-                    float minimum = UnitRadius(squad) * 1.6f;
+                    float minimum = BattleSim.UnitRadius(squad) * 1.6f;
                     if (distance >= minimum) continue;
                     if (distance < 0.001f) delta = Vector2.right;
                     else delta /= distance;

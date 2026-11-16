@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>处理战斗参与方的 AI 决策。</summary>
-    internal sealed class BattleAiSystem : BattleSimSystem
+    internal sealed class BattleAiSystem : BattleSimSystemBase
     {
         /// <summary>进攻所需的最低部队战力（人类托管和敌方 AI 共用）。</summary>
         private const float AttackPowerThreshold = 250f;
@@ -54,14 +54,14 @@ namespace GameLogic.Takeover
             int farmCost = Cfg.BuildingById(5)?.BuildCost ?? 150;
             for (int i = 0; i < MaxFarmsPerTick && player.FreeSupply < SupplyComfort && player.Gold >= farmCost; i++)
             {
-                if (!EconomySystem.TryBuildFirstType(player, 5)) break;
+                if (!Sim.EconomySystem.TryBuildFirstType(player, 5)) break;
             }
 
             int buildingCount = Mathf.Max(1, player.ActiveBuildings);
             if (player.ManaIncome < Mathf.RoundToInt(buildingCount / 3f))
-                EconomySystem.TryBuildFirstType(player, 7);
+                Sim.EconomySystem.TryBuildFirstType(player, 7);
             if (player.BaseGoldIncome < 2 && buildingCount > player.BaseGoldIncome)
-                EconomySystem.TryBuildFirstType(player, 6);
+                Sim.EconomySystem.TryBuildFirstType(player, 6);
         }
 
         // ---------------- 造兵 ----------------
@@ -77,7 +77,7 @@ namespace GameLogic.Takeover
                 GameConfig.takeover.Unit bestUnit = null;
                 float bestScore = float.NegativeInfinity;
                 foreach (MapNodeEntity node in player.OwnedNodes.Where(value =>
-                             IsKeyBuilding(value.Building) && value.Building.IsActive))
+                             BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive))
                 {
                     float frontier = FrontierBonus(node, player);
                     foreach (GameConfig.takeover.Unit unit in Cfg.TbUnit.DataList)
@@ -96,11 +96,11 @@ namespace GameLogic.Takeover
                 }
 
                 if (bestNode == null || bestUnit == null) return;
-                SquadEntity bought = EconomySystem.BuyUnit(player, bestUnit, bestNode, out _);
+                SquadEntity bought = Sim.EconomySystem.BuyUnit(player, bestUnit, bestNode, out _);
                 if (bought == null) return;
                 // 新兵先去集结地，不要一个一个往敌人堆里送
                 MapNodeEntity push = StagingNode(player, PickAttackTarget(player));
-                if (push != null) MapSystem.OrderMove(bought, push);
+                if (push != null) Sim.MapSystem.OrderMove(bought, push);
             }
         }
 
@@ -118,7 +118,7 @@ namespace GameLogic.Takeover
         internal float DefenderPower(MapNodeEntity node)
         {
             if (node == null) return 0f;
-            return Squads.Where(squad => !squad.IsDead && squad.HomeNode == node &&
+            return Sim.Squads.Where(squad => !squad.IsDead && squad.HomeNode == node &&
                                           Vector2.Distance(squad.Pos, node.Pos) <= 120f)
                 .Sum(SquadPower);
         }
@@ -131,24 +131,24 @@ namespace GameLogic.Takeover
             float tank = unit.Hp * Mathf.Max(1, unit.UnitsCount);
             float value = dps * 2f + tank * 0.15f + unit.Range * 0.3f + unit.Tier * 8f;
             int cost = Mathf.Max(1, BattleEconomySystem.UnitCost(player, unit));
-            return value / cost + (float)_rng.NextDouble() * 0.02f;
+            return value / cost + (float)Sim.RandomSource.NextDouble() * 0.02f;
         }
 
         /// <summary>据点威胁度：附近敌军越多、附近敌方据点越近、守军越少，分越高。</summary>
         internal float BuildingThreat(MapNodeEntity node)
         {
             if (node?.Building == null) return 0f;
-            float score = Squads.Count(squad => !squad.IsDead && squad.Faction != node.Building.Owner &&
+            float score = Sim.Squads.Count(squad => !squad.IsDead && squad.Faction != node.Building.Owner &&
                                                   Vector2.Distance(squad.Pos, node.Pos) <= 220f) * 20f;
-            int defenders = Squads.Count(squad => !squad.IsDead && squad.Faction == node.Building.Owner &&
+            int defenders = Sim.Squads.Count(squad => !squad.IsDead && squad.Faction == node.Building.Owner &&
                                                     squad.HomeNode == node &&
                                                     Vector2.Distance(squad.Pos, node.Pos) <= 60f);
-            foreach (MapNodeEntity other in Nodes.Where(value => IsKeyBuilding(value.Building) &&
+            foreach (MapNodeEntity other in Sim.Nodes.Where(value => BattleSim.IsKeyBuilding(value.Building) &&
                                                            value.Building.IsActive &&
                                                            value.Building.Owner != node.Building.Owner))
             {
                 float distance = Mathf.Max(1f, Vector2.Distance(node.Pos, other.Pos));
-                int enemyDefenders = Squads.Count(squad => !squad.IsDead &&
+                int enemyDefenders = Sim.Squads.Count(squad => !squad.IsDead &&
                                                            squad.Faction == other.Building.Owner &&
                                                            squad.HomeNode == other);
                 score += 10000f / distance + 10f * (enemyDefenders - defenders);
@@ -160,8 +160,8 @@ namespace GameLogic.Takeover
         private float FrontierBonus(MapNodeEntity node, PlayerStateEntity player)
         {
             float best = float.MaxValue;
-            foreach (MapNodeEntity other in Nodes.Where(value =>
-                         IsKeyBuilding(value.Building) && value.Building.IsActive &&
+            foreach (MapNodeEntity other in Sim.Nodes.Where(value =>
+                         BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive &&
                          value.Building.Owner != player.Faction))
             {
                 best = Mathf.Min(best, Vector2.Distance(node.Pos, other.Pos));
@@ -177,7 +177,7 @@ namespace GameLogic.Takeover
             MapNodeEntity best = null;
             float bestScore = float.NegativeInfinity;
             foreach (MapNodeEntity node in player.OwnedNodes.Where(value =>
-                         IsKeyBuilding(value.Building) && value.Building.IsActive &&
+                         BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive &&
                          value.Building.Level < BuildingState.MaxLevel))
             {
                 GameConfig.takeover.Building def = Cfg.BuildingById(node.Building.Kind);
@@ -190,7 +190,7 @@ namespace GameLogic.Takeover
                 bestScore = score;
                 best = node;
             }
-            if (best != null) EconomySystem.TryUpgrade(player, best);
+            if (best != null) Sim.EconomySystem.TryUpgrade(player, best);
         }
 
         // ---------------- 指挥 ----------------
@@ -202,7 +202,7 @@ namespace GameLogic.Takeover
         internal void CommandArmy(PlayerStateEntity player)
         {
             MapNodeEntity underAttack = player.OwnedNodes
-                .Where(value => IsKeyBuilding(value.Building) && value.Building.IsActive)
+                .Where(value => BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive)
                 .OrderByDescending(BuildingThreat)
                 .FirstOrDefault(node => BuildingThreat(node) > 40f);
 
@@ -218,12 +218,12 @@ namespace GameLogic.Takeover
                     .FirstOrDefault();
                 if (defender != null)
                 {
-                    MapSystem.OrderMove(defender, underAttack);
+                    Sim.MapSystem.OrderMove(defender, underAttack);
                     idle.Remove(defender);
                 }
             }
 
-            int enemyKeys = Nodes.Count(node => IsKeyBuilding(node.Building) &&
+            int enemyKeys = Sim.Nodes.Count(node => BattleSim.IsKeyBuilding(node.Building) &&
                                                 node.Building.IsActive &&
                                                 node.Building.Owner != player.Faction);
             // 收尾阶段（敌方只剩 1-2 个关键建筑）不再留驻军、阈值也放宽，避免「围而不打」
@@ -240,7 +240,7 @@ namespace GameLogic.Takeover
             if (target.Building != null && target.Building.Hp <= 0f)
             {
                 SquadEntity receiver = available.FirstOrDefault() ?? idle.FirstOrDefault();
-                if (receiver != null) MapSystem.OrderMove(receiver, target);
+                if (receiver != null) Sim.MapSystem.OrderMove(receiver, target);
                 return;
             }
 
@@ -264,7 +264,7 @@ namespace GameLogic.Takeover
 
             if (strongEnough && available.Count > 0)
             {
-                foreach (SquadEntity squad in available) MapSystem.OrderMove(squad, target);
+                foreach (SquadEntity squad in available) Sim.MapSystem.OrderMove(squad, target);
                 return;
             }
 
@@ -274,7 +274,7 @@ namespace GameLogic.Takeover
                 .OrderBy(value => Vector2.Distance(value.Pos, target.Pos))
                 .FirstOrDefault();
             if (staging == null) return;
-            foreach (SquadEntity squad in available) MapSystem.OrderMove(squad, staging);
+            foreach (SquadEntity squad in available) Sim.MapSystem.OrderMove(squad, staging);
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace GameLogic.Takeover
         private bool OnGarrisonDuty(SquadEntity squad)
         {
             MapNodeEntity home = squad.HomeNode;
-            if (home?.Building == null || !IsKeyBuilding(home.Building)) return false;
+            if (home?.Building == null || !BattleSim.IsKeyBuilding(home.Building)) return false;
             if (Vector2.Distance(squad.Pos, home.Pos) > 80f) return false;
             if (BuildingThreat(home) <= 40f) return false;
             return GarrisonDutyCount() <= MaxGarrisonSquads;
@@ -295,12 +295,12 @@ namespace GameLogic.Takeover
         private int GarrisonDutyCount()
         {
             int count = 0;
-            for (int i = 0; i < Squads.Count; i++)
+            for (int i = 0; i < Sim.Squads.Count; i++)
             {
-                SquadEntity squad = Squads[i];
+                SquadEntity squad = Sim.Squads[i];
                 if (squad.IsDead) continue;
                 MapNodeEntity home = squad.HomeNode;
-                if (home?.Building == null || !IsKeyBuilding(home.Building)) continue;
+                if (home?.Building == null || !BattleSim.IsKeyBuilding(home.Building)) continue;
                 if (Vector2.Distance(squad.Pos, home.Pos) > 80f) continue;
                 count++;
             }
@@ -311,9 +311,9 @@ namespace GameLogic.Takeover
         private bool CanPullGarrison(SquadEntity squad)
         {
             MapNodeEntity home = squad.HomeNode;
-            if (home?.Building == null || !IsKeyBuilding(home.Building)) return false;
+            if (home?.Building == null || !BattleSim.IsKeyBuilding(home.Building)) return false;
             if (Vector2.Distance(squad.Pos, home.Pos) > 80f) return false;
-            int defenders = Squads.Count(other => !other.IsDead && other.HomeNode == home &&
+            int defenders = Sim.Squads.Count(other => !other.IsDead && other.HomeNode == home &&
                                                    Vector2.Distance(other.Pos, home.Pos) <= 80f);
             return defenders > 1;
         }
@@ -324,11 +324,11 @@ namespace GameLogic.Takeover
             MapNodeEntity best = null;
             float bestScore = float.NegativeInfinity;
             MapNodeEntity from = player.OwnedNodes.FirstOrDefault();
-            foreach (MapNodeEntity node in Nodes.Where(value =>
-                         IsKeyBuilding(value.Building) &&
+            foreach (MapNodeEntity node in Sim.Nodes.Where(value =>
+                         BattleSim.IsKeyBuilding(value.Building) &&
                          value.Building.Owner != player.Faction))
             {
-                int defenders = Squads.Count(squad => !squad.IsDead && squad.HomeNode == node &&
+                int defenders = Sim.Squads.Count(squad => !squad.IsDead && squad.HomeNode == node &&
                                                        Vector2.Distance(squad.Pos, node.Pos) <= 80f);
                 float distance = from != null ? Vector2.Distance(from.Pos, node.Pos) : 0f;
                 float score = 400f / Mathf.Max(60f, distance) - defenders * 0.6f - node.Building.Level * 0.4f;
@@ -337,7 +337,7 @@ namespace GameLogic.Takeover
                 // 补给吃紧时优先抢能解锁可建造点的区段（否则金币再多也造不出农场）
                 if (player.FreeSupply <= 1)
                 {
-                    score += Nodes.Count(spot => spot.Kind == NodeKind.BuildSpot &&
+                    score += Sim.Nodes.Count(spot => spot.Kind == NodeKind.BuildSpot &&
                                                  spot.Building == null && spot.Loc == node.Loc) * 0.8f;
                 }
                 if (score <= bestScore) continue;
@@ -362,7 +362,7 @@ namespace GameLogic.Takeover
         internal void CastAiSpells(PlayerStateEntity player)
         {
             if (!player.SpellsEnabled || player.SpellCooldown > 0f) return;
-            foreach (GameConfig.takeover.Spell spell in SpellSystem.AvailableSpells(player)
+            foreach (GameConfig.takeover.Spell spell in Sim.SpellSystem.AvailableSpells(player)
                          .Where(value => value.SpellType != 2)
                          .OrderBy(value => value.Id))
             {
@@ -370,7 +370,7 @@ namespace GameLogic.Takeover
                 if (cost > player.Mana) continue;
                 Vector2 position = FindAiSpellTarget(player, spell);
                 if (!HasAiSpellTarget(player, spell, position)) continue;
-                if (SpellSystem.TryCastSpell(player, spell, position, MapSystem.NearestKeyNode(position), out _))
+                if (Sim.SpellSystem.TryCastSpell(player, spell, position, Sim.MapSystem.NearestKeyNode(position), out _))
                 {
                     player.SpellCooldown = OriginalRules.SpellRetrySeconds;
                     break;
@@ -384,14 +384,14 @@ namespace GameLogic.Takeover
             int id = OriginalRules.OriginalSpellIndex(spell.Id);
             bool beneficial = id == 1 || id == 2 || id == 6 || id == 9 || id == 10 || id == 14;
             IEnumerable<CombatUnitEntity> units = beneficial
-                ? Squads.Where(squad => !squad.IsDead && squad.Faction == player.Faction).SelectMany(squad => squad.Units)
-                : Squads.Where(squad => !squad.IsDead && squad.Faction != player.Faction &&
+                ? Sim.Squads.Where(squad => !squad.IsDead && squad.Faction == player.Faction).SelectMany(squad => squad.Units)
+                : Sim.Squads.Where(squad => !squad.IsDead && squad.Faction != player.Faction &&
                                          squad.Faction != Faction.Bandits).SelectMany(squad => squad.Units);
             CombatUnitEntity best = units.Where(unit => !unit.IsDead)
                 .OrderByDescending(unit => beneficial ? 1f - unit.HpRatio : 1f)
                 .ThenBy(unit => Vector2.Distance(unit.Pos, player.OwnedNodes.FirstOrDefault()?.Pos ?? Vector2.zero))
                 .FirstOrDefault();
-            if (best != null) return best.Pos + FormationOffset(0, 1);
+            if (best != null) return best.Pos + BattleSim.FormationOffset(0, 1);
             return player.OwnedNodes.FirstOrDefault()?.Pos ??
                    new Vector2(OriginalRules.NativeStageWidth * 0.5f, OriginalRules.NativeStageHeight);
         }
@@ -402,7 +402,7 @@ namespace GameLogic.Takeover
             int id = OriginalRules.OriginalSpellIndex(spell.Id);
             bool beneficial = id == 1 || id == 2 || id == 6 || id == 9 || id == 10 || id == 14;
             if (id == 3 || id == 5 || id == 7 || id == 11 || id == 13 || id == 15) return true;
-            return Squads.Any(squad => !squad.IsDead &&
+            return Sim.Squads.Any(squad => !squad.IsDead &&
                                        (beneficial ? squad.Faction == player.Faction : squad.Faction != player.Faction) &&
                                        Vector2.Distance(squad.Pos, position) <= spell.Radius);
         }
@@ -411,25 +411,25 @@ namespace GameLogic.Takeover
         internal void TryAiUltimate(PlayerStateEntity player)
         {
             if (player.Ultimate + 0.0001f < player.UltimateMax || !CanAiCastUltimate(player)) return;
-            GameConfig.takeover.Spell ultimate = SpellSystem.AvailableSpells(player).FirstOrDefault(spell => spell.SpellType == 2);
+            GameConfig.takeover.Spell ultimate = Sim.SpellSystem.AvailableSpells(player).FirstOrDefault(spell => spell.SpellType == 2);
             if (ultimate == null) return;
             Vector2 position = FindAiSpellTarget(player, ultimate);
-            SpellSystem.TryCastSpell(player, ultimate, position, MapSystem.NearestKeyNode(position), out _);
+            Sim.SpellSystem.TryCastSpell(player, ultimate, position, Sim.MapSystem.NearestKeyNode(position), out _);
         }
 
         /// <summary>检查 AI 当前是否满足释放终极技能的条件。</summary>
         internal bool CanAiCastUltimate(PlayerStateEntity player)
         {
-            int own = Squads.Count(squad => !squad.IsDead && squad.Faction == player.Faction);
-            int enemies = Squads.Count(squad => !squad.IsDead && squad.Faction != player.Faction &&
+            int own = Sim.Squads.Count(squad => !squad.IsDead && squad.Faction == player.Faction);
+            int enemies = Sim.Squads.Count(squad => !squad.IsDead && squad.Faction != player.Faction &&
                                                 squad.Faction != Faction.Bandits);
             switch (player.Faction)
             {
                 case Faction.Empire:
                     return enemies > 5;
                 case Faction.Westaria:
-                    return Squads.Count(squad => !squad.IsDead && squad.Faction == player.Faction &&
-                                                 !HasMechanism(squad)) >= 3;
+                    return Sim.Squads.Count(squad => !squad.IsDead && squad.Faction == player.Faction &&
+                                                 !BattleSim.HasMechanism(squad)) >= 3;
                 case Faction.Khaganate:
                     return true;
                 case Faction.Cult:

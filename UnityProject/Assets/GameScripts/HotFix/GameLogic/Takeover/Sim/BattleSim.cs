@@ -82,43 +82,43 @@ namespace GameLogic.Takeover
         public int Stars => Time < 330f ? 3 : Time < 540f ? 2 : 1;
 
         /// <summary>用于确定性战斗模拟的随机数生成器。</summary>
+        internal System.Random RandomSource => _rng;
         private readonly System.Random _rng;
+
         /// <summary>负责地图、寻路和移动逻辑的模拟系统。</summary>
+        internal BattleMapSystem MapSystem => _mapSystem;
         private readonly BattleMapSystem _mapSystem;
+
         /// <summary>负责招募、建筑和资源规则的模拟系统。</summary>
+        internal BattleEconomySystem EconomySystem => _economySystem;
         private readonly BattleEconomySystem _economySystem;
+
         /// <summary>负责部队、单位和建筑战斗的模拟系统。</summary>
+        internal BattleCombatSystem CombatSystem => _combatSystem;
         private readonly BattleCombatSystem _combatSystem;
+
         /// <summary>负责法术施放和效果的模拟系统。</summary>
+        internal BattleSpellSystem SpellSystem => _spellSystem;
         private readonly BattleSpellSystem _spellSystem;
+
         /// <summary>负责电脑参与方决策的模拟系统。</summary>
+        internal BattleAiSystem AiSystem => _aiSystem;
         private readonly BattleAiSystem _aiSystem;
-        /// <summary>等待交付给表现层的战斗事件。</summary>
+
+        /// <summary>供模拟系统写入事件的缓冲区。</summary>
+        internal List<BattleEvent> EventBuffer => _events;
         private readonly List<BattleEvent> _events = new List<BattleEvent>();
-        /// <summary>本局已为人类玩家解锁的建筑标识。</summary>
+
+        /// <summary>人类玩家本局已解锁的建筑标识集合。</summary>
+        internal HashSet<int> HumanBuildingsUnlocked => _humanBuildingsUnlocked;
         private readonly HashSet<int> _humanBuildingsUnlocked = new HashSet<int>();
+
         /// <summary>下一个待分配的部队标识。</summary>
         private int _nextSquadId = 1;
         /// <summary>下一个待分配的士兵标识。</summary>
         private int _nextUnitId = 1;
         /// <summary>最近一次处理的整数模拟秒数。</summary>
         private int _lastLogicalSecond = -1;
-        /// <summary>供模拟系统访问地图逻辑的内部入口。</summary>
-        internal BattleMapSystem MapSystem => _mapSystem;
-        /// <summary>供模拟系统访问经济逻辑的内部入口。</summary>
-        internal BattleEconomySystem EconomySystem => _economySystem;
-        /// <summary>供模拟系统访问战斗逻辑的内部入口。</summary>
-        internal BattleCombatSystem CombatSystem => _combatSystem;
-        /// <summary>供模拟系统访问法术逻辑的内部入口。</summary>
-        internal BattleSpellSystem SpellSystem => _spellSystem;
-        /// <summary>供模拟系统访问 AI 逻辑的内部入口。</summary>
-        internal BattleAiSystem AiSystem => _aiSystem;
-        /// <summary>供模拟系统共享的确定性随机数生成器。</summary>
-        internal System.Random RandomSource => _rng;
-        /// <summary>供模拟系统写入事件的缓冲区。</summary>
-        internal List<BattleEvent> EventBuffer => _events;
-        /// <summary>人类玩家本局已解锁的建筑标识集合。</summary>
-        internal HashSet<int> HumanBuildingsUnlocked => _humanBuildingsUnlocked;
         /// <summary>分配并返回下一个部队标识。</summary>
         internal int AllocateSquadId() => _nextSquadId++;
         /// <summary>分配并返回下一个士兵标识。</summary>

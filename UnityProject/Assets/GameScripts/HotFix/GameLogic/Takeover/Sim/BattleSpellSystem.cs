@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>处理法术施放和持续效果。</summary>
-    internal sealed class BattleSpellSystem : BattleSimSystem
+    internal sealed class BattleSpellSystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的法术系统。</summary>
         internal BattleSpellSystem(BattleSim sim) : base(sim) { }
@@ -14,9 +14,9 @@ namespace GameLogic.Takeover
         /// <summary>推进持续法术效果并处理到期移除。</summary>
         internal void TickSpellEffects(float dt)
         {
-            for (int i = ActiveSpells.Count - 1; i >= 0; i--)
+            for (int i = Sim.ActiveSpells.Count - 1; i >= 0; i--)
             {
-                ActiveSpellEffectEntity effect = ActiveSpells[i];
+                ActiveSpellEffectEntity effect = Sim.ActiveSpells[i];
                 effect.Runtime.Advance(dt);
 
                 if (effect.Kind == SpellEffectKind.Cataclysm)
@@ -46,9 +46,9 @@ namespace GameLogic.Takeover
             {
                 case SpellEffectKind.Consecration:
                 case SpellEffectKind.Desecration:
-                    foreach (SquadEntity squad in Squads.Where(value => !value.IsDead && value.Faction == effect.Faction))
+                    foreach (SquadEntity squad in Sim.Squads.Where(value => !value.IsDead && value.Faction == effect.Faction))
                     {
-                        if (HasMechanism(squad)) continue;
+                        if (BattleSim.HasMechanism(squad)) continue;
                         foreach (CombatUnitEntity unit in squad.Units)
                         {
                             if (Vector2.SqrMagnitude(unit.Pos - effect.Center) > radiusSquared) continue;
@@ -67,7 +67,7 @@ namespace GameLogic.Takeover
                 case SpellEffectKind.Heroism:
                     foreach (CombatUnitEntity unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
                     {
-                        if (HasMoraleLock(unit.Squad)) continue;
+                        if (BattleSim.HasMoraleLock(unit.Squad)) continue;
                         unit.HeroicSeconds = Mathf.Max(unit.HeroicSeconds, 10f);
                         unit.FearedSeconds = 0f;
                         unit.MoraleCurrent = unit.MoraleBase;
@@ -103,8 +103,8 @@ namespace GameLogic.Takeover
                                 unit.FrozenSeconds = Mathf.Max(unit.FrozenSeconds, effect.Def.Time);
                         }
                         else
-                            CombatSystem.ApplyDamage(unit, Mathf.Ceil((effect.Def.Power * 0.5f) +
-                                (float)_rng.NextDouble() * effect.Def.Power * 0.5f), effect.Owner?.Squads.FirstOrDefault(), true);
+                            Sim.CombatSystem.ApplyDamage(unit, Mathf.Ceil((effect.Def.Power * 0.5f) +
+                                (float)Sim.RandomSource.NextDouble() * effect.Def.Power * 0.5f), effect.Owner?.Squads.FirstOrDefault(), true);
                     }
                     break;
             }
@@ -113,21 +113,21 @@ namespace GameLogic.Takeover
         /// <summary>推进 Cataclysm 的延迟冲击并结算命中。</summary>
         internal void TickCataclysmImpact(ActiveSpellEffectEntity effect)
         {
-            Vector2 point = new Vector2((float)_rng.NextDouble() * OriginalRules.NativeStageWidth,
-                (float)_rng.NextDouble() * OriginalRules.NativeStageHeight * OriginalRules.WorldYScale);
-            float damage = 4f + (float)_rng.NextDouble() * 4f;
-            foreach (CombatUnitEntity unit in Squads.SelectMany(squad => squad.Units).Where(unit => !unit.IsDead).ToList())
+            Vector2 point = new Vector2((float)Sim.RandomSource.NextDouble() * OriginalRules.NativeStageWidth,
+                (float)Sim.RandomSource.NextDouble() * OriginalRules.NativeStageHeight * OriginalRules.WorldYScale);
+            float damage = 4f + (float)Sim.RandomSource.NextDouble() * 4f;
+            foreach (CombatUnitEntity unit in Sim.Squads.SelectMany(squad => squad.Units).Where(unit => !unit.IsDead).ToList())
             {
                 if (Vector2.Distance(unit.Pos, point) > effect.Def.Radius) continue;
                 float applied = unit.Squad.Faction == effect.Faction ? damage * 0.5f : damage;
-                CombatSystem.ApplyDamage(unit, applied, effect.Owner?.Squads.FirstOrDefault(), true);
+                Sim.CombatSystem.ApplyDamage(unit, applied, effect.Owner?.Squads.FirstOrDefault(), true);
             }
-            foreach (MapNodeEntity node in Nodes.Where(value => value.Building != null && value.Building.Hp > 0))
+            foreach (MapNodeEntity node in Sim.Nodes.Where(value => value.Building != null && value.Building.Hp > 0))
             {
                 if (Vector2.Distance(node.Pos, point) <= effect.Def.Radius)
-                    CombatSystem.ApplyBuildingDamage(node.Building, damage * 0.5f, effect.Owner?.Squads.FirstOrDefault());
+                    Sim.CombatSystem.ApplyBuildingDamage(node.Building, damage * 0.5f, effect.Owner?.Squads.FirstOrDefault());
             }
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = "CataclysmImpact",
                 ActorId = effect.Owner?.Id ?? -1,
@@ -140,7 +140,7 @@ namespace GameLogic.Takeover
         /// <summary>获取指定参与方控制的存活士兵。</summary>
         internal IEnumerable<CombatUnitEntity> AlliedUnits(Faction faction, Vector2 center, float radiusSquared)
         {
-            return Squads.Where(squad => !squad.IsDead && squad.Faction == faction)
+            return Sim.Squads.Where(squad => !squad.IsDead && squad.Faction == faction)
                 .SelectMany(squad => squad.Units)
                 .Where(unit => !unit.IsDead && Vector2.SqrMagnitude(unit.Pos - center) <= radiusSquared);
         }
@@ -148,7 +148,7 @@ namespace GameLogic.Takeover
         /// <summary>获取与指定参与方敌对的存活士兵。</summary>
         internal IEnumerable<CombatUnitEntity> HostileUnits(Faction faction, Vector2 center, float radiusSquared, bool excludeBandits)
         {
-            return Squads.Where(squad => !squad.IsDead && squad.Faction != faction &&
+            return Sim.Squads.Where(squad => !squad.IsDead && squad.Faction != faction &&
                                          (!excludeBandits || squad.Faction != Faction.Bandits))
                 .SelectMany(squad => squad.Units)
                 .Where(unit => !unit.IsDead && Vector2.SqrMagnitude(unit.Pos - center) <= radiusSquared);
@@ -174,7 +174,7 @@ namespace GameLogic.Takeover
             if (ultimate)
             {
                 if (player.Ultimate + 0.0001f < player.UltimateMax) { reason = "终极技能尚未充满"; return false; }
-                if (!player.IsHuman && !AiSystem.CanAiCastUltimate(player)) { reason = "终极技能条件不满足"; return false; }
+                if (!player.IsHuman && !Sim.AiSystem.CanAiCastUltimate(player)) { reason = "终极技能条件不满足"; return false; }
                 player.Ultimate = 0f;
             }
             else
@@ -185,7 +185,7 @@ namespace GameLogic.Takeover
             }
 
             CastSpellEffect(player, spell, position, target);
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = ultimate ? "UltimateCast" : "SpellCast",
                 ActorId = player.Id,
@@ -249,9 +249,9 @@ namespace GameLogic.Takeover
                     foreach (CombatUnitEntity unit in HostileUnits(player.Faction, position,
                                  spell.Radius * spell.Radius, false))
                     {
-                        float percent = spell.Power * 0.5f + (float)_rng.NextDouble() * spell.Power * 0.5f;
+                        float percent = spell.Power * 0.5f + (float)Sim.RandomSource.NextDouble() * spell.Power * 0.5f;
                         percent *= player.ModMul(10);
-                        CombatSystem.ApplyDamage(unit, Mathf.Ceil(unit.MaxHp * percent / 100f), null, true);
+                        Sim.CombatSystem.ApplyDamage(unit, Mathf.Ceil(unit.MaxHp * percent / 100f), null, true);
                     }
                     break;
                 case 1:
@@ -272,7 +272,7 @@ namespace GameLogic.Takeover
                             originalId == 6 ? SpellEffectKind.Bloodlust :
                             originalId == 10 ? SpellEffectKind.Liberation : SpellEffectKind.Desecration,
                     });
-                    ApplySpellEffect(ActiveSpells[ActiveSpells.Count - 1]);
+                    ApplySpellEffect(Sim.ActiveSpells[Sim.ActiveSpells.Count - 1]);
                     break;
                 case 3:
                     SpawnSpecialUnit(player, "Avatar", position);
@@ -327,7 +327,7 @@ namespace GameLogic.Takeover
                         TickTimer = 0f,
                         Kind = SpellEffectKind.FrostEnchantment,
                     });
-                    ApplySpellEffect(ActiveSpells[ActiveSpells.Count - 1]);
+                    ApplySpellEffect(Sim.ActiveSpells[Sim.ActiveSpells.Count - 1]);
                     break;
                 case 11:
                     ApplyGrandTransformation(player);
@@ -336,14 +336,14 @@ namespace GameLogic.Takeover
                     foreach (CombatUnitEntity unit in HostileUnits(player.Faction, position,
                                  spell.Radius * spell.Radius, true))
                     {
-                        if (unit.MagicImmunitySeconds > 0f || HasFearLock(unit.Squad)) continue;
+                        if (unit.MagicImmunitySeconds > 0f || BattleSim.HasFearLock(unit.Squad)) continue;
                         unit.HeroicSeconds = 0f;
                         unit.FearedSeconds = Mathf.Max(unit.FearedSeconds, 10f);
                         unit.MoraleCurrent = 0f;
                     }
                     break;
                 case 13:
-                    bool archer = _rng.NextDouble() > 0.5d;
+                    bool archer = Sim.RandomSource.NextDouble() > 0.5d;
                     SpawnSpecialUnit(player, archer ? "Undying Archers" : "Undying Warriors", target?.Pos ?? position);
                     break;
                 case 15:
@@ -360,23 +360,23 @@ namespace GameLogic.Takeover
             if (def == null && unitName == "Avatar")
                 def = Cfg.TbUnit.DataList.FirstOrDefault(unit => unit.Name == "Avatar");
             if (def == null) return;
-            MapNodeEntity node = MapSystem.NearestKeyNode(position);
-            EconomySystem.SpawnSquad(player, def, position, node, 0, false);
+            MapNodeEntity node = Sim.MapSystem.NearestKeyNode(position);
+            Sim.EconomySystem.SpawnSquad(player, def, position, node, 0, false);
         }
 
         /// <summary>对目标部队应用 Grand Transformation 效果。</summary>
         internal void ApplyGrandTransformation(PlayerStateEntity player)
         {
             bool kill = true;
-            foreach (CombatUnitEntity unit in Squads.Where(squad => squad.Faction != player.Faction &&
+            foreach (CombatUnitEntity unit in Sim.Squads.Where(squad => squad.Faction != player.Faction &&
                                                               squad.Faction != Faction.Bandits)
                          .SelectMany(squad => squad.Units).ToList())
             {
                 if (unit.IsDead || !kill) { kill = !kill; continue; }
                 kill = !kill;
-                CombatSystem.ApplyDamage(unit, unit.Hp, null, true);
+                Sim.CombatSystem.ApplyDamage(unit, unit.Hp, null, true);
                 if (!unit.IsDead) continue;
-                if (_rng.NextDouble() > 0.5d) player.Mana += 20f;
+                if (Sim.RandomSource.NextDouble() > 0.5d) player.Mana += 20f;
                 else player.Gold += 20f;
             }
         }
@@ -384,13 +384,13 @@ namespace GameLogic.Takeover
         /// <summary>执行 Call to the Grave 法术的单位复活效果。</summary>
         internal void CallToTheGrave(PlayerStateEntity player)
         {
-            List<SquadEntity> candidates = Squads.Where(squad => !squad.IsDead &&
+            List<SquadEntity> candidates = Sim.Squads.Where(squad => !squad.IsDead &&
                                                            squad.Faction != player.Faction &&
                                                            squad.Faction != Faction.Bandits)
                 .ToList();
             for (int i = 0; i < 2 && candidates.Count > 0; i++)
             {
-                SquadEntity source = candidates[_rng.Next(candidates.Count)];
+                SquadEntity source = candidates[Sim.RandomSource.Next(candidates.Count)];
                 int tier = Mathf.Clamp(1 + player.Mods[BattleEconomySystem.TierModifier(source.Def.UnitType)], 1, 3);
                 GameConfig.takeover.Unit undead = Cfg.TbUnit.DataList.FirstOrDefault(unit =>
                     OriginalRules.FromConfigFaction(unit.Faction) == player.Faction &&
@@ -399,12 +399,12 @@ namespace GameLogic.Takeover
                 Vector2 position = source.Pos;
                 int xp = (int)source.Xp;
                 source.Owner.Squads.Remove(source);
-                Squads.Remove(source);
+                Sim.Squads.Remove(source);
                 Sim.RemoveSquadEntities(source);
                 MapNodeEntity home = player.OwnedNodes.FirstOrDefault(node => node.Building != null);
-                SquadEntity created = EconomySystem.SpawnSquad(player, undead, position, home, xp, false);
-                MapNodeEntity targetNode = MapSystem.FindNearestHostileNode(home ?? created.AtNode, player);
-                if (targetNode != null) MapSystem.OrderMove(created, targetNode.Pos, targetNode);
+                SquadEntity created = Sim.EconomySystem.SpawnSquad(player, undead, position, home, xp, false);
+                MapNodeEntity targetNode = Sim.MapSystem.FindNearestHostileNode(home ?? created.AtNode, player);
+                if (targetNode != null) Sim.MapSystem.OrderMove(created, targetNode.Pos, targetNode);
                 candidates.Remove(source);
             }
         }

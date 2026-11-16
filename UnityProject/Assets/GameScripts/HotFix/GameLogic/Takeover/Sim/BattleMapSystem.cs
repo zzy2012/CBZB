@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>处理战场地图、寻路和移动命令。</summary>
-    internal sealed class BattleMapSystem : BattleSimSystem
+    internal sealed class BattleMapSystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的地图系统。</summary>
         internal BattleMapSystem(BattleSim sim) : base(sim) { }
@@ -47,15 +47,15 @@ namespace GameLogic.Takeover
                         node.Building.Hp = node.Building.MaxHp;
                     }
                 }
-                Nodes.Add(node);
+                Sim.Nodes.Add(node);
                 Sim.AddEntity(BattleEntityType.MapNode, node);
-                NodeByKey[node.Key] = node;
+                Sim.NodeByKey[node.Key] = node;
             }
 
             foreach (GameConfig.takeover.MapEdge config in Cfg.TbMapEdge.DataList.Where(value => value.LevelId == levelAssetId))
             {
-                if (!NodeByKey.TryGetValue(config.NodeA, out MapNodeEntity nodeA) ||
-                    !NodeByKey.TryGetValue(config.NodeB, out MapNodeEntity nodeB))
+                if (!Sim.NodeByKey.TryGetValue(config.NodeA, out MapNodeEntity nodeA) ||
+                    !Sim.NodeByKey.TryGetValue(config.NodeB, out MapNodeEntity nodeB))
                     continue;
                 var edge = new MapEdge
                 {
@@ -70,23 +70,23 @@ namespace GameLogic.Takeover
                 nodeB.Neighbours.Add(nodeA);
                 nodeA.Edges.Add(edge);
                 nodeB.Edges.Add(edge);
-                Edges.Add(edge);
+                Sim.Edges.Add(edge);
             }
         }
 
         /// <summary>确保地图配置中的参与方已加入当前模拟。</summary>
         internal PlayerStateEntity EnsurePlayer(Faction faction)
         {
-            PlayerStateEntity existing = PlayerOf(faction);
+            PlayerStateEntity existing = Sim.PlayerOf(faction);
             if (existing != null) return existing;
             var player = new PlayerStateEntity
             {
-                Id = Players.Count,
+                Id = Sim.Players.Count,
                 Name = faction.ToString(),
                 Faction = faction,
                 AiEnabled = false,
             };
-            Players.Add(player);
+            Sim.Players.Add(player);
             Sim.AddEntity(BattleEntityType.Player, player);
             return player;
         }
@@ -95,7 +95,7 @@ namespace GameLogic.Takeover
         internal MapNodeEntity FindNearestHostileNode(MapNodeEntity from, PlayerStateEntity player)
         {
             if (from == null) return null;
-            return Nodes.Where(node => IsKeyBuilding(node.Building) && node.Building.Owner != player.Faction)
+            return Sim.Nodes.Where(node => BattleSim.IsKeyBuilding(node.Building) && node.Building.Owner != player.Faction)
                 .OrderBy(node => ShortestDistance(from, node))
                 .FirstOrDefault();
         }
@@ -178,13 +178,13 @@ namespace GameLogic.Takeover
         /// <summary>查找距离指定位置最近的地图节点。</summary>
         internal MapNodeEntity NearestNode(Vector2 position)
         {
-            return Nodes.OrderBy(node => Vector2.SqrMagnitude(node.Pos - position)).FirstOrDefault();
+            return Sim.Nodes.OrderBy(node => Vector2.SqrMagnitude(node.Pos - position)).FirstOrDefault();
         }
 
         /// <summary>查找距离指定位置最近的关键节点。</summary>
         internal MapNodeEntity NearestKeyNode(Vector2 position)
         {
-            return Nodes.Where(node => node.Building != null)
+            return Sim.Nodes.Where(node => node.Building != null)
                 .OrderBy(node => Vector2.SqrMagnitude(node.Pos - position))
                 .FirstOrDefault();
         }
@@ -226,7 +226,7 @@ namespace GameLogic.Takeover
         /// <summary>处理部队对中立或敌方建筑的占领。</summary>
         internal void Capture(MapNodeEntity node, SquadEntity capturer)
         {
-            if (!IsKeyBuilding(node?.Building) || node.Building.Owner == capturer.Faction) return;
+            if (!BattleSim.IsKeyBuilding(node?.Building) || node.Building.Owner == capturer.Faction) return;
             Faction previousOwner = node.Building.Owner;
             node.Building.Owner = capturer.Faction;
             ReinitializeBuilding(node.Building, capturer.Owner);
@@ -234,7 +234,7 @@ namespace GameLogic.Takeover
             capturer.AtNode = node;
             capturer.Owner.Gold += capturer.Owner.Mods[22];
             RefreshOwnership();
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = "BuildingCaptured",
                 ActorId = capturer.Id,
@@ -262,9 +262,9 @@ namespace GameLogic.Takeover
         /// <summary>根据建筑归属刷新各参与方拥有的节点集合。</summary>
         internal void RefreshOwnership()
         {
-            foreach (PlayerStateEntity player in Players)
+            foreach (PlayerStateEntity player in Sim.Players)
                 player.OwnedNodes.RemoveAll(node => node.Building == null || node.Building.Owner != player.Faction);
-            foreach (MapNodeEntity node in Nodes.Where(value => value.Building != null))
+            foreach (MapNodeEntity node in Sim.Nodes.Where(value => value.Building != null))
             {
                 PlayerStateEntity owner = EnsurePlayer(node.Building.Owner);
                 if (!owner.OwnedNodes.Contains(node)) owner.OwnedNodes.Add(node);

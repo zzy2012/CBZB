@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GameLogic.Takeover
 {
     /// <summary>处理资源、招募和建筑经济规则。</summary>
-    internal sealed class BattleEconomySystem : BattleSimSystem
+    internal sealed class BattleEconomySystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的经济系统。</summary>
         internal BattleEconomySystem(BattleSim sim) : base(sim) { }
@@ -23,9 +23,9 @@ namespace GameLogic.Takeover
         /// <summary>尝试为参与方建造首个可用建筑类型。</summary>
         internal bool TryBuildFirstType(PlayerStateEntity player, int buildingId)
         {
-            MapNodeEntity spot = Nodes.FirstOrDefault(node => node.Kind == NodeKind.BuildSpot &&
+            MapNodeEntity spot = Sim.Nodes.FirstOrDefault(node => node.Kind == NodeKind.BuildSpot &&
                                                         node.Building == null &&
-                                                        IsLocControlled(player, node.Loc));
+                                                        BattleSim.IsLocControlled(player, node.Loc));
             return spot != null && TryBuild(player, spot, buildingId, out _);
         }
 
@@ -34,7 +34,7 @@ namespace GameLogic.Takeover
         {
             reason = null;
             if (player == null || def == null || at?.Building == null) { reason = "无效招募目标"; return false; }
-            if (!IsKeyBuilding(at.Building)) { reason = "附属建筑不能招募"; return false; }
+            if (!BattleSim.IsKeyBuilding(at.Building)) { reason = "附属建筑不能招募"; return false; }
             if (at.Building.Owner != player.Faction || !at.Building.IsActive) { reason = "不是己方可用建筑"; return false; }
             if (!AllowedAt(player, at.Building, def)) { reason = "该建筑不能生产此兵种"; return false; }
             if (player.Gold < UnitCost(player, def)) { reason = "金币不足"; return false; }
@@ -103,7 +103,7 @@ namespace GameLogic.Takeover
             };
             for (int i = 0; i < count; i++)
             {
-                Vector2 spawnPosition = position + FormationOffset(i, count);
+                Vector2 spawnPosition = position + BattleSim.FormationOffset(i, count);
                 var unit = new CombatUnitEntity
                 {
                     Id = Sim.AllocateUnitId(),
@@ -121,12 +121,12 @@ namespace GameLogic.Takeover
                 squad.Units.Add(unit);
                 Sim.AddEntity(BattleEntityType.Unit, unit);
             }
-            squad.LevelIndex = LevelForXp(squad.Xp);
+            squad.LevelIndex = BattleSim.LevelForXp(squad.Xp);
             ApplyLevel(squad);
             owner.Squads.Add(squad);
-            Squads.Add(squad);
+            Sim.Squads.Add(squad);
             Sim.AddEntity(BattleEntityType.Squad, squad);
-            _events.Add(new BattleEvent
+            Sim.EventBuffer.Add(new BattleEvent
             {
                 Kind = "SquadSpawned",
                 ActorId = owner.Id,
@@ -162,7 +162,7 @@ namespace GameLogic.Takeover
         {
             if (squad == null || squad.IsDead) return;
             squad.Xp += amount * squad.Owner.ModMul(37);
-            int level = LevelForXp(squad.Xp);
+            int level = BattleSim.LevelForXp(squad.Xp);
             if (level <= squad.LevelIndex) return;
             squad.LevelIndex = level;
             ApplyLevel(squad);
@@ -173,7 +173,7 @@ namespace GameLogic.Takeover
         {
             if (at?.Building == null || at.Building.Owner != player.Faction || at.Building.Level >= BuildingState.MaxLevel)
                 return false;
-            if (!IsKeyBuilding(at.Building)) return false;
+            if (!BattleSim.IsKeyBuilding(at.Building)) return false;
             var def = Cfg.BuildingById(at.Building.Kind);
             if (def == null) return false;
             int cost = at.Building.Level == 0 ? def.UpgradeCost1 : def.UpgradeCost2;
@@ -195,12 +195,12 @@ namespace GameLogic.Takeover
                 reason = "不是可建造空位";
                 return false;
             }
-            if (!_humanBuildingsUnlocked.Contains(buildingId) && player.IsHuman)
+            if (!Sim.HumanBuildingsUnlocked.Contains(buildingId) && player.IsHuman)
             {
                 reason = "该建筑尚未解锁";
                 return false;
             }
-            if (!IsLocControlled(player, spot.Loc))
+            if (!BattleSim.IsLocControlled(player, spot.Loc))
             {
                 reason = "不在己方控制范围";
                 return false;
@@ -233,8 +233,8 @@ namespace GameLogic.Takeover
                 UltimatePerSec = def.Ultimate,
             };
             if (!player.OwnedNodes.Contains(spot)) player.OwnedNodes.Add(spot);
-            if (LevelAssetId == 2 && player.IsHuman && def.Id == 5)
-                _humanBuildingsUnlocked.UnionWith(new[] { 6, 7 });
+            if (Sim.LevelAssetId == 2 && player.IsHuman && def.Id == 5)
+                Sim.HumanBuildingsUnlocked.UnionWith(new[] { 6, 7 });
             return true;
         }
 
