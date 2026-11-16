@@ -105,25 +105,43 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>战役地图上的节点及其邻接关系、占领状态和建筑状态。</summary>
-    public sealed class MapNode
+    public sealed class MapNode : BattleEntity
     {
-        public int Id;
-        public string Key;
-        public NodeKind Kind;
-        public int Loc;
-        public Faction Owner;
-        public Vector2 Pos;
-        public BuildingState Building;
-        public bool ChestCollected;
-        public readonly List<MapNode> Neighbours = new List<MapNode>();
-        public readonly List<MapEdge> Edges = new List<MapEdge>();
+        public BattleMapNodeComponent State { get; }
+        public int Id { get => State.Id; set => State.Id = value; }
+        public string Key { get => State.Key; set => State.Key = value; }
+        public NodeKind Kind { get => State.Kind; set => State.Kind = value; }
+        public int Loc { get => State.Loc; set => State.Loc = value; }
+        public Faction Owner { get => State.Owner; set => State.Owner = value; }
+        public Vector2 Pos { get => State.Position; set => State.Position = value; }
+        public BuildingState Building
+        {
+            get => GetComponent<BuildingState>();
+            set
+            {
+                BuildingState previous = Building;
+                if (previous == value) return;
+                if (previous != null) RemoveComponent(previous);
+                if (value == null) return;
+                value.Node = this;
+                AddComponent(value);
+            }
+        }
+        public bool ChestCollected { get => State.ChestCollected; set => State.ChestCollected = value; }
+        public List<MapNode> Neighbours => State.Neighbours;
+        public List<MapEdge> Edges => State.Edges;
+
+        public MapNode()
+        {
+            State = AddComponent(new BattleMapNodeComponent());
+        }
 
         public bool HasBuilding => Building != null;
         public bool IsOwnedBy(Faction faction) => Building != null && Building.Owner == faction;
     }
 
     /// <summary>地图节点上建筑的所有权、耐久、生产和占领进度。</summary>
-    public sealed class BuildingState
+    public sealed class BuildingState : BattleComponent
     {
         public const int MaxLevel = 2;
         public const int DefenderCatchDefault = 1;
@@ -149,53 +167,64 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>参与战斗的单个士兵及其生命、目标、状态效果和攻击数据。</summary>
-    public sealed class CombatUnit
+    public sealed class CombatUnit : BattleEntity
     {
+        public BattleUnitMovementComponent Movement { get; }
+        public BattleUnitStatusComponent Status { get; }
+        public BattleUnitCombatComponent Combat { get; }
         public int Id;
         public int Index;
         public Squad Squad;
-        public Vector2 Pos;
-        public float Hp;
-        public float MaxHp;
-        public float BaseMaxHp;
-        public float AttackTimer;
-        public int TargetUnitId = -1;
-        public int TargetBuildingNodeId = -1;
-        public UnitAction Action = UnitAction.Stand;
-        public MoraleState MoraleState = MoraleState.Neutral;
-        public float MoraleCurrent;
-        public float MoraleBase;
-        public float HeroicSeconds;
-        public float FearedSeconds;
-        public float FrozenSeconds;
-        public float PoisonSeconds;
-        public float PoisonTick;
-        public float PoisonDamage;
-        public float DamageResistSeconds;
-        public float DamageResist;
-        public float DamageBuffSeconds;
-        public float DamageBuffPercent;
-        public float MaxDamageSeconds;
-        public float MagicImmunitySeconds;
-        public bool ChargeAvailable;
-        public bool Pursuing;
-        public float DashSeconds;
-        public float ChargeSpeedSeconds;
-        public float SlowSeconds;
-        public int ProjectileTargetUnitId = -1;
-        public int ProjectileTargetNodeId = -1;
-        public float ProjectileRemaining;
-        public float ProjectileDamage;
-        public Vector2 ProjectileOrigin;
-        public Vector2 ProjectilePoint;
+        public Vector2 Pos { get => Movement.Position; set => Movement.Position = value; }
+        public float Hp { get => Combat.Hp; set => Combat.Hp = value; }
+        public float MaxHp { get => Combat.MaxHp; set => Combat.MaxHp = value; }
+        public float BaseMaxHp { get => Combat.BaseMaxHp; set => Combat.BaseMaxHp = value; }
+        public float AttackTimer { get => Combat.AttackTimer; set => Combat.AttackTimer = value; }
+        public int TargetUnitId { get => Combat.TargetUnitId; set => Combat.TargetUnitId = value; }
+        public int TargetBuildingNodeId { get => Combat.TargetBuildingNodeId; set => Combat.TargetBuildingNodeId = value; }
+        public UnitAction Action { get => Movement.Action; set => Movement.Action = value; }
+        public MoraleState MoraleState { get => Status.MoraleState; set => Status.MoraleState = value; }
+        public float MoraleCurrent { get => Status.MoraleCurrent; set => Status.MoraleCurrent = value; }
+        public float MoraleBase { get => Status.MoraleBase; set => Status.MoraleBase = value; }
+        public float HeroicSeconds { get => Status.HeroicSeconds; set => Status.HeroicSeconds = value; }
+        public float FearedSeconds { get => Status.FearedSeconds; set => Status.FearedSeconds = value; }
+        public float FrozenSeconds { get => Status.FrozenSeconds; set => Status.FrozenSeconds = value; }
+        public float PoisonSeconds { get => Status.PoisonSeconds; set => Status.PoisonSeconds = value; }
+        public float PoisonTick { get => Status.PoisonTick; set => Status.PoisonTick = value; }
+        public float PoisonDamage { get => Status.PoisonDamage; set => Status.PoisonDamage = value; }
+        public float DamageResistSeconds { get => Status.DamageResistSeconds; set => Status.DamageResistSeconds = value; }
+        public float DamageResist { get => Status.DamageResist; set => Status.DamageResist = value; }
+        public float DamageBuffSeconds { get => Status.DamageBuffSeconds; set => Status.DamageBuffSeconds = value; }
+        public float DamageBuffPercent { get => Status.DamageBuffPercent; set => Status.DamageBuffPercent = value; }
+        public float MaxDamageSeconds { get => Status.MaxDamageSeconds; set => Status.MaxDamageSeconds = value; }
+        public float MagicImmunitySeconds { get => Status.MagicImmunitySeconds; set => Status.MagicImmunitySeconds = value; }
+        public bool ChargeAvailable { get => Movement.ChargeAvailable; set => Movement.ChargeAvailable = value; }
+        public bool Pursuing { get => Movement.Pursuing; set => Movement.Pursuing = value; }
+        public float DashSeconds { get => Movement.DashSeconds; set => Movement.DashSeconds = value; }
+        public float ChargeSpeedSeconds { get => Movement.ChargeSpeedSeconds; set => Movement.ChargeSpeedSeconds = value; }
+        public float SlowSeconds { get => Status.SlowSeconds; set => Status.SlowSeconds = value; }
+        public int ProjectileTargetUnitId { get => Combat.ProjectileTargetUnitId; set => Combat.ProjectileTargetUnitId = value; }
+        public int ProjectileTargetNodeId { get => Combat.ProjectileTargetNodeId; set => Combat.ProjectileTargetNodeId = value; }
+        public float ProjectileRemaining { get => Combat.ProjectileRemaining; set => Combat.ProjectileRemaining = value; }
+        public float ProjectileDamage { get => Combat.ProjectileDamage; set => Combat.ProjectileDamage = value; }
+        public Vector2 ProjectileOrigin { get => Combat.ProjectileOrigin; set => Combat.ProjectileOrigin = value; }
+        public Vector2 ProjectilePoint { get => Combat.ProjectilePoint; set => Combat.ProjectilePoint = value; }
+
+        public CombatUnit()
+        {
+            Movement = AddComponent(new BattleUnitMovementComponent());
+            Status = AddComponent(new BattleUnitStatusComponent());
+            Combat = AddComponent(new BattleUnitCombatComponent());
+        }
 
         public bool IsDead => Hp <= 0f;
         public float HpRatio => MaxHp <= 0f ? 0f : Hp / MaxHp;
     }
 
     /// <summary>由同类士兵组成的部队，负责承载编队、移动、归属和成长状态。</summary>
-    public sealed class Squad
+    public sealed class Squad : BattleEntity
     {
+        public BattleSquadMovementComponent Movement { get; }
         public int Id;
         public PlayerState Owner;
         public GameConfig.takeover.Unit Def;
@@ -203,17 +232,22 @@ namespace GameLogic.Takeover
         public UnitCombatProfile Profile;
         public float Xp;
         public int LevelIndex;
-        public MapNode HomeNode;
-        public MapNode AtNode;
-        public MapNode TargetNode;
-        public Vector2 TargetPosition;
-        public Vector2 FormationCenter;
-        public List<Vector2> Path;
-        public int PathIndex;
-        public bool HasMoveOrder;
-        public float MoveDelaySeconds;
+        public MapNode HomeNode { get => Movement.HomeNode; set => Movement.HomeNode = value; }
+        public MapNode AtNode { get => Movement.AtNode; set => Movement.AtNode = value; }
+        public MapNode TargetNode { get => Movement.TargetNode; set => Movement.TargetNode = value; }
+        public Vector2 TargetPosition { get => Movement.TargetPosition; set => Movement.TargetPosition = value; }
+        public Vector2 FormationCenter { get => Movement.FormationCenter; set => Movement.FormationCenter = value; }
+        public List<Vector2> Path { get => Movement.Path; set => Movement.Path = value; }
+        public int PathIndex { get => Movement.PathIndex; set => Movement.PathIndex = value; }
+        public bool HasMoveOrder { get => Movement.HasMoveOrder; set => Movement.HasMoveOrder = value; }
+        public float MoveDelaySeconds { get => Movement.MoveDelaySeconds; set => Movement.MoveDelaySeconds = value; }
         public bool IsGarrison => HomeNode?.Building != null && HomeNode.Building.Owner == Faction;
         public readonly List<CombatUnit> Units = new List<CombatUnit>();
+
+        public Squad()
+        {
+            Movement = AddComponent(new BattleSquadMovementComponent());
+        }
 
         public Faction Faction => Owner.Faction;
         public int MaxSoldiers => Units.Count;
@@ -259,8 +293,9 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>战斗参与方的资源、阵营、领地、部队和战斗加成状态。</summary>
-    public sealed class PlayerState
+    public sealed class PlayerState : BattleEntity
     {
+        public BattlePlayerEconomyComponent Economy { get; }
         public int Id;
         public string Name;
         public Faction Faction;
@@ -270,14 +305,19 @@ namespace GameLogic.Takeover
         public bool AiControlled;
         public bool SpellsEnabled = true;
         public int UnitTypeLimit = 4;
-        public float Gold;
-        public float Mana;
-        public float Ultimate;
-        public float UltimateMax = 200f;
-        public float SpellCooldown;
+        public float Gold { get => Economy.Gold; set => Economy.Gold = value; }
+        public float Mana { get => Economy.Mana; set => Economy.Mana = value; }
+        public float Ultimate { get => Economy.Ultimate; set => Economy.Ultimate = value; }
+        public float UltimateMax { get => Economy.UltimateMax; set => Economy.UltimateMax = value; }
+        public float SpellCooldown { get => Economy.SpellCooldown; set => Economy.SpellCooldown = value; }
         public readonly int[] Mods = new int[45];
         public readonly List<MapNode> OwnedNodes = new List<MapNode>();
         public readonly List<Squad> Squads = new List<Squad>();
+
+        public PlayerState()
+        {
+            Economy = AddComponent(new BattlePlayerEconomyComponent());
+        }
 
         public float ModMul(int id) => (100 + Mods[Mathf.Clamp(id, 0, Mods.Length - 1)]) / 100f;
 
@@ -321,17 +361,23 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>战场上持续生效的法术实例及其范围、剩余时间和触发状态。</summary>
-    public sealed class ActiveSpellEffect
+    public sealed class ActiveSpellEffect : BattleEntity
     {
-        public GameConfig.takeover.Spell Def;
-        public PlayerState Owner;
-        public Faction Faction;
-        public Vector2 Center;
-        public float Remaining;
-        public float TickTimer;
-        public SpellEffectKind Kind;
-        public int RandomSeed;
-        public int ImpactIndex;
+        public BattleSpellEffectComponent Runtime { get; }
+        public GameConfig.takeover.Spell Def { get => Runtime.Def; set => Runtime.Def = value; }
+        public PlayerState Owner { get => Runtime.Owner; set => Runtime.Owner = value; }
+        public Faction Faction { get => Runtime.Faction; set => Runtime.Faction = value; }
+        public Vector2 Center { get => Runtime.Center; set => Runtime.Center = value; }
+        public float Remaining { get => Runtime.Remaining; set => Runtime.Remaining = value; }
+        public float TickTimer { get => Runtime.TickTimer; set => Runtime.TickTimer = value; }
+        public SpellEffectKind Kind { get => Runtime.Kind; set => Runtime.Kind = value; }
+        public int RandomSeed { get => Runtime.RandomSeed; set => Runtime.RandomSeed = value; }
+        public int ImpactIndex { get => Runtime.ImpactIndex; set => Runtime.ImpactIndex = value; }
+
+        public ActiveSpellEffect()
+        {
+            Runtime = AddComponent(new BattleSpellEffectComponent());
+        }
     }
 
     /// <summary>关卡中敌方参与者的阵营、初始资源、AI 开关和修正项配置。</summary>

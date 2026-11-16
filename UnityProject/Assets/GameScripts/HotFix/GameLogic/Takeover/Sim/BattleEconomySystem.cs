@@ -115,11 +115,13 @@ namespace GameLogic.Takeover
                 unit.Hp = unit.MaxHp;
                 unit.MoraleCurrent = unit.MoraleBase;
                 squad.Units.Add(unit);
+                Sim.AddEntity(BattleEntityType.Unit, unit);
             }
             squad.LevelIndex = LevelForXp(squad.Xp);
             ApplyLevel(squad);
             owner.Squads.Add(squad);
             Squads.Add(squad);
+            Sim.AddEntity(BattleEntityType.Squad, squad);
             _events.Add(new BattleEvent
             {
                 Kind = "SquadSpawned",

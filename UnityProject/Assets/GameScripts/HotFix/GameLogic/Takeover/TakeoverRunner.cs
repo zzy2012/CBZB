@@ -102,6 +102,8 @@ namespace GameLogic.Takeover
             ClearBuildingBadges();
             ClearSpellFx();
             CancelVisualBinding();
+            _sim?.Dispose();
+            _sim = null;
             if (_clickableAreaMaterial != null)
             {
                 Destroy(_clickableAreaMaterial);
@@ -177,6 +179,7 @@ namespace GameLogic.Takeover
             }
 
             // 已购教令在进关时换算成修正器数组交给模拟器（建筑 HP 在建图时按 mods 缩放）
+            _sim?.Dispose();
             _sim = new BattleSimulation(LevelAssetId, HumanFaction, EnemyFaction, Campaign.BuildHumanMods());
             PlayMusic("takeover_sfx_2910_musicGameplayClass_musicGameplayClass");
             BuildSelectionVisuals();

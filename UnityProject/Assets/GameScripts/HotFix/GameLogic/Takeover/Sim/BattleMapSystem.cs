@@ -45,6 +45,7 @@ namespace GameLogic.Takeover
                     }
                 }
                 Nodes.Add(node);
+                Sim.AddEntity(BattleEntityType.MapNode, node);
                 NodeByKey[node.Key] = node;
             }
 
@@ -82,6 +83,7 @@ namespace GameLogic.Takeover
                 AiEnabled = false,
             };
             Players.Add(player);
+            Sim.AddEntity(BattleEntityType.Player, player);
             return player;
         }
 

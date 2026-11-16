@@ -288,11 +288,13 @@ namespace GameLogic.Takeover
     /// </summary>
     public sealed class BattleSimulation
     {
-        public const float FixedStep = 1f / 30f;
+        public const float FixedStep = BattleManager.FixedStep;
         private readonly Queue<BattleCommand> _commands = new Queue<BattleCommand>();
-        private float _accumulator;
+        private readonly BattleManager _battleManager = new BattleManager();
+        private readonly Action _beforeFixedStep;
 
         public BattleSim State { get; }
+        public TakeoverBattle Battle { get; }
         public IReadOnlyList<MapNode> Nodes => State.Nodes;
         public IReadOnlyList<Squad> Squads => State.Squads;
         public IReadOnlyList<PlayerState> Players => State.Players;
@@ -307,7 +309,10 @@ namespace GameLogic.Takeover
         public BattleSimulation(int levelAssetId, Faction humanFaction, Faction enemyFaction,
             int[] humanMods = null, int seed = 20120920)
         {
+            _beforeFixedStep = ExecuteQueuedCommands;
             State = new BattleSim(levelAssetId, humanFaction, enemyFaction, humanMods, seed);
+            Battle = new TakeoverBattle(State);
+            _battleManager.CreateBattle(Battle);
         }
 
         public void Enqueue(BattleCommand command) => _commands.Enqueue(command);
@@ -321,34 +326,16 @@ namespace GameLogic.Takeover
 
         public bool ExecuteNow(BattleCommand command) => State.ExecuteCommand(State.Human, command);
 
-        /// <summary>单次 Tick 允许推进的最大模拟时间（秒）：只防卡死，不再限制倍速。</summary>
-        private const float MaxTickSeconds = 40f;
+        public void Tick(float realDeltaSeconds) => _battleManager.Update(realDeltaSeconds, _beforeFixedStep);
 
-        /// <summary>单次 Tick 的硬步数上限，防止极端卡顿后一次跑几千步卡住主线程。</summary>
-        private const int MaxStepsPerTick = 1500;
-
-        public void Tick(float realDeltaSeconds)
+        private void ExecuteQueuedCommands()
         {
-            if (realDeltaSeconds <= 0f) return;
-            // 之前这里用 Mathf.Min(realDeltaSeconds, 0.25f) 和 guard < 20，
-            // 等于把倍速硬顶在 ~15 倍（0.25s × 帧率），所以 ×64 和 ×256 手感一样。
-            float budget = Mathf.Min(realDeltaSeconds, MaxTickSeconds);
-            _accumulator += budget;
-            int maxSteps = Mathf.Clamp(Mathf.CeilToInt(budget / FixedStep) + 2, 1, MaxStepsPerTick);
-            int guard = 0;
-            while (_accumulator >= FixedStep && guard++ < maxSteps)
-            {
-                while (_commands.Count > 0)
-                {
-                    State.ExecuteCommand(State.Human, _commands.Dequeue());
-                }
-                State.Tick(FixedStep);
-                _accumulator -= FixedStep;
-            }
-            // 撞到步数上限时丢掉积压，避免下一帧继续追赶
-            if (guard >= maxSteps) _accumulator = 0f;
+            while (_commands.Count > 0)
+                State.ExecuteCommand(State.Human, _commands.Dequeue());
         }
 
         public IReadOnlyList<BattleEvent> DrainEvents() => State.DrainEvents();
+
+        public void Dispose() => _battleManager.Dispose();
     }
 }

@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
     /// 对原版 1.0.4 首章战役进行确定性模拟。
     /// 不采用迁移阶段的临时逻辑；常量和状态变化根据反编译的关卡、部队、单位及法术代码还原。
     /// </summary>
-    public sealed class BattleSim
+    public sealed class BattleSim : TakeoverScene
     {
         public const float ManaCap = 500f;
         public const int AiBuyThreshold = OriginalRules.AiBuyThreshold;
@@ -119,6 +119,7 @@ namespace GameLogic.Takeover
                 AiEnabled = false,
             };
             Players.Add(Human);
+            AddEntity(BattleEntityType.Player, Human);
             ApplyModifiers(Human, humanMods);
             OriginalRules.ApplyBaselineEdicts(Human);
 
@@ -152,6 +153,7 @@ namespace GameLogic.Takeover
                 }
                 player.UltimateMax = 200f * player.ModMul(12);
                 Players.Add(player);
+                AddEntity(BattleEntityType.Player, player);
             }
 
             Human.UltimateMax = 200f * Human.ModMul(12);
@@ -186,6 +188,28 @@ namespace GameLogic.Takeover
                 TickLogicalSecond();
             }
             CheckEnd();
+            base.OnUpdate(dt);
+        }
+
+        public override void OnUpdate(float deltaSeconds) => Tick(deltaSeconds);
+
+        internal void AddSpellEffect(ActiveSpellEffect effect)
+        {
+            ActiveSpells.Add(effect);
+            AddEntity(BattleEntityType.SpellEffect, effect);
+        }
+
+        internal void RemoveSpellEffect(ActiveSpellEffect effect)
+        {
+            if (!ActiveSpells.Remove(effect)) return;
+            RemoveEntity(BattleEntityType.SpellEffect, effect);
+        }
+
+        internal void RemoveSquadEntities(Squad squad)
+        {
+            foreach (CombatUnit unit in squad.Units)
+                RemoveEntity(BattleEntityType.Unit, unit);
+            RemoveEntity(BattleEntityType.Squad, squad);
         }
 
         public bool ExecuteCommand(PlayerState player, BattleCommand command)
@@ -382,10 +406,7 @@ namespace GameLogic.Takeover
         {
             foreach (PlayerState player in Players)
             {
-                player.Gold += player.NetGoldIncome();
-                player.Mana = Mathf.Min(ManaCap, player.Mana + player.ManaIncome);
-                player.Ultimate = Mathf.Min(player.UltimateMax, player.Ultimate + player.UltimateRate);
-                player.SpellCooldown = Mathf.Max(0f, player.SpellCooldown - 1f);
+                player.Economy.AdvanceIncome(ManaCap);
                 // 人类玩家默认 AiEnabled = false，托管时要靠 AiControlled 单独放行
                 bool aiDriven = player.IsHuman ? player.AiControlled : player.AiEnabled;
                 if (aiDriven) _aiSystem.TickAiSecond(player);

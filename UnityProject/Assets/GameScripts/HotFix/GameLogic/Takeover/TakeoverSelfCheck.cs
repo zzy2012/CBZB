@@ -176,6 +176,7 @@ namespace GameLogic.Takeover
                       OriginalRules.FromConfigFaction(3) == Faction.Empire,
                     "配置阵营到原版阵营映射错误", failures);
                 CheckScenarioCombat(tables, failures);
+                CheckBattleArchitecture(failures);
 
                 var incomePlayer = new PlayerState { Faction = Faction.Westaria };
                 incomePlayer.OwnedNodes.Add(new MapNode
@@ -345,6 +346,44 @@ namespace GameLogic.Takeover
         private static void Check(bool condition, string message, ICollection<string> failures)
         {
             if (!condition) failures.Add(message);
+        }
+
+        private static void CheckBattleArchitecture(ICollection<string> failures)
+        {
+            var sim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 3601);
+            Check(sim.GetEntities(BattleEntityType.MapNode).Count == sim.Nodes.Count,
+                "战斗场景节点实体注册不完整", failures);
+            Check(sim.GetEntities(BattleEntityType.Player).Count == sim.Players.Count,
+                "战斗场景玩家实体注册不完整", failures);
+            Check(sim.GetEntities(BattleEntityType.Squad).Count == sim.Squads.Count &&
+                  sim.GetEntities(BattleEntityType.Unit).Count == sim.Squads.Sum(squad => squad.Units.Count),
+                "战斗场景部队/单位实体注册不完整", failures);
+            Check(sim.Nodes.All(node => node.Scene == sim && node.State.Entity == node &&
+                                        (node.Building == null || node.Building.Entity == node)),
+                "地图节点/建筑组件未绑定到战斗场景", failures);
+            Check(sim.Players.All(player => player.Scene == sim && player.Economy.Entity == player),
+                "玩家经济组件未绑定到战斗场景", failures);
+            Check(sim.Squads.SelectMany(squad => squad.Units).All(unit =>
+                    unit.Scene == sim && unit.Movement.Entity == unit &&
+                    unit.Status.Entity == unit && unit.Combat.Entity == unit),
+                "战斗单位组件未绑定到战斗场景", failures);
+
+            sim.Tick(BattleSimulation.FixedStep);
+            Check(sim.GetEntities(BattleEntityType.MapNode).All(entity => entity.IsInitialized),
+                "战斗场景未初始化已注册实体", failures);
+
+            var managed = new BattleSimulation(1, Faction.Westaria, Faction.Empire, null, 3602);
+            float initialGold = managed.Human.Gold;
+            managed.Enqueue(BattleCommand.GrantResources(100, 0));
+            managed.Tick(BattleSimulation.FixedStep * 0.6f);
+            Check(Mathf.Approximately(managed.Time, 0f) &&
+                  Mathf.Approximately(managed.Human.Gold, initialGold),
+                "BattleManager 在不足一个固定步长时提前推进", failures);
+            managed.Tick(BattleSimulation.FixedStep * 0.6f);
+            Check(Mathf.Approximately(managed.Time, BattleSimulation.FixedStep) &&
+                  Mathf.Approximately(managed.Human.Gold, initialGold + 100f),
+                "BattleManager 固定步长或命令队列推进错误", failures);
+            managed.Dispose();
         }
 
         /// <summary>教令树结构 + 修正器换算：27 条 × 3 档、同价、阵营分组、应用后数值正确。</summary>

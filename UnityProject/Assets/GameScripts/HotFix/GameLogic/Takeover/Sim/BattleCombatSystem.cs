@@ -101,32 +101,7 @@ namespace GameLogic.Takeover
 
         internal void TickUnitStatuses(CombatUnit unit, float dt)
         {
-            unit.FrozenSeconds = Mathf.Max(0f, unit.FrozenSeconds - dt);
-            unit.DashSeconds = Mathf.Max(0f, unit.DashSeconds - dt);
-            unit.ChargeSpeedSeconds = Mathf.Max(0f, unit.ChargeSpeedSeconds - dt);
-            unit.SlowSeconds = Mathf.Max(0f, unit.SlowSeconds - dt);
-            unit.DamageResistSeconds = Mathf.Max(0f, unit.DamageResistSeconds - dt);
-            unit.DamageBuffSeconds = Mathf.Max(0f, unit.DamageBuffSeconds - dt);
-            unit.MaxDamageSeconds = Mathf.Max(0f, unit.MaxDamageSeconds - dt);
-            unit.MagicImmunitySeconds = Mathf.Max(0f, unit.MagicImmunitySeconds - dt);
-            unit.HeroicSeconds = Mathf.Max(0f, unit.HeroicSeconds - dt);
-            unit.FearedSeconds = Mathf.Max(0f, unit.FearedSeconds - dt);
-            if (unit.HeroicSeconds > 0f) unit.MoraleState = MoraleState.Heroic;
-            else if (unit.FearedSeconds > 0f) unit.MoraleState = MoraleState.Feared;
-            else if (unit.MoraleCurrent <= unit.MoraleBase * 0.35f) unit.MoraleState = MoraleState.Low;
-            else if (unit.MoraleCurrent >= unit.MoraleBase * 0.65f) unit.MoraleState = MoraleState.High;
-            else unit.MoraleState = MoraleState.Neutral;
-
-            if (unit.PoisonSeconds > 0f)
-            {
-                unit.PoisonSeconds = Mathf.Max(0f, unit.PoisonSeconds - dt);
-                unit.PoisonTick -= dt;
-                if (unit.PoisonTick <= 0f)
-                {
-                    unit.PoisonTick = 3f;
-                    ApplyDamage(unit, unit.PoisonDamage, null, false);
-                }
-            }
+            unit.Status.Tick(dt, this);
         }
 
         internal void TickProjectile(CombatUnit unit, float dt)
@@ -170,11 +145,7 @@ namespace GameLogic.Takeover
 
         internal void AdvanceSquad(Squad squad, float dt)
         {
-            if (squad.MoveDelaySeconds > 0f)
-            {
-                squad.MoveDelaySeconds = Mathf.Max(0f, squad.MoveDelaySeconds - dt);
-                return;
-            }
+            if (squad.Movement.ConsumeMoveDelay(dt)) return;
             if (!squad.HasMoveOrder || squad.Path == null || squad.Path.Count == 0)
             {
                 RepairAtHome(squad, dt);
@@ -218,7 +189,7 @@ namespace GameLogic.Takeover
                 }
                 if (unit.DashSeconds > 0f) unitSpeed *= 15f;
                 if (unit.ChargeSpeedSeconds > 0f) unitSpeed *= 1.75f;
-                unit.Pos += unitDelta / unitDistance * Mathf.Min(unitDistance, unitSpeed * dt);
+                squad.Movement.MoveUnitToward(unit, desired, unitSpeed, dt);
                 unit.DashSeconds = Mathf.Max(0f, unit.DashSeconds - dt);
                 unit.ChargeSpeedSeconds = Mathf.Max(0f, unit.ChargeSpeedSeconds - dt);
                 if (Vector2.Distance(unit.Pos, desired) > 2f) formationArrived = false;
@@ -619,6 +590,7 @@ namespace GameLogic.Takeover
             }
             squad.Owner.Squads.Remove(squad);
             Squads.Remove(squad);
+            Sim.RemoveSquadEntities(squad);
             if (squad.Owner != null && squad.Owner.Mods[26] > 0)
                 squad.Owner.Ultimate = Mathf.Min(squad.Owner.UltimateMax,
                     squad.Owner.Ultimate + squad.Owner.UltimateMax * squad.Owner.Mods[26] / 100f);

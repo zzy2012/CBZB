@@ -14,8 +14,7 @@ namespace GameLogic.Takeover
             for (int i = ActiveSpells.Count - 1; i >= 0; i--)
             {
                 ActiveSpellEffect effect = ActiveSpells[i];
-                effect.Remaining -= dt;
-                effect.TickTimer -= dt;
+                effect.Runtime.Advance(dt);
 
                 if (effect.Kind == SpellEffectKind.Cataclysm)
                 {
@@ -32,7 +31,7 @@ namespace GameLogic.Takeover
                     effect.TickTimer += 0.5f;
                 }
 
-                if (effect.Remaining <= 0f) ActiveSpells.RemoveAt(i);
+                if (effect.Remaining <= 0f) Sim.RemoveSpellEffect(effect);
             }
         }
 
@@ -250,7 +249,7 @@ namespace GameLogic.Takeover
                 case 6:
                 case 10:
                 case 14:
-                    ActiveSpells.Add(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffect
                     {
                         Def = spell,
                         Owner = player,
@@ -269,7 +268,7 @@ namespace GameLogic.Takeover
                     SpawnSpecialUnit(player, "Avatar", position);
                     break;
                 case 4:
-                    ActiveSpells.Add(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffect
                     {
                         Def = spell,
                         Owner = player,
@@ -284,7 +283,7 @@ namespace GameLogic.Takeover
                     SpawnSpecialUnit(player, "Immortals", target?.Pos ?? position);
                     break;
                 case 7:
-                    ActiveSpells.Add(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffect
                     {
                         Def = spell,
                         Owner = player,
@@ -296,7 +295,7 @@ namespace GameLogic.Takeover
                     });
                     break;
                 case 8:
-                    ActiveSpells.Add(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffect
                     {
                         Def = spell,
                         Owner = player,
@@ -308,7 +307,7 @@ namespace GameLogic.Takeover
                     });
                     break;
                 case 9:
-                    ActiveSpells.Add(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffect
                     {
                         Def = spell,
                         Owner = player,
@@ -388,6 +387,7 @@ namespace GameLogic.Takeover
                 int xp = (int)source.Xp;
                 source.Owner.Squads.Remove(source);
                 Squads.Remove(source);
+                Sim.RemoveSquadEntities(source);
                 MapNode home = player.OwnedNodes.FirstOrDefault(node => node.Building != null);
                 Squad created = EconomySystem.SpawnSquad(player, undead, position, home, xp, false);
                 MapNode targetNode = MapSystem.FindNearestHostileNode(home ?? created.AtNode, player);
