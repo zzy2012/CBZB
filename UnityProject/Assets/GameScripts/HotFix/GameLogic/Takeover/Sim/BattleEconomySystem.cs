@@ -5,10 +5,13 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>处理资源、招募和建筑经济规则。</summary>
     internal sealed class BattleEconomySystem : BattleSimSystem
     {
+        /// <summary>创建并关联当前战斗模拟的经济系统。</summary>
         internal BattleEconomySystem(BattleSim sim) : base(sim) { }
 
+        /// <summary>按配置标识查找单位定义。</summary>
         internal GameConfig.takeover.Unit FindUnit(Faction faction, UnitKind kind, int tier)
         {
             int configFaction = OriginalRules.ToConfigFaction(faction);
@@ -17,15 +20,17 @@ namespace GameLogic.Takeover
                                                               unit.Tier == tier);
         }
 
-        internal bool TryBuildFirstType(PlayerState player, int buildingId)
+        /// <summary>尝试为参与方建造首个可用建筑类型。</summary>
+        internal bool TryBuildFirstType(PlayerStateEntity player, int buildingId)
         {
-            MapNode spot = Nodes.FirstOrDefault(node => node.Kind == NodeKind.BuildSpot &&
+            MapNodeEntity spot = Nodes.FirstOrDefault(node => node.Kind == NodeKind.BuildSpot &&
                                                         node.Building == null &&
                                                         IsLocControlled(player, node.Loc));
             return spot != null && TryBuild(player, spot, buildingId, out _);
         }
 
-        internal bool CanBuy(PlayerState player, GameConfig.takeover.Unit def, MapNode at, out string reason)
+        /// <summary>检查单位招募条件并返回失败原因。</summary>
+        internal bool CanBuy(PlayerStateEntity player, GameConfig.takeover.Unit def, MapNodeEntity at, out string reason)
         {
             reason = null;
             if (player == null || def == null || at?.Building == null) { reason = "无效招募目标"; return false; }
@@ -37,6 +42,7 @@ namespace GameLogic.Takeover
             return true;
         }
 
+        /// <summary>判断当前建筑是否允许招募指定单位。</summary>
         internal static bool AllowedAt(BuildingState building, GameConfig.takeover.Unit def)
         {
             if (building == null || def == null) return false;
@@ -44,7 +50,8 @@ namespace GameLogic.Takeover
             return buildingDef != null && buildingDef.AllowedTypes.Contains(def.UnitType) && def.Tier == 1;
         }
 
-        internal static bool AllowedAt(PlayerState player, BuildingState building, GameConfig.takeover.Unit def)
+        /// <summary>判断当前建筑是否允许招募指定单位。</summary>
+        internal static bool AllowedAt(PlayerStateEntity player, BuildingState building, GameConfig.takeover.Unit def)
         {
             if (building == null || def == null) return false;
             var buildingDef = Cfg.BuildingById(building.Kind);
@@ -55,12 +62,13 @@ namespace GameLogic.Takeover
             return def.Tier == selectedTier;
         }
 
-        internal Squad BuyUnit(PlayerState player, GameConfig.takeover.Unit def, MapNode at, out string reason)
+        /// <summary>扣除招募资源并创建指定单位部队。</summary>
+        internal SquadEntity BuyUnit(PlayerStateEntity player, GameConfig.takeover.Unit def, MapNodeEntity at, out string reason)
         {
             if (!CanBuy(player, def, at, out reason)) return null;
             player.Gold -= UnitCost(player, def);
             int initialXp = at.Building.Level == 0 ? 0 : at.Building.Level == 1 ? 25 : 100;
-            Squad squad = SpawnSquad(player, def, at.Pos, at, initialXp, true);
+            SquadEntity squad = SpawnSquad(player, def, at.Pos, at, initialXp, true);
             if (LevelAssetId == 1 && player.IsHuman && def.Name == "Guards" && !_tutorialGuardPurchased)
             {
                 _tutorialGuardPurchased = true;
@@ -70,21 +78,23 @@ namespace GameLogic.Takeover
             return squad;
         }
 
-        internal static int UnitCost(PlayerState player, GameConfig.takeover.Unit def)
+        /// <summary>计算考虑折扣修正后的单位招募费用。</summary>
+        internal static int UnitCost(PlayerStateEntity player, GameConfig.takeover.Unit def)
         {
             float multiplier = OriginalRules.UsesUndeadRecruitDiscount(def) ? player.ModMul(28) : 1f;
             return Mathf.RoundToInt(def.Cost * multiplier);
         }
 
-        internal Squad SpawnSquad(PlayerState owner, GameConfig.takeover.Unit def, Vector2 position,
-            MapNode home, int initialXp, bool checkSupply)
+        /// <summary>按单位定义在指定节点创建部队和士兵。</summary>
+        internal SquadEntity SpawnSquad(PlayerStateEntity owner, GameConfig.takeover.Unit def, Vector2 position,
+            MapNodeEntity home, int initialXp, bool checkSupply)
         {
             if (checkSupply && owner.FreeSupply < def.Upkeep) return null;
             AbilityMask abilities = OriginalRules.ParseAbilities(def.Abilities);
             int count = def.UnitsCount + ((abilities & AbilityMask.Undead) != 0 && def.Name == "Immortals"
                 ? owner.Mods[23]
                 : 0);
-            var squad = new Squad
+            var squad = new SquadEntity
             {
                 Id = Sim.AllocateSquadId(),
                 Owner = owner,
@@ -100,7 +110,7 @@ namespace GameLogic.Takeover
             for (int i = 0; i < count; i++)
             {
                 Vector2 spawnPosition = position + FormationOffset(i, count);
-                var unit = new CombatUnit
+                var unit = new CombatUnitEntity
                 {
                     Id = Sim.AllocateUnitId(),
                     Index = i,
@@ -133,7 +143,8 @@ namespace GameLogic.Takeover
             return squad;
         }
 
-        internal static float UnitHp(PlayerState player, GameConfig.takeover.Unit def)
+        /// <summary>计算单位当前等级下的生命值。</summary>
+        internal static float UnitHp(PlayerStateEntity player, GameConfig.takeover.Unit def)
         {
             float multiplier = 1f;
             if (def.UnitType == (int)UnitKind.Infantry) multiplier *= player.ModMul(16);
@@ -141,9 +152,10 @@ namespace GameLogic.Takeover
             return Mathf.Ceil(def.Hp * multiplier);
         }
 
-        internal static void ApplyLevel(Squad squad)
+        /// <summary>按部队等级更新士兵属性。</summary>
+        internal static void ApplyLevel(SquadEntity squad)
         {
-            foreach (CombatUnit unit in squad.Units)
+            foreach (CombatUnitEntity unit in squad.Units)
             {
                 float hpRatio = unit.MaxHp <= 0f ? 1f : unit.Hp / unit.MaxHp;
                 unit.MaxHp = Mathf.Ceil(unit.BaseMaxHp * (1f + squad.LevelIndex * 0.1f));
@@ -151,7 +163,8 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void AddSquadXp(Squad squad, float amount)
+        /// <summary>增加部队经验并应用升级效果。</summary>
+        internal void AddSquadXp(SquadEntity squad, float amount)
         {
             if (squad == null || squad.IsDead) return;
             squad.Xp += amount * squad.Owner.ModMul(37);
@@ -161,7 +174,8 @@ namespace GameLogic.Takeover
             ApplyLevel(squad);
         }
 
-        internal bool TryUpgrade(PlayerState player, MapNode at)
+        /// <summary>检查条件并尝试升级节点上的建筑。</summary>
+        internal bool TryUpgrade(PlayerStateEntity player, MapNodeEntity at)
         {
             if (at?.Building == null || at.Building.Owner != player.Faction || at.Building.Level >= BuildingState.MaxLevel)
                 return false;
@@ -177,7 +191,8 @@ namespace GameLogic.Takeover
             return true;
         }
 
-        internal bool CanPlace(PlayerState player, MapNode spot, int buildingId, out string reason)
+        /// <summary>检查建筑能否由参与方建造在指定节点。</summary>
+        internal bool CanPlace(PlayerStateEntity player, MapNodeEntity spot, int buildingId, out string reason)
         {
             reason = null;
             var def = Cfg.BuildingById(buildingId);
@@ -205,7 +220,8 @@ namespace GameLogic.Takeover
             return true;
         }
 
-        internal bool TryBuild(PlayerState player, MapNode spot, int buildingId, out string reason)
+        /// <summary>扣除资源并在指定节点建造建筑。</summary>
+        internal bool TryBuild(PlayerStateEntity player, MapNodeEntity spot, int buildingId, out string reason)
         {
             if (!CanPlace(player, spot, buildingId, out reason)) return false;
             var def = Cfg.BuildingById(buildingId);
@@ -228,6 +244,7 @@ namespace GameLogic.Takeover
             return true;
         }
 
+        /// <summary>获取指定政令修正项当前生效的等级值。</summary>
         internal static int TierModifier(int unitType)
         {
             switch ((UnitKind)unitType)

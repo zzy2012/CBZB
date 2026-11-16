@@ -8,9 +8,12 @@ namespace GameLogic.Takeover
     /// <summary>一个原版关卡或参与方修正项的索引和值。</summary>
     public readonly struct ModifierValue
     {
+        /// <summary>对象的标识。</summary>
         public readonly int Id;
+        /// <summary>事件或修正项对应的数值。</summary>
         public readonly int Value;
 
+        /// <summary>使用修正项标识和数值创建修正项。</summary>
         public ModifierValue(int id, int value)
         {
             Id = id;
@@ -24,16 +27,26 @@ namespace GameLogic.Takeover
     /// </summary>
     public static class OriginalRules
     {
+        /// <summary>还原规则所参考的原版版本。</summary>
         public const string SourceVersion = "4399 Takeover 1.0.4";
+        /// <summary>原版世界坐标的纵轴缩放系数。</summary>
         public const float WorldYScale = 2f;
+        /// <summary>原版舞台宽度。</summary>
         public const int NativeStageWidth = 800;
+        /// <summary>原版舞台高度。</summary>
         public const int NativeStageHeight = 600;
+        /// <summary>玩家的初始金币。</summary>
         public const int PlayerStartGold = 250;
+        /// <summary>玩家的初始魔法值。</summary>
         public const int PlayerStartMana = 100;
+        /// <summary>AI 购买单位时使用的资源阈值。</summary>
         public const int AiBuyThreshold = 180;
+        /// <summary>原版逻辑更新步长，单位为秒。</summary>
         public const float LogicStep = 1f / 30f;
+        /// <summary>AI 重新尝试施放法术的间隔，单位为秒。</summary>
         public const float SpellRetrySeconds = 2f;
 
+        /// <summary>按关卡索引的原版敌方参与方及修正项配置。</summary>
         private static readonly IReadOnlyDictionary<int, EnemyPlayerSetup[]> EnemyPlayersByLevel =
             new Dictionary<int, EnemyPlayerSetup[]>
             {
@@ -52,11 +65,13 @@ namespace GameLogic.Takeover
                     (25, 1), (4, 1), (3, 1), (1, 1))),
             };
 
+        /// <summary>获取指定关卡的敌方修正项。</summary>
         public static IReadOnlyList<ModifierValue> EnemyModifiers(int levelId)
         {
             return EnemyPlayers(levelId).SelectMany(player => player.Modifiers.Select(value => value)).ToArray();
         }
 
+        /// <summary>获取指定关卡的敌方参与方配置。</summary>
         public static IReadOnlyList<EnemyPlayerSetup> EnemyPlayers(int levelId)
         {
             return EnemyPlayersByLevel.TryGetValue(levelId, out var values)
@@ -77,6 +92,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>将运行时阵营转换为配置表中的阵营值。</summary>
         public static int ToConfigFaction(Faction value)
         {
             switch (value)
@@ -89,6 +105,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>解析单位配置中的能力字符串并生成能力标记。</summary>
         public static AbilityMask ParseAbilities(string abilities)
         {
             AbilityMask result = AbilityMask.None;
@@ -120,6 +137,7 @@ namespace GameLogic.Takeover
             return result;
         }
 
+        /// <summary>根据单位配置获取战斗表现和能力参数。</summary>
         public static UnitCombatProfile UnitProfile(GameConfig.takeover.Unit def)
         {
             var profile = new UnitCombatProfile
@@ -182,10 +200,12 @@ namespace GameLogic.Takeover
             return profile;
         }
 
+        /// <summary>判断指定单位是否使用亡灵招募折扣。</summary>
         public static bool UsesUndeadRecruitDiscount(GameConfig.takeover.Unit def) =>
             def != null && (def.Name == "Immortals" || def.Name == "Ancient Raiders");
 
-        public static void ApplyBaselineEdicts(PlayerState player)
+        /// <summary>为参与方应用原版基础政令修正。</summary>
+        public static void ApplyBaselineEdicts(PlayerStateEntity player)
         {
             switch (player.Faction)
             {
@@ -195,7 +215,8 @@ namespace GameLogic.Takeover
             }
         }
 
-        public static bool IsSpellUnlocked(PlayerState player, int spellId)
+        /// <summary>判断参与方是否解锁指定法术。</summary>
+        public static bool IsSpellUnlocked(PlayerStateEntity player, int spellId)
         {
             if (player == null || !player.SpellsEnabled) return false;
             spellId = OriginalSpellIndex(spellId);
@@ -255,11 +276,13 @@ namespace GameLogic.Takeover
             return false;
         }
 
+        /// <summary>创建关卡敌方参与方配置集合。</summary>
         private static EnemyPlayerSetup[] E(params EnemyPlayerSetup[] values)
         {
             return values;
         }
 
+        /// <summary>创建指定阵营及初始修正项的敌方参与方配置。</summary>
         private static EnemyPlayerSetup P(Faction faction, int gold, int mana,
             params (int id, int value)[] mods)
         {

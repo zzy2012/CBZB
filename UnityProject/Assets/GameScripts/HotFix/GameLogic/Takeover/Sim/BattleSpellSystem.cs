@@ -5,15 +5,18 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>处理法术施放和持续效果。</summary>
     internal sealed class BattleSpellSystem : BattleSimSystem
     {
+        /// <summary>创建并关联当前战斗模拟的法术系统。</summary>
         internal BattleSpellSystem(BattleSim sim) : base(sim) { }
 
+        /// <summary>推进持续法术效果并处理到期移除。</summary>
         internal void TickSpellEffects(float dt)
         {
             for (int i = ActiveSpells.Count - 1; i >= 0; i--)
             {
-                ActiveSpellEffect effect = ActiveSpells[i];
+                ActiveSpellEffectEntity effect = ActiveSpells[i];
                 effect.Runtime.Advance(dt);
 
                 if (effect.Kind == SpellEffectKind.Cataclysm)
@@ -35,17 +38,18 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void ApplySpellEffect(ActiveSpellEffect effect)
+        /// <summary>将指定法术效果应用到模拟中的目标。</summary>
+        internal void ApplySpellEffect(ActiveSpellEffectEntity effect)
         {
             float radiusSquared = effect.Def.Radius * effect.Def.Radius;
             switch (effect.Kind)
             {
                 case SpellEffectKind.Consecration:
                 case SpellEffectKind.Desecration:
-                    foreach (Squad squad in Squads.Where(value => !value.IsDead && value.Faction == effect.Faction))
+                    foreach (SquadEntity squad in Squads.Where(value => !value.IsDead && value.Faction == effect.Faction))
                     {
                         if (HasMechanism(squad)) continue;
-                        foreach (CombatUnit unit in squad.Units)
+                        foreach (CombatUnitEntity unit in squad.Units)
                         {
                             if (Vector2.SqrMagnitude(unit.Pos - effect.Center) > radiusSquared) continue;
                             if (unit.Hp <= 0f)
@@ -61,7 +65,7 @@ namespace GameLogic.Takeover
                     }
                     break;
                 case SpellEffectKind.Heroism:
-                    foreach (CombatUnit unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
+                    foreach (CombatUnitEntity unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
                     {
                         if (HasMoraleLock(unit.Squad)) continue;
                         unit.HeroicSeconds = Mathf.Max(unit.HeroicSeconds, 10f);
@@ -70,18 +74,18 @@ namespace GameLogic.Takeover
                     }
                     break;
                 case SpellEffectKind.Bloodlust:
-                    foreach (CombatUnit unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
+                    foreach (CombatUnitEntity unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
                     {
                         unit.DamageBuffSeconds = 0.75f;
                         unit.DamageBuffPercent = Mathf.Max(0f, (effect.Def.Power - 1f) * 100f);
                     }
                     break;
                 case SpellEffectKind.Liberation:
-                    foreach (CombatUnit unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
+                    foreach (CombatUnitEntity unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
                         unit.MagicImmunitySeconds = 0.75f;
                     break;
                 case SpellEffectKind.FrostEnchantment:
-                    foreach (CombatUnit unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
+                    foreach (CombatUnitEntity unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
                     {
                         unit.MaxDamageSeconds = 0.75f;
                         unit.DamageResistSeconds = 0.75f;
@@ -91,7 +95,7 @@ namespace GameLogic.Takeover
                 case SpellEffectKind.Stoneworms:
                 case SpellEffectKind.IceBlast:
                     if (effect.ImpactIndex++ > 0) break;
-                    foreach (CombatUnit unit in HostileUnits(effect.Faction, effect.Center, radiusSquared, false))
+                    foreach (CombatUnitEntity unit in HostileUnits(effect.Faction, effect.Center, radiusSquared, false))
                     {
                         if (effect.Kind == SpellEffectKind.IceBlast)
                         {
@@ -106,18 +110,19 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void TickCataclysmImpact(ActiveSpellEffect effect)
+        /// <summary>推进 Cataclysm 的延迟冲击并结算命中。</summary>
+        internal void TickCataclysmImpact(ActiveSpellEffectEntity effect)
         {
             Vector2 point = new Vector2((float)_rng.NextDouble() * OriginalRules.NativeStageWidth,
                 (float)_rng.NextDouble() * OriginalRules.NativeStageHeight * OriginalRules.WorldYScale);
             float damage = 4f + (float)_rng.NextDouble() * 4f;
-            foreach (CombatUnit unit in Squads.SelectMany(squad => squad.Units).Where(unit => !unit.IsDead).ToList())
+            foreach (CombatUnitEntity unit in Squads.SelectMany(squad => squad.Units).Where(unit => !unit.IsDead).ToList())
             {
                 if (Vector2.Distance(unit.Pos, point) > effect.Def.Radius) continue;
                 float applied = unit.Squad.Faction == effect.Faction ? damage * 0.5f : damage;
                 CombatSystem.ApplyDamage(unit, applied, effect.Owner?.Squads.FirstOrDefault(), true);
             }
-            foreach (MapNode node in Nodes.Where(value => value.Building != null && value.Building.Hp > 0))
+            foreach (MapNodeEntity node in Nodes.Where(value => value.Building != null && value.Building.Hp > 0))
             {
                 if (Vector2.Distance(node.Pos, point) <= effect.Def.Radius)
                     CombatSystem.ApplyBuildingDamage(node.Building, damage * 0.5f, effect.Owner?.Squads.FirstOrDefault());
@@ -132,14 +137,16 @@ namespace GameLogic.Takeover
             });
         }
 
-        internal IEnumerable<CombatUnit> AlliedUnits(Faction faction, Vector2 center, float radiusSquared)
+        /// <summary>获取指定参与方控制的存活士兵。</summary>
+        internal IEnumerable<CombatUnitEntity> AlliedUnits(Faction faction, Vector2 center, float radiusSquared)
         {
             return Squads.Where(squad => !squad.IsDead && squad.Faction == faction)
                 .SelectMany(squad => squad.Units)
                 .Where(unit => !unit.IsDead && Vector2.SqrMagnitude(unit.Pos - center) <= radiusSquared);
         }
 
-        internal IEnumerable<CombatUnit> HostileUnits(Faction faction, Vector2 center, float radiusSquared, bool excludeBandits)
+        /// <summary>获取与指定参与方敌对的存活士兵。</summary>
+        internal IEnumerable<CombatUnitEntity> HostileUnits(Faction faction, Vector2 center, float radiusSquared, bool excludeBandits)
         {
             return Squads.Where(squad => !squad.IsDead && squad.Faction != faction &&
                                          (!excludeBandits || squad.Faction != Faction.Bandits))
@@ -147,14 +154,16 @@ namespace GameLogic.Takeover
                 .Where(unit => !unit.IsDead && Vector2.SqrMagnitude(unit.Pos - center) <= radiusSquared);
         }
 
-        internal bool TryCastSpell(PlayerState player, GameConfig.takeover.Spell spell,
-            MapNode target, out string reason)
+        /// <summary>检查条件并尝试对指定目标施放法术。</summary>
+        internal bool TryCastSpell(PlayerStateEntity player, GameConfig.takeover.Spell spell,
+            MapNodeEntity target, out string reason)
         {
             return TryCastSpell(player, spell, target?.Pos ?? Vector2.zero, target, out reason);
         }
 
-        internal bool TryCastSpell(PlayerState player, GameConfig.takeover.Spell spell,
-            Vector2 position, MapNode target, out string reason)
+        /// <summary>检查条件并尝试对指定目标施放法术。</summary>
+        internal bool TryCastSpell(PlayerStateEntity player, GameConfig.takeover.Spell spell,
+            Vector2 position, MapNodeEntity target, out string reason)
         {
             reason = null;
             if (player == null || spell == null) { reason = "无效法术"; return false; }
@@ -230,13 +239,14 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void CastSpellEffect(PlayerState player, GameConfig.takeover.Spell spell, Vector2 position, MapNode target)
+        /// <summary>创建法术运行时效果并执行即时影响。</summary>
+        internal void CastSpellEffect(PlayerStateEntity player, GameConfig.takeover.Spell spell, Vector2 position, MapNodeEntity target)
         {
             int originalId = OriginalRules.OriginalSpellIndex(spell.Id);
             switch (originalId)
             {
                 case 0:
-                    foreach (CombatUnit unit in HostileUnits(player.Faction, position,
+                    foreach (CombatUnitEntity unit in HostileUnits(player.Faction, position,
                                  spell.Radius * spell.Radius, false))
                     {
                         float percent = spell.Power * 0.5f + (float)_rng.NextDouble() * spell.Power * 0.5f;
@@ -249,7 +259,7 @@ namespace GameLogic.Takeover
                 case 6:
                 case 10:
                 case 14:
-                    Sim.AddSpellEffect(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffectEntity
                     {
                         Def = spell,
                         Owner = player,
@@ -268,7 +278,7 @@ namespace GameLogic.Takeover
                     SpawnSpecialUnit(player, "Avatar", position);
                     break;
                 case 4:
-                    Sim.AddSpellEffect(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffectEntity
                     {
                         Def = spell,
                         Owner = player,
@@ -283,7 +293,7 @@ namespace GameLogic.Takeover
                     SpawnSpecialUnit(player, "Immortals", target?.Pos ?? position);
                     break;
                 case 7:
-                    Sim.AddSpellEffect(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffectEntity
                     {
                         Def = spell,
                         Owner = player,
@@ -295,7 +305,7 @@ namespace GameLogic.Takeover
                     });
                     break;
                 case 8:
-                    Sim.AddSpellEffect(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffectEntity
                     {
                         Def = spell,
                         Owner = player,
@@ -307,7 +317,7 @@ namespace GameLogic.Takeover
                     });
                     break;
                 case 9:
-                    Sim.AddSpellEffect(new ActiveSpellEffect
+                    Sim.AddSpellEffect(new ActiveSpellEffectEntity
                     {
                         Def = spell,
                         Owner = player,
@@ -323,7 +333,7 @@ namespace GameLogic.Takeover
                     ApplyGrandTransformation(player);
                     break;
                 case 12:
-                    foreach (CombatUnit unit in HostileUnits(player.Faction, position,
+                    foreach (CombatUnitEntity unit in HostileUnits(player.Faction, position,
                                  spell.Radius * spell.Radius, true))
                     {
                         if (unit.MagicImmunitySeconds > 0f || HasFearLock(unit.Squad)) continue;
@@ -342,21 +352,23 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void SpawnSpecialUnit(PlayerState player, string unitName, Vector2 position)
+        /// <summary>在指定位置创建法术召唤的特殊单位。</summary>
+        internal void SpawnSpecialUnit(PlayerStateEntity player, string unitName, Vector2 position)
         {
             GameConfig.takeover.Unit def = Cfg.TbUnit.DataList.FirstOrDefault(unit =>
                 unit.Name == unitName && OriginalRules.FromConfigFaction(unit.Faction) == player.Faction);
             if (def == null && unitName == "Avatar")
                 def = Cfg.TbUnit.DataList.FirstOrDefault(unit => unit.Name == "Avatar");
             if (def == null) return;
-            MapNode node = MapSystem.NearestKeyNode(position);
+            MapNodeEntity node = MapSystem.NearestKeyNode(position);
             EconomySystem.SpawnSquad(player, def, position, node, 0, false);
         }
 
-        internal void ApplyGrandTransformation(PlayerState player)
+        /// <summary>对目标部队应用 Grand Transformation 效果。</summary>
+        internal void ApplyGrandTransformation(PlayerStateEntity player)
         {
             bool kill = true;
-            foreach (CombatUnit unit in Squads.Where(squad => squad.Faction != player.Faction &&
+            foreach (CombatUnitEntity unit in Squads.Where(squad => squad.Faction != player.Faction &&
                                                               squad.Faction != Faction.Bandits)
                          .SelectMany(squad => squad.Units).ToList())
             {
@@ -369,15 +381,16 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void CallToTheGrave(PlayerState player)
+        /// <summary>执行 Call to the Grave 法术的单位复活效果。</summary>
+        internal void CallToTheGrave(PlayerStateEntity player)
         {
-            List<Squad> candidates = Squads.Where(squad => !squad.IsDead &&
+            List<SquadEntity> candidates = Squads.Where(squad => !squad.IsDead &&
                                                            squad.Faction != player.Faction &&
                                                            squad.Faction != Faction.Bandits)
                 .ToList();
             for (int i = 0; i < 2 && candidates.Count > 0; i++)
             {
-                Squad source = candidates[_rng.Next(candidates.Count)];
+                SquadEntity source = candidates[_rng.Next(candidates.Count)];
                 int tier = Mathf.Clamp(1 + player.Mods[BattleEconomySystem.TierModifier(source.Def.UnitType)], 1, 3);
                 GameConfig.takeover.Unit undead = Cfg.TbUnit.DataList.FirstOrDefault(unit =>
                     OriginalRules.FromConfigFaction(unit.Faction) == player.Faction &&
@@ -388,15 +401,16 @@ namespace GameLogic.Takeover
                 source.Owner.Squads.Remove(source);
                 Squads.Remove(source);
                 Sim.RemoveSquadEntities(source);
-                MapNode home = player.OwnedNodes.FirstOrDefault(node => node.Building != null);
-                Squad created = EconomySystem.SpawnSquad(player, undead, position, home, xp, false);
-                MapNode targetNode = MapSystem.FindNearestHostileNode(home ?? created.AtNode, player);
+                MapNodeEntity home = player.OwnedNodes.FirstOrDefault(node => node.Building != null);
+                SquadEntity created = EconomySystem.SpawnSquad(player, undead, position, home, xp, false);
+                MapNodeEntity targetNode = MapSystem.FindNearestHostileNode(home ?? created.AtNode, player);
                 if (targetNode != null) MapSystem.OrderMove(created, targetNode.Pos, targetNode);
                 candidates.Remove(source);
             }
         }
 
-        internal List<GameConfig.takeover.Spell> AvailableSpells(PlayerState player)
+        /// <summary>获取参与方当前满足解锁条件的法术。</summary>
+        internal List<GameConfig.takeover.Spell> AvailableSpells(PlayerStateEntity player)
         {
             return Cfg.TbSpell.DataList
                 .Where(spell => OriginalRules.FromConfigFaction(spell.Faction) == player.Faction)

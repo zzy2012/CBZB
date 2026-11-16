@@ -7,6 +7,7 @@ namespace GameLogic.Takeover
     /// </summary>
     public static class TakeoverCoordinates
     {
+        /// <summary>将逻辑坐标转换为显示坐标。</summary>
         public static Vector2 LogicalToDisplay(Vector2 logical)
         {
             return new Vector2(
@@ -14,6 +15,7 @@ namespace GameLogic.Takeover
                 OriginalRules.NativeStageHeight - logical.y / OriginalRules.WorldYScale);
         }
 
+        /// <summary>将逻辑坐标转换为地图像素坐标。</summary>
         public static Vector2 LogicalToMapPixel(Vector2 logical)
         {
             return new Vector2(logical.x, logical.y / OriginalRules.WorldYScale);

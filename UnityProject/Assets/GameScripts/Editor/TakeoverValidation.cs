@@ -360,6 +360,7 @@ public static class TakeoverValidation
         else
             prefabs[UiPrefabs[4]] = actionButtonPrefab;
 
+        CheckUiLayout1920x1080(prefabs, failures);
         CheckChildPaths(prefabs, UiPrefabs[0], LevelSelectPaths, failures);
         CheckChildPaths(prefabs, UiPrefabs[1], BattleHudPaths, failures);
         CheckChildPaths(prefabs, UiPrefabs[2], ResultPaths, failures);
@@ -535,6 +536,72 @@ public static class TakeoverValidation
         {
             CheckComponent<Button>(actionButton, string.Empty, UiPrefabs[4], failures);
             CheckComponent<Text>(actionButton, "m_text_Label", UiPrefabs[4], failures);
+        }
+    }
+
+    private static void CheckUiLayout1920x1080(
+        System.Collections.Generic.IReadOnlyDictionary<string, GameObject> prefabs,
+        System.Collections.Generic.ICollection<string> failures)
+    {
+        const string rootPath = "Assets/TEngine/Settings/Prefab/UIRoot.prefab";
+        GameObject root = AssetDatabase.LoadAssetAtPath<GameObject>(rootPath);
+        CanvasScaler scaler = root != null ? root.GetComponentInChildren<CanvasScaler>() : null;
+        if (scaler == null ||
+            scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize ||
+            scaler.screenMatchMode != CanvasScaler.ScreenMatchMode.Expand ||
+            scaler.referenceResolution != new Vector2(800f, 600f))
+        {
+            failures.Add("UIRoot CanvasScaler 未配置为 800x600 Expand");
+            return;
+        }
+
+        if (!prefabs.TryGetValue(UiPrefabs[0], out GameObject levelSelect)) return;
+        const float screenWidth = 1920f;
+        const float screenHeight = 1080f;
+        float scale = Mathf.Min(screenWidth / scaler.referenceResolution.x,
+            screenHeight / scaler.referenceResolution.y);
+        var host = new GameObject("UiLayoutValidation", typeof(RectTransform));
+        host.SetActive(false);
+        try
+        {
+            var hostRect = (RectTransform)host.transform;
+            hostRect.sizeDelta = new Vector2(screenWidth / scale, screenHeight / scale);
+            GameObject instance = UnityEngine.Object.Instantiate(levelSelect, hostRect, false);
+            string[] paths =
+            {
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_ResetSave",
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_ChapterPanel/m_btn_Edicts",
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_LevelDetails/m_btn_EdictClose",
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_LevelDetails/m_btn_Fight",
+                "m_rect_TakeoverRuntimeUI/m_item_LevelSelect/m_rect_EdictPanel/m_btn_EdictClose",
+            };
+            var corners = new Vector3[4];
+            Rect bounds = hostRect.rect;
+            foreach (string path in paths)
+            {
+                var button = instance.transform.Find(path) as RectTransform;
+                if (button == null)
+                {
+                    failures.Add($"UI 位置校验缺少节点: {path}");
+                    continue;
+                }
+
+                button.GetWorldCorners(corners);
+                foreach (Vector3 corner in corners)
+                {
+                    Vector3 point = hostRect.InverseTransformPoint(corner);
+                    if (point.x < bounds.xMin - 0.01f || point.x > bounds.xMax + 0.01f ||
+                        point.y < bounds.yMin - 0.01f || point.y > bounds.yMax + 0.01f)
+                    {
+                        failures.Add($"1920x1080 UI 控件超出屏幕: {path}");
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(host);
         }
     }
 

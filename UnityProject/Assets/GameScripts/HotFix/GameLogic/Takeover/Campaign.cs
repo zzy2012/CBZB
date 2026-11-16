@@ -8,15 +8,22 @@ namespace GameLogic.Takeover
     /// </summary>
     public static class Campaign
     {
+        /// <summary>第一章包含的关卡资源标识。</summary>
         public static readonly int[] ChapterOneLevels = { 1, 2, 3, 4, 5, 6, 7, 8 };
 
+        /// <summary>当前缓存的战役存档对象。</summary>
         private static CampaignSave _save;
 
+        /// <summary>当前战役存档数据，首次访问时加载。</summary>
         public static CampaignSave Data => _save ?? (_save = CampaignSaveService.Load());
+        /// <summary>已解锁的关卡标识集合。</summary>
         public static IReadOnlyList<int> Unlocked => Data.Unlocked;
+        /// <summary>累计经验值。</summary>
         public static int Xp => Data.Xp;
+        /// <summary>最近一次加载存档时产生的警告；无警告时为空。</summary>
         public static string LastLoadWarning => CampaignSaveService.LastLoadWarning;
 
+        /// <summary>根据通关耗时计算星级。</summary>
         public static int StarsFor(float seconds) => seconds < 330f ? 3 : seconds < 540f ? 2 : 1;
 
         /// <summary>首次通关奖励的教令点。</summary>
@@ -25,8 +32,10 @@ namespace GameLogic.Takeover
         /// <summary>首次三星额外奖励的教令点。</summary>
         public const int EdictPointsFirstThreeStars = 2;
 
+        /// <summary>可用于购买政令的点数。</summary>
         public static int EdictPoints => Data.EdictPoints;
 
+        /// <summary>获取指定政令当前已购买的等级。</summary>
         public static int EdictTier(int edictId)
         {
             Data.EnsureEdictTiers();
@@ -70,6 +79,7 @@ namespace GameLogic.Takeover
             return TakeoverEdicts.BuildMods(Data.EdictTiers);
         }
 
+        /// <summary>记录关卡完成结果并返回本次获得的经验值。</summary>
         public static int Complete(int assetId, float seconds, int xp)
         {
             if (assetId < 1 || assetId > 8) return 0;
@@ -103,8 +113,10 @@ namespace GameLogic.Takeover
             return awardedXp;
         }
 
+        /// <summary>判断指定关卡是否已解锁。</summary>
         public static bool IsUnlocked(int assetId) => assetId >= 1 && assetId <= 8 && Data.IsUnlocked(assetId);
 
+        /// <summary>获取指定关卡之后的关卡标识。</summary>
         public static int NextLevel(int assetId)
         {
             int index = System.Array.IndexOf(ChapterOneLevels, assetId);
@@ -113,8 +125,10 @@ namespace GameLogic.Takeover
                 : assetId;
         }
 
+        /// <summary>最近选择的关卡资源标识。</summary>
         public static int LastLevel => CampaignSaveService.LastLoadWarning == null ? Data.LastLevel : 1;
 
+        /// <summary>记录最近选择的关卡。</summary>
         public static void SetLastLevel(int assetId)
         {
             if (!IsUnlocked(assetId)) return;
@@ -122,8 +136,10 @@ namespace GameLogic.Takeover
             CampaignSaveService.Save(Data);
         }
 
+        /// <summary>获取指定关卡的战役记录。</summary>
         public static LevelRecord Record(int assetId) => Data.Record(assetId);
 
+        /// <summary>重置战役进度及存档。</summary>
         public static void Reset()
         {
             CampaignSaveService.Delete();

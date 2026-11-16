@@ -6,6 +6,7 @@ namespace GameLogic.Takeover
     /// <summary>由 FFDec 提取的 takeover.xml 中 Level1-8GraphMarkersClass 数据生成。</summary>
     public static class OriginalMapWaypoints
     {
+        /// <summary>按关卡及节点键保存的原版地图路径点。</summary>
         private static readonly Dictionary<string, Vector2[]> Entries =
             new Dictionary<string, Vector2[]>
             {
@@ -164,6 +165,7 @@ namespace GameLogic.Takeover
                 ["8:120:010"] = new[] { new Vector2(169f, 618.1f), new Vector2(171.5f, 576.1f), new Vector2(181f, 532.9f), new Vector2(196.5f, 496.6f) },
             };
 
+        /// <summary>获取指定关卡中两个节点之间的原版路径点。</summary>
         public static IReadOnlyList<Vector2> For(int level, string nodeA, string nodeB)
         {
             string key = level + ":" + nodeA + ":" + nodeB;

@@ -11,8 +11,11 @@ namespace GameLogic.Takeover
     /// </summary>
     public static class TakeoverEdicts
     {
+        /// <summary>每个阵营拥有的政令数量。</summary>
         public const int EdictsPerFaction = 9;
+        /// <summary>政令可达到的最高等级。</summary>
         public const int MaxTier = 3;
+        /// <summary>战斗修正项数组的长度。</summary>
         public const int ModCount = 45;
         /// <summary>教令总数（27 条 × 3 档 = 81 行配置）。</summary>
         public const int EdictCount = 27;
@@ -88,7 +91,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>把已购档位直接叠加到某个玩家的 Mods 上（用于存档回放/自检）。</summary>
-        public static void ApplyTo(PlayerState player, IReadOnlyList<int> tiers)
+        public static void ApplyTo(PlayerStateEntity player, IReadOnlyList<int> tiers)
         {
             if (player == null) return;
             int[] mods = BuildMods(tiers);

@@ -11,20 +11,32 @@ namespace GameLogic.Takeover
     /// </summary>
     public sealed class TakeoverEdictPanelWidget : TakeoverActionListWidget
     {
+        /// <summary>政令列表首行的纵向位置。</summary>
         private const float RowTop = 150f;
+        /// <summary>政令列表行之间的纵向间距。</summary>
         private const float RowSpacing = 36f;
+        /// <summary>政令列表行的界面尺寸。</summary>
         private static readonly Vector2 RowSize = new Vector2(490f, 34f);
 
+        /// <summary>政令面板中操作按钮的布局描述。</summary>
         private readonly List<TakeoverActionPlan> _plan = new List<TakeoverActionPlan>(TakeoverEdicts.EdictsPerFaction);
+        /// <summary>政令面板标题文本组件。</summary>
         private Text _title;
+        /// <summary>显示可用政令点数的文本组件。</summary>
         private Text _points;
+        /// <summary>显示政令购买提示的文本组件。</summary>
         private Text _hint;
+        /// <summary>显示政令选项的列表组件。</summary>
         private RectTransform _list;
+        /// <summary>关闭政令面板的按钮。</summary>
         private Button _close;
+        /// <summary>政令面板使用的字体。</summary>
         private Font _font;
 
+        /// <summary>政令操作按钮的父级变换。</summary>
         protected override Transform ActionButtonParent => _list != null ? _list : transform;
 
+        /// <summary>生成政令面板所需的界面组件。</summary>
         protected override void ScriptGenerator()
         {
             _title = Required<Text>("m_text_EdictTitle");
@@ -34,17 +46,20 @@ namespace GameLogic.Takeover
             _close = Required<Button>("m_btn_EdictClose");
         }
 
+        /// <summary>注册政令面板的按钮事件。</summary>
         protected override void RegisterEvent()
         {
             if (_close != null) _close.onClick.AddListener(() => SetVisible(false));
         }
 
+        /// <summary>设置政令面板使用的字体。</summary>
         public void SetFont(Font font)
         {
             _font = font;
             if (_font != null) TakeoverUIResources.ApplyFont(gameObject, _font);
         }
 
+        /// <summary>设置政令面板是否可见。</summary>
         public void SetVisible(bool visible)
         {
             if (gameObject.activeSelf != visible) gameObject.SetActive(visible);
@@ -99,6 +114,7 @@ namespace GameLogic.Takeover
             if (_font != null) TakeoverUIResources.ApplyFont(gameObject, _font);
         }
 
+        /// <summary>处理购买指定政令下一等级的操作。</summary>
         private void Buy(int edictId)
         {
             string error = Campaign.TryBuyEdict(edictId);
@@ -113,6 +129,7 @@ namespace GameLogic.Takeover
             Refresh();
         }
 
+        /// <summary>查找并返回指定的必需界面组件。</summary>
         private T Required<T>(string path) where T : Component
         {
             T component = FindChildComponent<T>(path);

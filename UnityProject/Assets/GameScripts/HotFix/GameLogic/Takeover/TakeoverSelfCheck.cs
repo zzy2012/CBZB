@@ -13,20 +13,33 @@ namespace GameLogic.Takeover
         /// <summary>记录单个章节关卡压力测试的战斗结果和边界状态。</summary>
         public sealed class ChapterScenarioResult
         {
+            /// <summary>关卡标识。</summary>
             public int LevelId;
+            /// <summary>战斗是否已经结束。</summary>
             public bool IsOver;
+            /// <summary>战斗是否由人类玩家获胜。</summary>
             public bool HumanVictory;
+            /// <summary>场景运行的时间，单位为秒。</summary>
             public float ElapsedSeconds;
+            /// <summary>人类玩家的部队数量。</summary>
             public int HumanSquads;
+            /// <summary>敌方部队数量。</summary>
             public int EnemySquads;
+            /// <summary>人类玩家部队的位置。</summary>
             public Vector2 HumanPosition;
+            /// <summary>敌方部队的位置。</summary>
             public Vector2 EnemyPosition;
+            /// <summary>人类玩家部队的生命值。</summary>
             public float HumanHp;
+            /// <summary>敌方部队的生命值。</summary>
             public float EnemyHp;
+            /// <summary>人类玩家部队是否正在移动。</summary>
             public bool HumanMoving;
+            /// <summary>检查时所有单位是否处于地图范围内。</summary>
             public bool UnitsInBounds;
         }
 
+        /// <summary>使用指定配置表运行战斗自检并返回检查结果。</summary>
         public static IReadOnlyList<string> Run(Tables tables)
         {
             var failures = new List<string>();
@@ -178,8 +191,8 @@ namespace GameLogic.Takeover
                 CheckScenarioCombat(tables, failures);
                 CheckBattleArchitecture(failures);
 
-                var incomePlayer = new PlayerState { Faction = Faction.Westaria };
-                incomePlayer.OwnedNodes.Add(new MapNode
+                var incomePlayer = new PlayerStateEntity { Faction = Faction.Westaria };
+                incomePlayer.OwnedNodes.Add(new MapNodeEntity
                 {
                     Building = new BuildingState { Owner = Faction.Westaria, Kind = 1, BaseHp = 500, Hp = 500, GoldPerSec = 100 },
                 });
@@ -282,7 +295,7 @@ namespace GameLogic.Takeover
                                 .FirstOrDefault();
                             if (target != null)
                             {
-                                foreach (Squad squad in sim.Human.Squads.Where(squad => !squad.IsDead && !squad.HasMoveOrder))
+                                foreach (SquadEntity squad in sim.Human.Squads.Where(squad => !squad.IsDead && !squad.HasMoveOrder))
                                     sim.OrderMove(squad, target);
                             }
                         }
@@ -319,6 +332,7 @@ namespace GameLogic.Takeover
             return results;
         }
 
+        /// <summary>执行自检场景中人类玩家的一步脚本操作。</summary>
         private static void ScriptPlayerStep(BattleSim sim)
         {
             if (sim.Human.FreeSupply <= 0 && sim.Human.Gold >= 150)
@@ -343,11 +357,13 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>记录一项自检条件及其失败信息。</summary>
         private static void Check(bool condition, string message, ICollection<string> failures)
         {
             if (!condition) failures.Add(message);
         }
 
+        /// <summary>检查战斗场景、实体和组件生命周期结构。</summary>
         private static void CheckBattleArchitecture(ICollection<string> failures)
         {
             var sim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 3601);
@@ -417,15 +433,16 @@ namespace GameLogic.Takeover
             Check(mods[5] == 0, "未购买 THE LORD'S CHURCH 时不应有 mods[5]", failures);
         }
 
-        private static Squad DummySquad(PlayerState player)
+        /// <summary>为自检场景创建测试用部队。</summary>
+        private static SquadEntity DummySquad(PlayerStateEntity player)
         {
-            var squad = new Squad
+            var squad = new SquadEntity
             {
                 Owner = player,
                 Def = Cfg.TbUnit.DataList[0],
                 Xp = 0f,
             };
-            squad.Units.Add(new CombatUnit
+            squad.Units.Add(new CombatUnitEntity
             {
                 Squad = squad,
                 Hp = 1f,
@@ -435,17 +452,18 @@ namespace GameLogic.Takeover
             return squad;
         }
 
+        /// <summary>检查法术命令和运行时效果是否正确执行。</summary>
         private static void CheckSpellExecution(Tables tables, ICollection<string> failures)
         {
             var sim = new BattleSim(8, Faction.Westaria, Faction.Empire, null, 9091);
-            MapNode target = sim.Nodes.First(node => node.Building != null);
+            MapNodeEntity target = sim.Nodes.First(node => node.Building != null);
             foreach (GameConfig.takeover.Spell spell in tables.TbSpell.DataList.OrderBy(value => value.Id))
             {
                 Faction faction = OriginalRules.FromConfigFaction(spell.Faction);
-                PlayerState player = sim.Players.FirstOrDefault(value => value.Faction == faction);
+                PlayerStateEntity player = sim.Players.FirstOrDefault(value => value.Faction == faction);
                 if (player == null)
                 {
-                    player = new PlayerState
+                    player = new PlayerStateEntity
                     {
                         Id = sim.Players.Count,
                         Name = "spell-test",
@@ -480,6 +498,7 @@ namespace GameLogic.Takeover
             for (int i = 0; i < 240; i++) sim.Tick(OriginalRules.LogicStep);
         }
 
+        /// <summary>运行指定关卡的移动调试场景并返回诊断文本。</summary>
         public static string DebugMovement(Tables tables, int levelId = 1, float seconds = 30f)
         {
             Cfg.InstallValidationTables(tables);
@@ -487,11 +506,11 @@ namespace GameLogic.Takeover
             {
                 var sim = new BattleSim(levelId, Faction.Westaria,
                     OriginalRules.EnemyPlayers(levelId).First().Faction, null, 7711);
-                MapNode home = sim.Human.OwnedNodes.First(node => node.Building != null);
+                MapNodeEntity home = sim.Human.OwnedNodes.First(node => node.Building != null);
                 GameConfig.takeover.Unit guard = tables.TbUnit.DataList.First(unit =>
                     unit.Name == "Guards" && OriginalRules.FromConfigFaction(unit.Faction) == Faction.Westaria);
-                Squad squad = sim.BuyUnit(sim.Human, guard, home, out _);
-                MapNode target = sim.Nodes
+                SquadEntity squad = sim.BuyUnit(sim.Human, guard, home, out _);
+                MapNodeEntity target = sim.Nodes
                     .Where(node => BattleSim.IsKeyBuilding(node.Building) && node.Building.Owner != Faction.Westaria)
                     .OrderBy(node => (node.Pos - home.Pos).sqrMagnitude)
                     .First();
@@ -513,6 +532,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>检查关卡场景中的战斗流程和结果。</summary>
         private static void CheckScenarioCombat(Tables tables, ICollection<string> failures)
         {
             var sim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 4488);
@@ -522,28 +542,28 @@ namespace GameLogic.Takeover
                     .All(point => point.x >= 0f && point.x <= 800f && point.y >= 0f && point.y <= 1200f),
                 "原版道路 waypoint 超出地图范围", failures);
 
-            MapNode home = sim.Human.OwnedNodes.First(node => node.Building != null);
+            MapNodeEntity home = sim.Human.OwnedNodes.First(node => node.Building != null);
             GameConfig.takeover.Unit guard = tables.TbUnit.DataList.First(unit =>
                 unit.Name == "Guards" && OriginalRules.FromConfigFaction(unit.Faction) == Faction.Westaria);
-            Squad playerSquad = sim.BuyUnit(sim.Human, guard, home, out _);
+            SquadEntity playerSquad = sim.BuyUnit(sim.Human, guard, home, out _);
             Check(playerSquad != null, "L1 无法招募 Guards", failures);
-            Squad enemySquad = sim.Squads.FirstOrDefault(squad => squad.Faction == Faction.Empire);
+            SquadEntity enemySquad = sim.Squads.FirstOrDefault(squad => squad.Faction == Faction.Empire);
             Check(enemySquad != null, "L1 没有剧本敌军", failures);
             if (playerSquad != null && enemySquad != null)
             {
-                foreach (CombatUnit unit in enemySquad.Units)
+                foreach (CombatUnitEntity unit in enemySquad.Units)
                     unit.Pos = playerSquad.Pos + new Vector2(12f, 0f);
                 float before = enemySquad.Hp;
                 for (int i = 0; i < 180; i++) sim.Tick(OriginalRules.LogicStep);
                 Check(enemySquad.IsDead || enemySquad.Hp < before, "逐单位战斗没有产生伤害", failures);
             }
 
-            MapNode enemyBuilding = sim.Nodes.First(node =>
+            MapNodeEntity enemyBuilding = sim.Nodes.First(node =>
                 node.Building != null && BattleSim.IsKeyBuilding(node.Building) &&
                 node.Building.Owner != Faction.Westaria);
             enemyBuilding.Building.Level = 2;
             enemyBuilding.Building.Hp = 0;
-            foreach (CombatUnit unit in playerSquad.Units.Where(unit => !unit.IsDead))
+            foreach (CombatUnitEntity unit in playerSquad.Units.Where(unit => !unit.IsDead))
                 unit.Pos = enemyBuilding.Pos;
             playerSquad.TargetNode = enemyBuilding;
             playerSquad.HasMoveOrder = false;

@@ -5,26 +5,29 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>处理士兵和建筑之间的战斗。</summary>
     internal sealed class BattleCombatSystem : BattleSimSystem
     {
+        /// <summary>创建并关联当前战斗模拟的战斗系统。</summary>
         internal BattleCombatSystem(BattleSim sim) : base(sim) { }
 
+        /// <summary>推进部队和士兵的战斗、移动及状态更新。</summary>
         internal void TickSquads(float dt)
         {
             for (int squadIndex = 0; squadIndex < Squads.Count; squadIndex++)
             {
-                Squad squad = Squads[squadIndex];
+                SquadEntity squad = Squads[squadIndex];
                 if (squad.IsDead) continue;
                 bool squadEngaged = false;
-                foreach (CombatUnit unit in squad.Units)
+                foreach (CombatUnitEntity unit in squad.Units)
                 {
                     if (unit.IsDead) continue;
                     TickUnitStatuses(unit, dt);
                     TickProjectile(unit, dt);
                     if (unit.IsDead || unit.FrozenSeconds > 0f) continue;
 
-                    CombatUnit targetUnit = FindTargetUnit(unit);
-                    MapNode targetBuilding = FindTargetBuilding(unit, squad);
+                    CombatUnitEntity targetUnit = FindTargetUnit(unit);
+                    MapNodeEntity targetBuilding = FindTargetBuilding(unit, squad);
                     unit.TargetUnitId = targetUnit?.Id ?? -1;
                     unit.TargetBuildingNodeId = targetBuilding?.Id ?? -1;
 
@@ -50,7 +53,7 @@ namespace GameLogic.Takeover
                 if (!squadEngaged) AdvanceSquad(squad, dt);
                 if (squad.Def.Name == "Giantbots" && squad.Owner.Mods[40] > 0)
                 {
-                    foreach (CombatUnit unit in squad.Units)
+                    foreach (CombatUnitEntity unit in squad.Units)
                     {
                         if (unit.IsDead) continue;
                         unit.Hp = Mathf.Min(unit.MaxHp,
@@ -77,17 +80,18 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>应用 Divine Presence 能力对周围单位的影响。</summary>
         internal void ApplyDivinePresence(float dt)
         {
-            foreach (Squad source in Squads)
+            foreach (SquadEntity source in Squads)
             {
                 if (source.IsDead) continue;
                 if (!OriginalRules.TryAbility(source.Def.Abilities, "DivinePresence", out int power) || power <= 0)
                     continue;
-                foreach (Squad allySquad in Squads)
+                foreach (SquadEntity allySquad in Squads)
                 {
                     if (allySquad.IsDead || allySquad.Faction != source.Faction) continue;
-                    foreach (CombatUnit ally in allySquad.Units)
+                    foreach (CombatUnitEntity ally in allySquad.Units)
                     {
                         if (ally.IsDead || HasMoraleLock(allySquad) ||
                             Vector2.Distance(ally.Pos, source.Pos) > 100f)
@@ -99,12 +103,14 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void TickUnitStatuses(CombatUnit unit, float dt)
+        /// <summary>更新部队中士兵的持续状态效果。</summary>
+        internal void TickUnitStatuses(CombatUnitEntity unit, float dt)
         {
             unit.Status.Tick(dt, this);
         }
 
-        internal void TickProjectile(CombatUnit unit, float dt)
+        /// <summary>推进投射物飞行并在命中时结算攻击。</summary>
+        internal void TickProjectile(CombatUnitEntity unit, float dt)
         {
             if (unit.ProjectileTargetUnitId < 0 && unit.ProjectileTargetNodeId < 0) return;
             unit.ProjectileRemaining -= dt;
@@ -120,7 +126,7 @@ namespace GameLogic.Takeover
             unit.ProjectileDamage = 0f;
             if (unitId >= 0)
             {
-                CombatUnit target = FindUnitById(unitId);
+                CombatUnitEntity target = FindUnitById(unitId);
                 if (target != null && !target.IsDead)
                 {
                     ApplyDamage(target, damage, unit.Squad, false);
@@ -129,7 +135,7 @@ namespace GameLogic.Takeover
             }
             else if (nodeId >= 0)
             {
-                MapNode node = FindNode(nodeId);
+                MapNodeEntity node = FindNode(nodeId);
                 if (node?.Building != null && node.Building.Hp > 0)
                     ApplyBuildingDamage(node.Building, damage, unit.Squad);
             }
@@ -143,7 +149,8 @@ namespace GameLogic.Takeover
             });
         }
 
-        internal void AdvanceSquad(Squad squad, float dt)
+        /// <summary>推进指定部队的移动、目标选择和攻击行为。</summary>
+        internal void AdvanceSquad(SquadEntity squad, float dt)
         {
             if (squad.Movement.ConsumeMoveDelay(dt)) return;
             if (!squad.HasMoveOrder || squad.Path == null || squad.Path.Count == 0)
@@ -167,7 +174,7 @@ namespace GameLogic.Takeover
             bool formationArrived = true;
             for (int i = 0; i < squad.Units.Count; i++)
             {
-                CombatUnit unit = squad.Units[i];
+                CombatUnitEntity unit = squad.Units[i];
                 if (unit.IsDead) continue;
                 Vector2 formationOffset = FormationOffset(i, squad.Units.Count, facing);
                 Vector2 desired = newCenter + formationOffset;
@@ -209,7 +216,8 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void FinishMove(Squad squad)
+        /// <summary>完成部队移动并更新其到达节点状态。</summary>
+        internal void FinishMove(SquadEntity squad)
         {
             squad.HasMoveOrder = false;
             squad.Path = null;
@@ -224,13 +232,14 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void RepairAtHome(Squad squad, float dt)
+        /// <summary>处理部队在己方驻地的士兵恢复。</summary>
+        internal void RepairAtHome(SquadEntity squad, float dt)
         {
             if (squad.HomeNode?.Building == null || squad.HomeNode.Building.Owner != squad.Faction) return;
             if (squad.Units.Where(unit => !unit.IsDead)
                 .All(unit => Vector2.Distance(unit.Pos, squad.HomeNode.Pos) > 60f))
                 return;
-            foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead && value.Hp < value.MaxHp))
+            foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead && value.Hp < value.MaxHp))
             {
                 if (HasMechanism(squad)) continue;
                 float repair = unit.MaxHp / 4f + 1f;
@@ -238,11 +247,12 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void TryCollectChest(Squad squad)
+        /// <summary>尝试由部队收集所在节点的宝箱。</summary>
+        internal void TryCollectChest(SquadEntity squad)
         {
-            foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead))
+            foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead))
             {
-                MapNode node = Nodes.FirstOrDefault(value => value.Kind == NodeKind.Chest &&
+                MapNodeEntity node = Nodes.FirstOrDefault(value => value.Kind == NodeKind.Chest &&
                                                              !value.ChestCollected &&
                                                              Vector2.Distance(value.Pos, unit.Pos) <= 30f);
                 if (node == null) continue;
@@ -260,14 +270,15 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal CombatUnit FindTargetUnit(CombatUnit unit)
+        /// <summary>为攻击者查找当前目标敌方士兵。</summary>
+        internal CombatUnitEntity FindTargetUnit(CombatUnitEntity unit)
         {
-            CombatUnit best = null;
+            CombatUnitEntity best = null;
             float bestDistance = float.MaxValue;
-            foreach (Squad squad in Squads)
+            foreach (SquadEntity squad in Squads)
             {
                 if (squad.IsDead || squad.Faction == unit.Squad.Faction) continue;
-                foreach (CombatUnit candidate in squad.Units)
+                foreach (CombatUnitEntity candidate in squad.Units)
                 {
                     if (candidate.IsDead) continue;
                     float distance = Vector2.Distance(unit.Pos, candidate.Pos);
@@ -280,14 +291,15 @@ namespace GameLogic.Takeover
             return best;
         }
 
-        internal CombatUnit FindNearestHostile(CombatUnit unit, Squad self)
+        /// <summary>查找距离部队最近的敌对部队。</summary>
+        internal CombatUnitEntity FindNearestHostile(CombatUnitEntity unit, SquadEntity self)
         {
-            CombatUnit best = null;
+            CombatUnitEntity best = null;
             float bestDistance = 160f * 160f;
-            foreach (Squad squad in Squads)
+            foreach (SquadEntity squad in Squads)
             {
                 if (squad.Faction == self.Faction) continue;
-                foreach (CombatUnit candidate in squad.Units)
+                foreach (CombatUnitEntity candidate in squad.Units)
                 {
                     if (candidate.IsDead) continue;
                     float distance = Vector2.SqrMagnitude(candidate.Pos - unit.Pos);
@@ -299,7 +311,8 @@ namespace GameLogic.Takeover
             return best;
         }
 
-        internal MapNode FindTargetBuilding(CombatUnit unit, Squad squad)
+        /// <summary>为攻击者查找可攻击的敌方建筑目标。</summary>
+        internal MapNodeEntity FindTargetBuilding(CombatUnitEntity unit, SquadEntity squad)
         {
             if (!IsKeyBuilding(squad.TargetNode?.Building) || squad.TargetNode.Building.Owner == squad.Faction ||
                 squad.TargetNode.Building.Hp <= 0)
@@ -310,7 +323,8 @@ namespace GameLogic.Takeover
             return squad.TargetNode;
         }
 
-        internal void AttackUnit(CombatUnit attacker, CombatUnit target, float dt)
+        /// <summary>执行士兵对敌方士兵的攻击并结算效果。</summary>
+        internal void AttackUnit(CombatUnitEntity attacker, CombatUnitEntity target, float dt)
         {
             if (LevelAssetId == 2 && target.Squad == _ogreSquad && !_ogreEngaged &&
                 attacker.Squad.Owner.IsHuman)
@@ -349,7 +363,8 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void AttackBuilding(CombatUnit attacker, MapNode node, float dt)
+        /// <summary>执行士兵对敌方建筑的攻击。</summary>
+        internal void AttackBuilding(CombatUnitEntity attacker, MapNodeEntity node, float dt)
         {
             attacker.AttackTimer -= dt;
             if (attacker.AttackTimer > 0f) return;
@@ -372,7 +387,8 @@ namespace GameLogic.Takeover
             if (node.Building != null) node.Building.LastAttackerUnitId = attacker.Id;
         }
 
-        internal float RollDamage(CombatUnit attacker, CombatUnit target)
+        /// <summary>依据攻击属性和战斗修正计算攻击伤害。</summary>
+        internal float RollDamage(CombatUnitEntity attacker, CombatUnitEntity target)
         {
             GameConfig.takeover.Unit def = attacker.Squad.Def;
             float roll = attacker.MaxDamageSeconds > 0f
@@ -438,7 +454,8 @@ namespace GameLogic.Takeover
             return Mathf.Max(1f, roll);
         }
 
-        internal void ApplyAttackAbilities(CombatUnit attacker, CombatUnit target, float damage, bool allowSplash = true)
+        /// <summary>应用攻击者能力及其附带的战斗效果。</summary>
+        internal void ApplyAttackAbilities(CombatUnitEntity attacker, CombatUnitEntity target, float damage, bool allowSplash = true)
         {
             AbilityMask abilities = attacker.Squad.Abilities;
             AbilityMask targetAbilities = target.Squad.Abilities;
@@ -465,10 +482,10 @@ namespace GameLogic.Takeover
             if (allowSplash && (abilities & AbilityMask.SplashDamage) != 0)
             {
                 OriginalRules.TryAbility(attacker.Squad.Def.Abilities, "SplashDamage", out int radius);
-                foreach (Squad squad in Squads)
+                foreach (SquadEntity squad in Squads)
                 {
                     if (squad.Faction == attacker.Squad.Faction || squad.IsDead) continue;
-                    foreach (CombatUnit unit in squad.Units)
+                    foreach (CombatUnitEntity unit in squad.Units)
                     {
                         if (unit == target || unit.IsDead) continue;
                         if (Vector2.Distance(unit.Pos, target.Pos) <= radius)
@@ -481,7 +498,8 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void ApplyDamage(CombatUnit target, float damage, Squad source, bool magic)
+        /// <summary>结算单位受到的伤害并处理濒死状态。</summary>
+        internal void ApplyDamage(CombatUnitEntity target, float damage, SquadEntity source, bool magic)
         {
             if (target == null || target.IsDead) return;
             if (magic && target.MagicImmunitySeconds > 0f) return;
@@ -513,7 +531,8 @@ namespace GameLogic.Takeover
             });
         }
 
-        internal void ApplyBuildingDamage(BuildingState building, float damage, Squad source)
+        /// <summary>对建筑结算伤害并处理占领状态变化。</summary>
+        internal void ApplyBuildingDamage(BuildingState building, float damage, SquadEntity source)
         {
             if (building == null || building.Hp <= 0) return;
             building.Hp = Mathf.Max(0, building.Hp - Mathf.RoundToInt(damage));
@@ -529,17 +548,18 @@ namespace GameLogic.Takeover
                 MapSystem.RefreshOwnership();
         }
 
+        /// <summary>更新战斗中的建筑生命、占领和修复状态。</summary>
         internal void TickBuildings(float dt)
         {
-            foreach (MapNode node in Nodes.Where(value => value.Building != null))
+            foreach (MapNodeEntity node in Nodes.Where(value => value.Building != null))
             {
                 BuildingState building = node.Building;
                 if (building.Hp <= 0 || building.LastAttackerUnitId < 0) continue;
-                CombatUnit attacker = FindUnitById(building.LastAttackerUnitId);
+                CombatUnitEntity attacker = FindUnitById(building.LastAttackerUnitId);
                 if (attacker == null || attacker.IsDead) continue;
-                PlayerState owner = PlayerOf(building.Owner);
+                PlayerStateEntity owner = PlayerOf(building.Owner);
                 if (owner == null) continue;
-                foreach (Squad defender in owner.Squads.Where(value => !value.IsDead && value.HomeNode == node))
+                foreach (SquadEntity defender in owner.Squads.Where(value => !value.IsDead && value.HomeNode == node))
                 {
                     if (defender.Path == null && defender.TargetNode != node)
                         MapSystem.OrderMove(defender, attacker.Pos, null);
@@ -548,12 +568,13 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal void KillSquad(Squad squad)
+        /// <summary>处理部队全灭后的清理和战斗事件。</summary>
+        internal void KillSquad(SquadEntity squad)
         {
             if (squad == _ogreSquad && !_ogreKilled)
             {
                 _ogreKilled = true;
-                PlayerState khaganate = PlayerOf(Faction.Khaganate);
+                PlayerStateEntity khaganate = PlayerOf(Faction.Khaganate);
                 if (khaganate != null)
                 {
                     khaganate.AiEnabled = true;
@@ -570,7 +591,7 @@ namespace GameLogic.Takeover
             if (squad == _tutorialEnemySquad && !_tutorialEnemyReplaced)
             {
                 _tutorialEnemyReplaced = true;
-                PlayerState empire = PlayerOf(Faction.Empire);
+                PlayerStateEntity empire = PlayerOf(Faction.Empire);
                 GameConfig.takeover.Unit replacement = EconomySystem.FindUnit(Faction.Empire, UnitKind.Infantry, 1);
                 if (empire != null && replacement != null)
                 {
@@ -596,15 +617,16 @@ namespace GameLogic.Takeover
                     squad.Owner.Ultimate + squad.Owner.UltimateMax * squad.Owner.Mods[26] / 100f);
         }
 
-        internal void ResolveUnitSeparation(Squad squad)
+        /// <summary>分离重叠士兵以避免单位位置互相穿插。</summary>
+        internal void ResolveUnitSeparation(SquadEntity squad)
         {
             for (int i = 0; i < squad.Units.Count; i++)
             {
-                CombatUnit a = squad.Units[i];
+                CombatUnitEntity a = squad.Units[i];
                 if (a.IsDead) continue;
                 for (int j = i + 1; j < squad.Units.Count; j++)
                 {
-                    CombatUnit b = squad.Units[j];
+                    CombatUnitEntity b = squad.Units[j];
                     if (b.IsDead) continue;
                     Vector2 delta = b.Pos - a.Pos;
                     float distance = delta.magnitude;

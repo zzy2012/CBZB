@@ -8,11 +8,17 @@ namespace GameLogic.Takeover
     /// <summary>玩家可提交给战斗模拟器处理的操作类型。</summary>
     public enum BattleCommandType
     {
+        /// <summary>移动部队。</summary>
         Move,
+        /// <summary>招募单位。</summary>
         BuyUnit,
+        /// <summary>升级建筑。</summary>
         Upgrade,
+        /// <summary>建造建筑。</summary>
         Build,
+        /// <summary>施放法术。</summary>
         CastSpell,
+        /// <summary>通过调试命令增减资源。</summary>
         GrantResources,
     }
 
@@ -22,15 +28,24 @@ namespace GameLogic.Takeover
     [Serializable]
     public struct BattleCommand
     {
+        /// <summary>战斗命令的类型。</summary>
         public BattleCommandType Type;
+        /// <summary>命令涉及的部队标识。</summary>
         public int SquadId;
+        /// <summary>命令涉及的部队标识集合。</summary>
         public int[] SquadIds;
+        /// <summary>关联的地图节点标识。</summary>
         public int NodeId;
+        /// <summary>命令使用的配置项标识。</summary>
         public int ConfigId;
+        /// <summary>命令对金币的增减量。</summary>
         public int GoldDelta;
+        /// <summary>命令对魔法值的增减量。</summary>
         public int ManaDelta;
+        /// <summary>移动或法术命令的目标位置。</summary>
         public Vector2 Position;
 
+        /// <summary>创建将部队移动到目标节点或位置的命令。</summary>
         public static BattleCommand Move(int squadId, int nodeId) =>
             new BattleCommand
             {
@@ -40,6 +55,7 @@ namespace GameLogic.Takeover
                 NodeId = nodeId,
             };
 
+        /// <summary>创建将部队移动到目标节点或位置的命令。</summary>
         public static BattleCommand Move(IEnumerable<int> squadIds, Vector2 position, int nodeId = 0) =>
             new BattleCommand
             {
@@ -49,18 +65,23 @@ namespace GameLogic.Takeover
                 NodeId = nodeId,
             };
 
+        /// <summary>创建在指定节点招募单位的命令。</summary>
         public static BattleCommand BuyUnit(int unitId, int nodeId) =>
             new BattleCommand { Type = BattleCommandType.BuyUnit, ConfigId = unitId, NodeId = nodeId };
 
+        /// <summary>创建升级指定节点建筑的命令。</summary>
         public static BattleCommand Upgrade(int nodeId) =>
             new BattleCommand { Type = BattleCommandType.Upgrade, NodeId = nodeId };
 
+        /// <summary>创建在指定节点建造建筑的命令。</summary>
         public static BattleCommand Build(int buildingId, int nodeId) =>
             new BattleCommand { Type = BattleCommandType.Build, ConfigId = buildingId, NodeId = nodeId };
 
+        /// <summary>创建在指定节点或位置施放法术的命令。</summary>
         public static BattleCommand CastSpell(int spellId, int nodeId) =>
             new BattleCommand { Type = BattleCommandType.CastSpell, ConfigId = spellId, NodeId = nodeId };
 
+        /// <summary>创建在指定节点或位置施放法术的命令。</summary>
         public static BattleCommand CastSpell(int spellId, Vector2 position, int nodeId = 0) =>
             new BattleCommand
             {
@@ -84,10 +105,15 @@ namespace GameLogic.Takeover
     [Serializable]
     public struct BattleEvent
     {
+        /// <summary>战斗事件的类型标识。</summary>
         public string Kind;
+        /// <summary>事件发起者的标识。</summary>
         public int ActorId;
+        /// <summary>事件目标的标识。</summary>
         public int TargetId;
+        /// <summary>事件或修正项对应的数值。</summary>
         public float Value;
+        /// <summary>战斗事件发生的位置。</summary>
         public Vector2 Position;
         /// <summary>可选的表现文案（例如法术效果说明），由模拟器在触发时填好。</summary>
         public string Text;
@@ -97,21 +123,37 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class SquadSnapshot
     {
+        /// <summary>对象的标识。</summary>
         public int Id;
+        /// <summary>所属阵营。</summary>
         public Faction Faction;
+        /// <summary>单位配置标识。</summary>
         public int UnitId;
+        /// <summary>部队对应单位的显示名称。</summary>
         public string Name;
+        /// <summary>存活士兵数量。</summary>
         public int AliveSoldiers;
+        /// <summary>部队的士兵总数，包含已死亡士兵。</summary>
         public int MaxSoldiers;
+        /// <summary>当前生命值。</summary>
         public float Hp;
+        /// <summary>当前最大生命值。</summary>
         public float MaxHp;
+        /// <summary>对象在战场或界面中的位置。</summary>
         public Vector2 Position;
+        /// <summary>关联的地图节点标识。</summary>
         public int NodeId;
+        /// <summary>目标地图节点的标识。</summary>
         public int TargetNodeId;
+        /// <summary>部队的驻守节点是否仍由本阵营占有。</summary>
         public bool IsGarrison;
+        /// <summary>当前是否处于冰冻状态。</summary>
         public bool Frozen;
+        /// <summary>当前是否处于中毒状态。</summary>
         public bool Poisoned;
+        /// <summary>当前等级。</summary>
         public int Level;
+        /// <summary>部队中的士兵状态快照。</summary>
         public List<UnitSnapshot> Units = new List<UnitSnapshot>();
     }
 
@@ -119,13 +161,21 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class UnitSnapshot
     {
+        /// <summary>对象的标识。</summary>
         public int Id;
+        /// <summary>对象在战场或界面中的位置。</summary>
         public Vector2 Position;
+        /// <summary>当前生命值。</summary>
         public float Hp;
+        /// <summary>当前最大生命值。</summary>
         public float MaxHp;
+        /// <summary>当前行动状态。</summary>
         public UnitAction Action;
+        /// <summary>当前士气状态。</summary>
         public MoraleState Morale;
+        /// <summary>当前是否处于冰冻状态。</summary>
         public bool Frozen;
+        /// <summary>当前是否处于中毒状态。</summary>
         public bool Poisoned;
     }
 
@@ -133,14 +183,23 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class PlayerSnapshot
     {
+        /// <summary>对象的标识。</summary>
         public int Id;
+        /// <summary>所属阵营。</summary>
         public Faction Faction;
+        /// <summary>该参与方是否为人类玩家。</summary>
         public bool IsHuman;
+        /// <summary>当前金币数量。</summary>
         public float Gold;
+        /// <summary>当前魔法值。</summary>
         public float Mana;
+        /// <summary>当前终极技能能量。</summary>
         public float Ultimate;
+        /// <summary>当前部队占用的补给数量。</summary>
         public int SupplyUsed;
+        /// <summary>参与方的补给容量上限。</summary>
         public int SupplyCap;
+        /// <summary>当前可用的法术配置标识集合。</summary>
         public List<int> AvailableSpellIds = new List<int>();
     }
 
@@ -148,11 +207,17 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class SpellSnapshot
     {
+        /// <summary>法术配置标识。</summary>
         public int SpellId;
+        /// <summary>法术施放者的参与方标识。</summary>
         public int CasterPlayerId;
+        /// <summary>所属阵营。</summary>
         public Faction Faction;
+        /// <summary>对象在战场或界面中的位置。</summary>
         public Vector2 Position;
+        /// <summary>法术效果的剩余持续时间。</summary>
         public float Remaining;
+        /// <summary>法术效果的运行时类别。</summary>
         public SpellEffectKind Effect;
     }
 
@@ -160,12 +225,19 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class BuildingSnapshot
     {
+        /// <summary>关联的地图节点标识。</summary>
         public int NodeId;
+        /// <summary>建筑配置标识。</summary>
         public int BuildingId;
+        /// <summary>对象的所属方或所有者。</summary>
         public Faction Owner;
+        /// <summary>当前等级。</summary>
         public int Level;
+        /// <summary>当前生命值。</summary>
         public int Hp;
+        /// <summary>当前最大生命值。</summary>
         public int MaxHp;
+        /// <summary>建筑的占领进度。</summary>
         public float CaptureProgress;
     }
 
@@ -173,20 +245,34 @@ namespace GameLogic.Takeover
     [Serializable]
     public sealed class BattleSnapshot
     {
+        /// <summary>战斗已运行的时间，单位为秒。</summary>
         public float Time;
+        /// <summary>战斗是否已经结束。</summary>
         public bool IsOver;
+        /// <summary>战斗是否由人类玩家获胜。</summary>
         public bool HumanVictory;
+        /// <summary>按照战斗耗时计算的通关星级。</summary>
         public int Stars;
+        /// <summary>当前金币数量。</summary>
         public float Gold;
+        /// <summary>当前魔法值。</summary>
         public float Mana;
+        /// <summary>当前终极技能能量。</summary>
         public float Ultimate;
+        /// <summary>当前部队占用的补给数量。</summary>
         public int SupplyUsed;
+        /// <summary>参与方的补给容量上限。</summary>
         public int SupplyCap;
+        /// <summary>存活部队的状态快照集合。</summary>
         public List<SquadSnapshot> Squads = new List<SquadSnapshot>();
+        /// <summary>战场建筑的状态快照集合。</summary>
         public List<BuildingSnapshot> Buildings = new List<BuildingSnapshot>();
+        /// <summary>战斗参与方的状态快照集合。</summary>
         public List<PlayerSnapshot> Players = new List<PlayerSnapshot>();
+        /// <summary>当前生效法术的状态快照集合。</summary>
         public List<SpellSnapshot> ActiveSpells = new List<SpellSnapshot>();
 
+        /// <summary>从当前模拟状态构建战斗快照。</summary>
         public static BattleSnapshot From(BattleSim sim)
         {
             var snapshot = new BattleSnapshot
@@ -235,7 +321,7 @@ namespace GameLogic.Takeover
                 });
             }
 
-            foreach (PlayerState player in sim.Players)
+            foreach (PlayerStateEntity player in sim.Players)
             {
                 snapshot.Players.Add(new PlayerSnapshot
                 {
@@ -265,7 +351,7 @@ namespace GameLogic.Takeover
                 });
             }
 
-            foreach (ActiveSpellEffect effect in sim.ActiveSpells)
+            foreach (ActiveSpellEffectEntity effect in sim.ActiveSpells)
             {
                 snapshot.ActiveSpells.Add(new SpellSnapshot
                 {
@@ -288,24 +374,41 @@ namespace GameLogic.Takeover
     /// </summary>
     public sealed class BattleSimulation
     {
+        /// <summary>战斗模拟的固定时间步长，单位为秒。</summary>
         public const float FixedStep = BattleManager.FixedStep;
+        /// <summary>等待固定模拟步处理的战斗命令队列。</summary>
         private readonly Queue<BattleCommand> _commands = new Queue<BattleCommand>();
+        /// <summary>负责推进底层战斗场景的管理器。</summary>
         private readonly BattleManager _battleManager = new BattleManager();
+        /// <summary>每个固定模拟步执行前调用的可选回调。</summary>
         private readonly Action _beforeFixedStep;
 
+        /// <summary>关联的战斗模拟或节点状态。</summary>
         public BattleSim State { get; }
+        /// <summary>当前战斗实例。</summary>
         public TakeoverBattle Battle { get; }
-        public IReadOnlyList<MapNode> Nodes => State.Nodes;
-        public IReadOnlyList<Squad> Squads => State.Squads;
-        public IReadOnlyList<PlayerState> Players => State.Players;
+        /// <summary>战场地图节点集合。</summary>
+        public IReadOnlyList<MapNodeEntity> Nodes => State.Nodes;
+        /// <summary>部队集合。</summary>
+        public IReadOnlyList<SquadEntity> Squads => State.Squads;
+        /// <summary>战斗参与方集合。</summary>
+        public IReadOnlyList<PlayerStateEntity> Players => State.Players;
+        /// <summary>地图连接边的集合。</summary>
         public IReadOnlyList<MapEdge> Edges => State.Edges;
-        public PlayerState Human => State.Human;
+        /// <summary>人类玩家参与方。</summary>
+        public PlayerStateEntity Human => State.Human;
+        /// <summary>战斗是否已经结束。</summary>
         public bool IsOver => State.IsOver;
+        /// <summary>战斗是否由人类玩家获胜。</summary>
         public bool HumanVictory => State.HumanVictory;
+        /// <summary>战斗已运行的时间，单位为秒。</summary>
         public float Time => State.Time;
+        /// <summary>按照战斗耗时计算的通关星级。</summary>
         public int Stars => State.Stars;
+        /// <summary>当前模拟的关卡资源标识。</summary>
         public int LevelAssetId => State.LevelAssetId;
 
+        /// <summary>按关卡、双方阵营、修正项和随机种子创建战斗模拟。</summary>
         public BattleSimulation(int levelAssetId, Faction humanFaction, Faction enemyFaction,
             int[] humanMods = null, int seed = 20120920)
         {
@@ -315,27 +418,33 @@ namespace GameLogic.Takeover
             _battleManager.CreateBattle(Battle);
         }
 
+        /// <summary>将命令加入队列，等待固定步执行。</summary>
         public void Enqueue(BattleCommand command) => _commands.Enqueue(command);
 
         /// <summary>GM 的「AI 托管」开关打开时，立刻让 AI 跑一拍，玩家马上能看到它开始买兵/建造。</summary>
-        public void ForceAiTick(PlayerState player)
+        public void ForceAiTick(PlayerStateEntity player)
         {
             if (player == null) return;
             State.AiSystem.TickAiSecond(player);
         }
 
+        /// <summary>立即以人类玩家身份执行命令并返回执行结果。</summary>
         public bool ExecuteNow(BattleCommand command) => State.ExecuteCommand(State.Human, command);
 
+        /// <summary>按实际时间推进固定步战斗模拟。</summary>
         public void Tick(float realDeltaSeconds) => _battleManager.Update(realDeltaSeconds, _beforeFixedStep);
 
+        /// <summary>按队列顺序处理等待执行的玩家命令。</summary>
         private void ExecuteQueuedCommands()
         {
             while (_commands.Count > 0)
                 State.ExecuteCommand(State.Human, _commands.Dequeue());
         }
 
+        /// <summary>取出并清空模拟器积累的战斗事件。</summary>
         public IReadOnlyList<BattleEvent> DrainEvents() => State.DrainEvents();
 
+        /// <summary>销毁当前战斗并释放模拟管理器。</summary>
         public void Dispose() => _battleManager.Dispose();
     }
 }

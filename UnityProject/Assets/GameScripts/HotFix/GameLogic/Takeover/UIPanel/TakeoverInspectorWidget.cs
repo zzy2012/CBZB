@@ -6,22 +6,35 @@ using UnityEngine.UI;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>展示当前选中对象的详情及可用操作。</summary>
     public sealed class TakeoverInspectorWidget : TakeoverActionListWidget
     {
+        /// <summary>详情面板首个操作按钮的纵向位置。</summary>
         private const float InspectorActionTopY = 90f;
+        /// <summary>详情操作按钮之间的纵向间距。</summary>
         private const float InspectorActionSpacing = 38f;
+        /// <summary>仅显示信息时详情面板的高度。</summary>
         private const float InspectorInfoOnlyHeight = 134f;
+        /// <summary>包含操作按钮时详情面板的基础高度。</summary>
         private const float InspectorActionBaseHeight = 174f;
 
+        /// <summary>详情面板当前生成的操作布局。</summary>
         private readonly List<TakeoverActionPlan> _plan = new List<TakeoverActionPlan>(8);
+        /// <summary>详情面板查询和操作的战斗运行器。</summary>
         private TakeoverRunner _runner;
+        /// <summary>最近一次生成详情时使用的模拟实例。</summary>
         private BattleSimulation _lastSimulation;
+        /// <summary>当前选中对象的标题文本组件。</summary>
         private Text _title;
+        /// <summary>当前选中对象的详情文本组件。</summary>
         private Text _body;
+        /// <summary>当前详情对应的操作按钮列表。</summary>
         private RectTransform _actions;
 
+        /// <summary>详情操作按钮的父级变换。</summary>
         protected override Transform ActionButtonParent => _actions != null ? _actions : transform;
 
+        /// <summary>生成详情检查面板所需的界面组件。</summary>
         protected override void ScriptGenerator()
         {
             _title = Required<Text>("m_text_InspectorTitle");
@@ -29,12 +42,14 @@ namespace GameLogic.Takeover
             _actions = Required<RectTransform>("m_rect_Actions");
         }
 
+        /// <summary>设置详情面板使用的战斗运行器。</summary>
         public void SetRunner(TakeoverRunner runner)
         {
             _runner = runner;
             Refresh();
         }
 
+        /// <summary>根据当前选中对象刷新详情和操作。</summary>
         public void Refresh()
         {
             if (_runner == null) return;
@@ -74,11 +89,12 @@ namespace GameLogic.Takeover
             RefreshActionButtons(_plan, targetKey, stateTint: true);
         }
 
+        /// <summary>根据当前选中对象生成详情文本和操作计划。</summary>
         private bool BuildInspectorPlan()
         {
             if (_runner.SelectedSquad != null)
             {
-                Squad squad = _runner.SelectedSquad;
+                SquadEntity squad = _runner.SelectedSquad;
                 _title.text = $"{squad.Def.CnName}  {squad.AliveSoldiers}/{squad.MaxSoldiers}";
                 _body.text =
                     $"HP {squad.Hp:F0}/{squad.HpPerSoldier * squad.MaxSoldiers:F0}\n" +
@@ -89,7 +105,7 @@ namespace GameLogic.Takeover
                 return true;
             }
 
-            MapNode node = _runner.SelectedNode;
+            MapNodeEntity node = _runner.SelectedNode;
             if (node == null) return false;
 
             if (node.Building != null && node.Building.Owner == _runner.HumanFaction &&
@@ -162,6 +178,7 @@ namespace GameLogic.Takeover
             return false;
         }
 
+        /// <summary>向详情面板操作列表添加一项操作计划。</summary>
         private void AddPlan(
             string name, string label, Vector2 position, Vector2 size,
             UnityAction click, Func<bool> enabled)
@@ -177,6 +194,7 @@ namespace GameLogic.Takeover
             });
         }
 
+        /// <summary>查找并返回指定的必需界面组件。</summary>
         private T Required<T>(string path) where T : UnityEngine.Component
         {
             T component = FindChildComponent<T>(path);

@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>处理战斗参与方的 AI 决策。</summary>
     internal sealed class BattleAiSystem : BattleSimSystem
     {
         /// <summary>进攻所需的最低部队战力（人类托管和敌方 AI 共用）。</summary>
@@ -28,9 +29,11 @@ namespace GameLogic.Takeover
         /// <summary>全局最多留几支部队驻防（只统计被威胁的据点）。</summary>
         private const int MaxGarrisonSquads = 2;
 
+        /// <summary>创建并关联当前战斗模拟的 AI 系统。</summary>
         internal BattleAiSystem(BattleSim sim) : base(sim) { }
 
-        internal void TickAiSecond(PlayerState player)
+        /// <summary>为启用 AI 的参与方执行一次逻辑秒决策。</summary>
+        internal void TickAiSecond(PlayerStateEntity player)
         {
             EnsureEconomy(player);
             BuyArmy(player);
@@ -46,7 +49,7 @@ namespace GameLogic.Takeover
         /// 经济建筑：补给是硬上限（农场每个只 +1 补给），所以金币够就尽量先把农场铺满，
         /// 再补法力/金币建筑。以前只在补给耗尽时造 1 个农场，无限金币也堆不出兵。
         /// </summary>
-        internal void EnsureEconomy(PlayerState player)
+        internal void EnsureEconomy(PlayerStateEntity player)
         {
             int farmCost = Cfg.BuildingById(5)?.BuildCost ?? 150;
             for (int i = 0; i < MaxFarmsPerTick && player.FreeSupply < SupplyComfort && player.Gold >= farmCost; i++)
@@ -64,16 +67,16 @@ namespace GameLogic.Takeover
         // ---------------- 造兵 ----------------
 
         /// <summary>能买就买，按「战斗力/价格」挑最好的兵种，优先放在离敌人最近的己方据点。</summary>
-        internal void BuyArmy(PlayerState player)
+        internal void BuyArmy(PlayerStateEntity player)
         {
             for (int purchase = 0; purchase < MaxPurchasesPerTick; purchase++)
             {
                 if (player.Gold < BattleSim.AiBuyThreshold) return;
 
-                MapNode bestNode = null;
+                MapNodeEntity bestNode = null;
                 GameConfig.takeover.Unit bestUnit = null;
                 float bestScore = float.NegativeInfinity;
-                foreach (MapNode node in player.OwnedNodes.Where(value =>
+                foreach (MapNodeEntity node in player.OwnedNodes.Where(value =>
                              IsKeyBuilding(value.Building) && value.Building.IsActive))
                 {
                     float frontier = FrontierBonus(node, player);
@@ -93,16 +96,16 @@ namespace GameLogic.Takeover
                 }
 
                 if (bestNode == null || bestUnit == null) return;
-                Squad bought = EconomySystem.BuyUnit(player, bestUnit, bestNode, out _);
+                SquadEntity bought = EconomySystem.BuyUnit(player, bestUnit, bestNode, out _);
                 if (bought == null) return;
                 // 新兵先去集结地，不要一个一个往敌人堆里送
-                MapNode push = StagingNode(player, PickAttackTarget(player));
+                MapNodeEntity push = StagingNode(player, PickAttackTarget(player));
                 if (push != null) MapSystem.OrderMove(bought, push);
             }
         }
 
         /// <summary>集结地：己方据点里离目标最近的那个。</summary>
-        private MapNode StagingNode(PlayerState player, MapNode target)
+        private MapNodeEntity StagingNode(PlayerStateEntity player, MapNodeEntity target)
         {
             if (target == null) return null;
             return player.OwnedNodes
@@ -112,7 +115,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>目标据点附近守军的战力（用来判断打得过再打）。</summary>
-        internal float DefenderPower(MapNode node)
+        internal float DefenderPower(MapNodeEntity node)
         {
             if (node == null) return 0f;
             return Squads.Where(squad => !squad.IsDead && squad.HomeNode == node &&
@@ -121,7 +124,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>战斗力 / 价格，兼顾远程和血量；高 Tier 略微加权。</summary>
-        internal float UnitScore(PlayerState player, GameConfig.takeover.Unit unit)
+        internal float UnitScore(PlayerStateEntity player, GameConfig.takeover.Unit unit)
         {
             float dps = (unit.DmgMin + unit.DmgMax) * 0.5f * Mathf.Max(1, unit.UnitsCount) /
                         Mathf.Max(0.2f, unit.AttackSpeed);
@@ -132,7 +135,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>据点威胁度：附近敌军越多、附近敌方据点越近、守军越少，分越高。</summary>
-        internal float BuildingThreat(MapNode node)
+        internal float BuildingThreat(MapNodeEntity node)
         {
             if (node?.Building == null) return 0f;
             float score = Squads.Count(squad => !squad.IsDead && squad.Faction != node.Building.Owner &&
@@ -140,7 +143,7 @@ namespace GameLogic.Takeover
             int defenders = Squads.Count(squad => !squad.IsDead && squad.Faction == node.Building.Owner &&
                                                     squad.HomeNode == node &&
                                                     Vector2.Distance(squad.Pos, node.Pos) <= 60f);
-            foreach (MapNode other in Nodes.Where(value => IsKeyBuilding(value.Building) &&
+            foreach (MapNodeEntity other in Nodes.Where(value => IsKeyBuilding(value.Building) &&
                                                            value.Building.IsActive &&
                                                            value.Building.Owner != node.Building.Owner))
             {
@@ -154,10 +157,10 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>离敌方关键建筑越近的据点加成越高，兵才会往前面堆。</summary>
-        private float FrontierBonus(MapNode node, PlayerState player)
+        private float FrontierBonus(MapNodeEntity node, PlayerStateEntity player)
         {
             float best = float.MaxValue;
-            foreach (MapNode other in Nodes.Where(value =>
+            foreach (MapNodeEntity other in Nodes.Where(value =>
                          IsKeyBuilding(value.Building) && value.Building.IsActive &&
                          value.Building.Owner != player.Faction))
             {
@@ -169,11 +172,11 @@ namespace GameLogic.Takeover
         // ---------------- 升级 ----------------
 
         /// <summary>有余钱就升级前线关键建筑：等级越高血量/产出越高，也更抗打。</summary>
-        internal void UpgradeFrontline(PlayerState player)
+        internal void UpgradeFrontline(PlayerStateEntity player)
         {
-            MapNode best = null;
+            MapNodeEntity best = null;
             float bestScore = float.NegativeInfinity;
-            foreach (MapNode node in player.OwnedNodes.Where(value =>
+            foreach (MapNodeEntity node in player.OwnedNodes.Where(value =>
                          IsKeyBuilding(value.Building) && value.Building.IsActive &&
                          value.Building.Level < BuildingState.MaxLevel))
             {
@@ -196,20 +199,20 @@ namespace GameLogic.Takeover
         /// 集中兵力：战力够了就打敌方最薄弱的关键建筑；战力不够就先把富余守军推到前线据点集合，
         /// 同时把最近的无命令部队调回被围攻的据点。
         /// </summary>
-        internal void CommandArmy(PlayerState player)
+        internal void CommandArmy(PlayerStateEntity player)
         {
-            MapNode underAttack = player.OwnedNodes
+            MapNodeEntity underAttack = player.OwnedNodes
                 .Where(value => IsKeyBuilding(value.Building) && value.Building.IsActive)
                 .OrderByDescending(BuildingThreat)
                 .FirstOrDefault(node => BuildingThreat(node) > 40f);
 
-            List<Squad> idle = player.Squads
+            List<SquadEntity> idle = player.Squads
                 .Where(squad => !squad.IsDead && !squad.HasMoveOrder)
                 .ToList();
 
             if (underAttack != null)
             {
-                Squad defender = idle
+                SquadEntity defender = idle
                     .Where(squad => squad.HomeNode != underAttack)
                     .OrderBy(squad => Vector2.Distance(squad.Pos, underAttack.Pos))
                     .FirstOrDefault();
@@ -226,17 +229,17 @@ namespace GameLogic.Takeover
             // 收尾阶段（敌方只剩 1-2 个关键建筑）不再留驻军、阈值也放宽，避免「围而不打」
             bool endgame = enemyKeys > 0 && enemyKeys <= 2;
 
-            List<Squad> available = endgame
+            List<SquadEntity> available = endgame
                 ? idle.ToList()
                 : idle.Where(squad => !OnGarrisonDuty(squad)).ToList();
             float power = available.Sum(SquadPower);
-            MapNode target = PickAttackTarget(player);
+            MapNodeEntity target = PickAttackTarget(player);
             if (target == null) return;
 
             // 空血建筑只差走上去接收，不需要凑战力：随便派一支过去占领
             if (target.Building != null && target.Building.Hp <= 0f)
             {
-                Squad receiver = available.FirstOrDefault() ?? idle.FirstOrDefault();
+                SquadEntity receiver = available.FirstOrDefault() ?? idle.FirstOrDefault();
                 if (receiver != null) MapSystem.OrderMove(receiver, target);
                 return;
             }
@@ -250,7 +253,7 @@ namespace GameLogic.Takeover
             if (!strongEnough && idle.Count > available.Count)
             {
                 // 兵力压在阈值附近时，连驻军也抽出来（每个据点至少留 1 支）
-                List<Squad> extra = idle.Where(squad => !available.Contains(squad) &&
+                List<SquadEntity> extra = idle.Where(squad => !available.Contains(squad) &&
                                                         CanPullGarrison(squad)).ToList();
                 if (power + extra.Sum(SquadPower) >= threshold)
                 {
@@ -261,17 +264,17 @@ namespace GameLogic.Takeover
 
             if (strongEnough && available.Count > 0)
             {
-                foreach (Squad squad in available) MapSystem.OrderMove(squad, target);
+                foreach (SquadEntity squad in available) MapSystem.OrderMove(squad, target);
                 return;
             }
 
             // 战力不足：把富余部队推到最靠近目标的己方据点集合
-            MapNode staging = player.OwnedNodes
+            MapNodeEntity staging = player.OwnedNodes
                 .Where(value => value != target)
                 .OrderBy(value => Vector2.Distance(value.Pos, target.Pos))
                 .FirstOrDefault();
             if (staging == null) return;
-            foreach (Squad squad in available) MapSystem.OrderMove(squad, staging);
+            foreach (SquadEntity squad in available) MapSystem.OrderMove(squad, staging);
         }
 
         /// <summary>
@@ -279,9 +282,9 @@ namespace GameLogic.Takeover
         /// 之前按「每个关键建筑留 1 支」来算，占的地盘越多就被钉得越多，
         /// 到收尾阶段所有部队都成了驻军，于是出现「还剩一个城堡却围而不打」。
         /// </summary>
-        private bool OnGarrisonDuty(Squad squad)
+        private bool OnGarrisonDuty(SquadEntity squad)
         {
-            MapNode home = squad.HomeNode;
+            MapNodeEntity home = squad.HomeNode;
             if (home?.Building == null || !IsKeyBuilding(home.Building)) return false;
             if (Vector2.Distance(squad.Pos, home.Pos) > 80f) return false;
             if (BuildingThreat(home) <= 40f) return false;
@@ -294,9 +297,9 @@ namespace GameLogic.Takeover
             int count = 0;
             for (int i = 0; i < Squads.Count; i++)
             {
-                Squad squad = Squads[i];
+                SquadEntity squad = Squads[i];
                 if (squad.IsDead) continue;
-                MapNode home = squad.HomeNode;
+                MapNodeEntity home = squad.HomeNode;
                 if (home?.Building == null || !IsKeyBuilding(home.Building)) continue;
                 if (Vector2.Distance(squad.Pos, home.Pos) > 80f) continue;
                 count++;
@@ -305,9 +308,9 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>该据点守军超过 1 支时，可以抽走多余的那支去进攻。</summary>
-        private bool CanPullGarrison(Squad squad)
+        private bool CanPullGarrison(SquadEntity squad)
         {
-            MapNode home = squad.HomeNode;
+            MapNodeEntity home = squad.HomeNode;
             if (home?.Building == null || !IsKeyBuilding(home.Building)) return false;
             if (Vector2.Distance(squad.Pos, home.Pos) > 80f) return false;
             int defenders = Squads.Count(other => !other.IsDead && other.HomeNode == home &&
@@ -316,12 +319,12 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>挑敌方关键建筑里「距离近 + 守军少」的那个；血量为 0 的建筑优先级最高（只差走上去接收）。</summary>
-        internal MapNode PickAttackTarget(PlayerState player)
+        internal MapNodeEntity PickAttackTarget(PlayerStateEntity player)
         {
-            MapNode best = null;
+            MapNodeEntity best = null;
             float bestScore = float.NegativeInfinity;
-            MapNode from = player.OwnedNodes.FirstOrDefault();
-            foreach (MapNode node in Nodes.Where(value =>
+            MapNodeEntity from = player.OwnedNodes.FirstOrDefault();
+            foreach (MapNodeEntity node in Nodes.Where(value =>
                          IsKeyBuilding(value.Building) &&
                          value.Building.Owner != player.Faction))
             {
@@ -345,7 +348,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>粗略战力：存活人数 ×（每兵血量权重 + 每兵输出）。</summary>
-        internal float SquadPower(Squad squad)
+        internal float SquadPower(SquadEntity squad)
         {
             int alive = squad.AliveSoldiers;
             if (alive <= 0 || squad.Def == null) return 0f;
@@ -355,7 +358,8 @@ namespace GameLogic.Takeover
 
         // ---------------- 法术 ----------------
 
-        internal void CastAiSpells(PlayerState player)
+        /// <summary>按 AI 规则尝试施放可用法术。</summary>
+        internal void CastAiSpells(PlayerStateEntity player)
         {
             if (!player.SpellsEnabled || player.SpellCooldown > 0f) return;
             foreach (GameConfig.takeover.Spell spell in SpellSystem.AvailableSpells(player)
@@ -374,15 +378,16 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal Vector2 FindAiSpellTarget(PlayerState player, GameConfig.takeover.Spell spell)
+        /// <summary>按法术类型寻找 AI 施法目标。</summary>
+        internal Vector2 FindAiSpellTarget(PlayerStateEntity player, GameConfig.takeover.Spell spell)
         {
             int id = OriginalRules.OriginalSpellIndex(spell.Id);
             bool beneficial = id == 1 || id == 2 || id == 6 || id == 9 || id == 10 || id == 14;
-            IEnumerable<CombatUnit> units = beneficial
+            IEnumerable<CombatUnitEntity> units = beneficial
                 ? Squads.Where(squad => !squad.IsDead && squad.Faction == player.Faction).SelectMany(squad => squad.Units)
                 : Squads.Where(squad => !squad.IsDead && squad.Faction != player.Faction &&
                                          squad.Faction != Faction.Bandits).SelectMany(squad => squad.Units);
-            CombatUnit best = units.Where(unit => !unit.IsDead)
+            CombatUnitEntity best = units.Where(unit => !unit.IsDead)
                 .OrderByDescending(unit => beneficial ? 1f - unit.HpRatio : 1f)
                 .ThenBy(unit => Vector2.Distance(unit.Pos, player.OwnedNodes.FirstOrDefault()?.Pos ?? Vector2.zero))
                 .FirstOrDefault();
@@ -391,7 +396,8 @@ namespace GameLogic.Takeover
                    new Vector2(OriginalRules.NativeStageWidth * 0.5f, OriginalRules.NativeStageHeight);
         }
 
-        internal bool HasAiSpellTarget(PlayerState player, GameConfig.takeover.Spell spell, Vector2 position)
+        /// <summary>判断指定法术当前是否存在有效目标。</summary>
+        internal bool HasAiSpellTarget(PlayerStateEntity player, GameConfig.takeover.Spell spell, Vector2 position)
         {
             int id = OriginalRules.OriginalSpellIndex(spell.Id);
             bool beneficial = id == 1 || id == 2 || id == 6 || id == 9 || id == 10 || id == 14;
@@ -401,7 +407,8 @@ namespace GameLogic.Takeover
                                        Vector2.Distance(squad.Pos, position) <= spell.Radius);
         }
 
-        internal void TryAiUltimate(PlayerState player)
+        /// <summary>检查条件并尝试施放 AI 的终极技能。</summary>
+        internal void TryAiUltimate(PlayerStateEntity player)
         {
             if (player.Ultimate + 0.0001f < player.UltimateMax || !CanAiCastUltimate(player)) return;
             GameConfig.takeover.Spell ultimate = SpellSystem.AvailableSpells(player).FirstOrDefault(spell => spell.SpellType == 2);
@@ -410,7 +417,8 @@ namespace GameLogic.Takeover
             SpellSystem.TryCastSpell(player, ultimate, position, MapSystem.NearestKeyNode(position), out _);
         }
 
-        internal bool CanAiCastUltimate(PlayerState player)
+        /// <summary>检查 AI 当前是否满足释放终极技能的条件。</summary>
+        internal bool CanAiCastUltimate(PlayerStateEntity player)
         {
             int own = Squads.Count(squad => !squad.IsDead && squad.Faction == player.Faction);
             int enemies = Squads.Count(squad => !squad.IsDead && squad.Faction != player.Faction &&

@@ -10,13 +10,17 @@ namespace GameLogic.Takeover
     /// <summary>窗口若暴露了原版字体，动态列表按钮创建时会自动套用。</summary>
     public interface ITakeoverFontSource
     {
+        /// <summary>界面使用的字体。</summary>
         Font Font { get; }
     }
 
+    /// <summary>负责加载、应用和释放 Takeover 界面字体资源。</summary>
     internal static class TakeoverUIResources
     {
+        /// <summary>Takeover 界面字体的资源位置。</summary>
         private const string FontLocation = "takeover_font_328_Chaparral_Pro";
 
+        /// <summary>异步加载界面字体并应用到指定对象层级。</summary>
         public static async UniTask<Font> LoadAndApplyFontAsync(GameObject root, CancellationToken token)
         {
             Text templateText = root.GetComponentInChildren<Text>(true);
@@ -50,6 +54,7 @@ namespace GameLogic.Takeover
             return loadedFont;
         }
 
+        /// <summary>将字体应用到指定对象层级中的文本。</summary>
         public static void ApplyFont(GameObject root, Font font)
         {
             if (root == null || font == null) return;
@@ -57,6 +62,7 @@ namespace GameLogic.Takeover
                 text.font = font;
         }
 
+        /// <summary>释放界面持有的字体资源。</summary>
         public static void ReleaseFont(Font font)
         {
             if (font != null) GameModule.Resource.UnloadAsset(font);

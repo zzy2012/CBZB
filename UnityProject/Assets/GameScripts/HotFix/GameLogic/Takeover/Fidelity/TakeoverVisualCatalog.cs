@@ -12,6 +12,7 @@ namespace GameLogic.Takeover
     /// </summary>
     public static class TakeoverVisualCatalog
     {
+        /// <summary>获取指定单位的精灵资源位置。</summary>
         public static string UnitLocation(GameConfig.takeover.Unit unit) =>
             $"takeover_unit_{unit.Id}_" + Slug(unit.Name);
 
@@ -19,6 +20,7 @@ namespace GameLogic.Takeover
         public static string BuildingLocation(int buildingId) =>
             Cfg.BuildingById(buildingId)?.Sprite ?? string.Empty;
 
+        /// <summary>获取指定地图节点类型的精灵资源位置。</summary>
         public static string NodeLocation(NodeKind kind)
         {
             switch (kind)
@@ -31,17 +33,20 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>按指定单位、节点或资源位置为渲染器绑定精灵。</summary>
         public static void Bind(SpriteRenderer renderer, GameConfig.takeover.Unit unit)
         {
             Bind(renderer, UnitLocation(unit));
         }
 
-        public static void Bind(SpriteRenderer renderer, MapNode node)
+        /// <summary>按指定单位、节点或资源位置为渲染器绑定精灵。</summary>
+        public static void Bind(SpriteRenderer renderer, MapNodeEntity node)
         {
             Bind(renderer, LocationFor(node));
         }
 
-        public static string LocationFor(MapNode node)
+        /// <summary>获取地图节点当前应显示的精灵资源位置。</summary>
+        public static string LocationFor(MapNodeEntity node)
         {
             if (node == null) return string.Empty;
             return node.Building != null
@@ -49,6 +54,7 @@ namespace GameLogic.Takeover
                 : NodeLocation(node.Kind);
         }
 
+        /// <summary>按指定单位、节点或资源位置为渲染器绑定精灵。</summary>
         public static bool Bind(SpriteRenderer renderer, string location)
         {
             if (renderer == null || string.IsNullOrEmpty(location)) return false;
@@ -57,6 +63,7 @@ namespace GameLogic.Takeover
             return true;
         }
 
+        /// <summary>绑定关卡背景精灵并按目标尺寸调整显示。</summary>
         public static void BindMapBackground(SpriteRenderer renderer, int levelId, Vector2 targetSize)
         {
             if (renderer == null) return;
@@ -72,6 +79,7 @@ namespace GameLogic.Takeover
             });
         }
 
+        /// <summary>获取指定单位动画使用的精灵资源位置。</summary>
         public static string[] UnitAnimationLocations(GameConfig.takeover.Unit unit)
         {
             string root = UnitLocation(unit);
@@ -90,6 +98,7 @@ namespace GameLogic.Takeover
             return level == null ? Vector2.zero : new Vector2(level.MapOffsetX, level.MapOffsetY);
         }
 
+        /// <summary>将单位名称转换为精灵资源路径使用的标识片段。</summary>
         private static string Slug(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return "unknown";

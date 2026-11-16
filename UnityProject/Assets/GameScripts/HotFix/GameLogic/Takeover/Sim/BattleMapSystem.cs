@@ -5,16 +5,19 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>处理战场地图、寻路和移动命令。</summary>
     internal sealed class BattleMapSystem : BattleSimSystem
     {
+        /// <summary>创建并关联当前战斗模拟的地图系统。</summary>
         internal BattleMapSystem(BattleSim sim) : base(sim) { }
 
+        /// <summary>依据关卡配置创建地图节点、连接边和建筑状态。</summary>
         internal void BuildMap(int levelAssetId)
         {
             foreach (GameConfig.takeover.MapNode config in Cfg.TbMapNode.DataList.Where(value => value.LevelId == levelAssetId))
             {
                 Faction owner = OriginalRules.FromConfigFaction(config.Owner);
-                var node = new MapNode
+                var node = new MapNodeEntity
                 {
                     Id = config.Id,
                     Key = config.NodeKey,
@@ -25,7 +28,7 @@ namespace GameLogic.Takeover
                 };
                 if (node.Kind >= NodeKind.Castle && node.Kind <= NodeKind.MageTower)
                 {
-                    PlayerState player = EnsurePlayer(owner);
+                    PlayerStateEntity player = EnsurePlayer(owner);
                     var buildingDef = Cfg.BuildingByKind((int)node.Kind);
                     if (buildingDef != null)
                     {
@@ -51,8 +54,8 @@ namespace GameLogic.Takeover
 
             foreach (GameConfig.takeover.MapEdge config in Cfg.TbMapEdge.DataList.Where(value => value.LevelId == levelAssetId))
             {
-                if (!NodeByKey.TryGetValue(config.NodeA, out MapNode nodeA) ||
-                    !NodeByKey.TryGetValue(config.NodeB, out MapNode nodeB))
+                if (!NodeByKey.TryGetValue(config.NodeA, out MapNodeEntity nodeA) ||
+                    !NodeByKey.TryGetValue(config.NodeB, out MapNodeEntity nodeB))
                     continue;
                 var edge = new MapEdge
                 {
@@ -71,11 +74,12 @@ namespace GameLogic.Takeover
             }
         }
 
-        internal PlayerState EnsurePlayer(Faction faction)
+        /// <summary>确保地图配置中的参与方已加入当前模拟。</summary>
+        internal PlayerStateEntity EnsurePlayer(Faction faction)
         {
-            PlayerState existing = PlayerOf(faction);
+            PlayerStateEntity existing = PlayerOf(faction);
             if (existing != null) return existing;
-            var player = new PlayerState
+            var player = new PlayerStateEntity
             {
                 Id = Players.Count,
                 Name = faction.ToString(),
@@ -87,7 +91,8 @@ namespace GameLogic.Takeover
             return player;
         }
 
-        internal MapNode FindNearestHostileNode(MapNode from, PlayerState player)
+        /// <summary>查找最近的敌方控制地图节点。</summary>
+        internal MapNodeEntity FindNearestHostileNode(MapNodeEntity from, PlayerStateEntity player)
         {
             if (from == null) return null;
             return Nodes.Where(node => IsKeyBuilding(node.Building) && node.Building.Owner != player.Faction)
@@ -95,20 +100,21 @@ namespace GameLogic.Takeover
                 .FirstOrDefault();
         }
 
-        internal float ShortestDistance(MapNode from, MapNode to)
+        /// <summary>计算两个地图节点之间的最短路径距离。</summary>
+        internal float ShortestDistance(MapNodeEntity from, MapNodeEntity to)
         {
             if (from == null || to == null) return float.MaxValue;
-            var distances = new Dictionary<MapNode, float>();
-            var queue = new List<MapNode> { from };
+            var distances = new Dictionary<MapNodeEntity, float>();
+            var queue = new List<MapNodeEntity> { from };
             distances[from] = 0f;
             while (queue.Count > 0)
             {
-                MapNode current = queue.OrderBy(node => distances[node]).First();
+                MapNodeEntity current = queue.OrderBy(node => distances[node]).First();
                 queue.Remove(current);
                 if (current == to) return distances[current];
                 foreach (MapEdge edge in current.Edges)
                 {
-                    MapNode next = edge.NodeA == current ? edge.NodeB : edge.NodeA;
+                    MapNodeEntity next = edge.NodeA == current ? edge.NodeB : edge.NodeA;
                     float candidate = distances[current] + Mathf.Max(1f, edge.Length);
                     if (distances.TryGetValue(next, out float existing) && existing <= candidate) continue;
                     distances[next] = candidate;
@@ -118,12 +124,14 @@ namespace GameLogic.Takeover
             return float.MaxValue;
         }
 
-        internal void OrderMove(Squad squad, MapNode targetNode)
+        /// <summary>为指定部队设置目标节点或目标位置。</summary>
+        internal void OrderMove(SquadEntity squad, MapNodeEntity targetNode)
         {
             OrderMove(squad, targetNode?.Pos ?? squad.Pos, targetNode);
         }
 
-        internal void OrderMove(Squad squad, Vector2 position, MapNode targetNode = null)
+        /// <summary>为指定部队设置目标节点或目标位置。</summary>
+        internal void OrderMove(SquadEntity squad, Vector2 position, MapNodeEntity targetNode = null)
         {
             if (squad == null || squad.IsDead) return;
             squad.TargetNode = targetNode;
@@ -132,19 +140,20 @@ namespace GameLogic.Takeover
             squad.Path = BuildPath(squad, position, targetNode);
             squad.PathIndex = squad.Path == null || squad.Path.Count == 0 ? 0 : Mathf.Min(1, squad.Path.Count - 1);
             squad.HasMoveOrder = squad.Path != null && squad.Path.Count > 0;
-            foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead))
+            foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead))
             {
                 unit.Pursuing = false;
                 unit.ChargeAvailable = (squad.Abilities & AbilityMask.Charge) != 0;
             }
         }
 
-        internal List<Vector2> BuildPath(Squad squad, Vector2 target, MapNode targetNode)
+        /// <summary>根据地图连接关系构造部队行军路径点。</summary>
+        internal List<Vector2> BuildPath(SquadEntity squad, Vector2 target, MapNodeEntity targetNode)
         {
-            MapNode start = squad.AtNode ?? NearestNode(squad.Pos);
+            MapNodeEntity start = squad.AtNode ?? NearestNode(squad.Pos);
             if (start == null || targetNode == null)
                 return new List<Vector2> { squad.Pos, target };
-            List<MapNode> nodePath = FindPath(start, targetNode);
+            List<MapNodeEntity> nodePath = FindPath(start, targetNode);
             if (nodePath == null || nodePath.Count == 0)
                 return new List<Vector2> { squad.Pos, target };
             var points = new List<Vector2> { squad.Pos };
@@ -166,32 +175,35 @@ namespace GameLogic.Takeover
             return points;
         }
 
-        internal MapNode NearestNode(Vector2 position)
+        /// <summary>查找距离指定位置最近的地图节点。</summary>
+        internal MapNodeEntity NearestNode(Vector2 position)
         {
             return Nodes.OrderBy(node => Vector2.SqrMagnitude(node.Pos - position)).FirstOrDefault();
         }
 
-        internal MapNode NearestKeyNode(Vector2 position)
+        /// <summary>查找距离指定位置最近的关键节点。</summary>
+        internal MapNodeEntity NearestKeyNode(Vector2 position)
         {
             return Nodes.Where(node => node.Building != null)
                 .OrderBy(node => Vector2.SqrMagnitude(node.Pos - position))
                 .FirstOrDefault();
         }
 
-        internal List<MapNode> FindPath(MapNode from, MapNode to)
+        /// <summary>使用地图连接关系查找节点间路径。</summary>
+        internal List<MapNodeEntity> FindPath(MapNodeEntity from, MapNodeEntity to)
         {
             if (from == null || to == null) return null;
-            var distances = new Dictionary<MapNode, float> { [from] = 0f };
-            var previous = new Dictionary<MapNode, MapNode>();
-            var open = new List<MapNode> { from };
+            var distances = new Dictionary<MapNodeEntity, float> { [from] = 0f };
+            var previous = new Dictionary<MapNodeEntity, MapNodeEntity>();
+            var open = new List<MapNodeEntity> { from };
             while (open.Count > 0)
             {
-                MapNode current = open.OrderBy(node => distances[node]).First();
+                MapNodeEntity current = open.OrderBy(node => distances[node]).First();
                 open.Remove(current);
                 if (current == to) break;
                 foreach (MapEdge edge in current.Edges)
                 {
-                    MapNode next = edge.NodeA == current ? edge.NodeB : edge.NodeA;
+                    MapNodeEntity next = edge.NodeA == current ? edge.NodeB : edge.NodeA;
                     float candidate = distances[current] + Mathf.Max(1f, edge.Length);
                     if (distances.TryGetValue(next, out float currentDistance) && currentDistance <= candidate)
                         continue;
@@ -201,8 +213,8 @@ namespace GameLogic.Takeover
                 }
             }
             if (!distances.ContainsKey(to)) return null;
-            var path = new List<MapNode>();
-            for (MapNode node = to; node != null; node = previous.TryGetValue(node, out MapNode prev) ? prev : null)
+            var path = new List<MapNodeEntity>();
+            for (MapNodeEntity node = to; node != null; node = previous.TryGetValue(node, out MapNodeEntity prev) ? prev : null)
             {
                 path.Add(node);
                 if (node == from) break;
@@ -211,7 +223,8 @@ namespace GameLogic.Takeover
             return path;
         }
 
-        internal void Capture(MapNode node, Squad capturer)
+        /// <summary>处理部队对中立或敌方建筑的占领。</summary>
+        internal void Capture(MapNodeEntity node, SquadEntity capturer)
         {
             if (!IsKeyBuilding(node?.Building) || node.Building.Owner == capturer.Faction) return;
             Faction previousOwner = node.Building.Owner;
@@ -223,7 +236,7 @@ namespace GameLogic.Takeover
             if (LevelAssetId == 1 && node == _tutorialTown && !_tutorialTownCaptured)
             {
                 _tutorialTownCaptured = true;
-                PlayerState empire = PlayerOf(Faction.Empire);
+                PlayerStateEntity empire = PlayerOf(Faction.Empire);
                 GameConfig.takeover.Unit replacement = EconomySystem.FindUnit(Faction.Empire, UnitKind.Infantry, 1);
                 if (empire != null && replacement != null) empire.Gold += replacement.Cost;
                 _events.Add(new BattleEvent
@@ -257,7 +270,8 @@ namespace GameLogic.Takeover
             });
         }
 
-        internal static void ReinitializeBuilding(BuildingState building, PlayerState owner)
+        /// <summary>根据节点当前状态重建建筑运行状态。</summary>
+        internal static void ReinitializeBuilding(BuildingState building, PlayerStateEntity owner)
         {
             int hp = building.Hp;
             var def = Cfg.BuildingById(building.Kind);
@@ -271,13 +285,14 @@ namespace GameLogic.Takeover
             building.Hp = Mathf.Clamp(hp, 0, building.MaxHp);
         }
 
+        /// <summary>根据建筑归属刷新各参与方拥有的节点集合。</summary>
         internal void RefreshOwnership()
         {
-            foreach (PlayerState player in Players)
+            foreach (PlayerStateEntity player in Players)
                 player.OwnedNodes.RemoveAll(node => node.Building == null || node.Building.Owner != player.Faction);
-            foreach (MapNode node in Nodes.Where(value => value.Building != null))
+            foreach (MapNodeEntity node in Nodes.Where(value => value.Building != null))
             {
-                PlayerState owner = EnsurePlayer(node.Building.Owner);
+                PlayerStateEntity owner = EnsurePlayer(node.Building.Owner);
                 if (!owner.OwnedNodes.Contains(node)) owner.OwnedNodes.Add(node);
             }
         }

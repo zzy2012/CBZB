@@ -13,57 +13,95 @@ namespace GameLogic.Takeover
     /// </summary>
     public sealed class TakeoverRunner : MonoBehaviour
     {
+        /// <summary>原版舞台坐标到精灵显示尺寸的缩放系数。</summary>
         private const float NativeSpriteScale = 100f;
 
         /// <summary>建筑底图按阵营染色的强度（0 = 原图，1 = 完全用阵营色）。</summary>
         private const float FactionTintBlend = 0.55f;
 
+        /// <summary>当前运行中的战斗模拟门面。</summary>
         private BattleSimulation _sim;
+        /// <summary>用于显示战场的摄像机。</summary>
         private Camera _cam;
+        /// <summary>战场表现对象的根变换。</summary>
         private Transform _root;
-        private readonly Dictionary<MapNode, SpriteRenderer> _nodeViews = new Dictionary<MapNode, SpriteRenderer>();
+        /// <summary>地图节点标识到场景显示对象的映射。</summary>
+        private readonly Dictionary<MapNodeEntity, SpriteRenderer> _nodeViews = new Dictionary<MapNodeEntity, SpriteRenderer>();
+        /// <summary>部队标识到场景显示对象的映射。</summary>
         private readonly Dictionary<int, SpriteRenderer> _squadViews = new Dictionary<int, SpriteRenderer>();
+        /// <summary>已绑定节点精灵的显示对象集合。</summary>
         private readonly Dictionary<int, string> _boundNodeVisuals = new Dictionary<int, string>();
-        private readonly Dictionary<MapNode, LineRenderer> _nodeClickableAreas =
-            new Dictionary<MapNode, LineRenderer>();
+        /// <summary>各地图节点对应的可点击区域。</summary>
+        private readonly Dictionary<MapNodeEntity, LineRenderer> _nodeClickableAreas =
+            new Dictionary<MapNodeEntity, LineRenderer>();
+        /// <summary>各部队士兵对应的可点击区域。</summary>
         private readonly Dictionary<int, LineRenderer> _unitClickableAreas =
             new Dictionary<int, LineRenderer>();
+        /// <summary>当前关卡的地图背景渲染器。</summary>
         private SpriteRenderer _mapBackground;
-        private MapNode _selected;
-        private Squad _selectedSquad;
+        /// <summary>当前选中的地图节点。</summary>
+        private MapNodeEntity _selected;
+        /// <summary>当前选中的部队。</summary>
+        private SquadEntity _selectedSquad;
+        /// <summary>是否正在拖动鼠标选择单位。</summary>
         private bool _dragging;
+        /// <summary>上一次记录的鼠标屏幕位置。</summary>
         private Vector3 _lastMouse;
+        /// <summary>战斗是否暂停。</summary>
         private bool _paused;
+        /// <summary>当前模拟速度倍率。</summary>
         private float _speed = 1f;
+        /// <summary>战斗结算结果是否已处理。</summary>
         private bool _reported;
+        /// <summary>关卡选择界面是否打开。</summary>
         private bool _levelSelectOpen = true;
+        /// <summary>当前等待玩家选择目标的法术。</summary>
         private GameConfig.takeover.Spell _pendingSpell;
+        /// <summary>当前注册的战斗界面。</summary>
         private TakeoverBattleUI _battleUI;
-        private Squad _dragSquad;
+        /// <summary>鼠标拖动操作选中的部队。</summary>
+        private SquadEntity _dragSquad;
+        /// <summary>鼠标按下时的屏幕坐标。</summary>
         private Vector2 _pressScreen;
+        /// <summary>显示部队移动命令预览的线条渲染器。</summary>
         private LineRenderer _orderPreview;
+        /// <summary>用于绘制可点击区域的材质实例。</summary>
         private Material _clickableAreaMaterial;
+        /// <summary>取消当前异步关卡视觉资源绑定操作的令牌源。</summary>
         private CancellationTokenSource _visualBindingCancellationTokenSource;
 
+        /// <summary>是否已记录部队标记创建失败日志。</summary>
         private bool _badgeCreateErrorLogged;
+        /// <summary>是否已记录部队标记预制体探测日志。</summary>
         private bool _badgeProbeLogged;
+        /// <summary>部队标记是否因创建失败而停用。</summary>
         private bool _badgeDisabled;
+        /// <summary>按部队标识缓存的部队界面标记。</summary>
         private readonly Dictionary<int, TakeoverSquadBadgeWidget> _squadBadges =
             new Dictionary<int, TakeoverSquadBadgeWidget>();
+        /// <summary>按节点标识缓存的建筑界面标记。</summary>
         private readonly Dictionary<int, TakeoverBuildingBadgeWidget> _buildingBadges =
             new Dictionary<int, TakeoverBuildingBadgeWidget>();
+        /// <summary>建筑标记是否因创建失败而停用。</summary>
         private bool _buildingBadgeDisabled;
+        /// <summary>是否已记录建筑标记创建失败日志。</summary>
         private bool _buildingBadgeErrorLogged;
 
+        /// <summary>部队标记相对战场位置的纵向偏移。</summary>
         private const float BadgeWorldOffsetY = 34f;
+        /// <summary>建筑标记相对战场位置的纵向偏移。</summary>
         private const float BuildingBadgeWorldOffsetY = 42f;
 
         /// <summary>敌方普通法术播报的最小间隔（秒），避免 AI 互丢法术刷屏。</summary>
         private const float EnemySpellToastInterval = 4f;
+        /// <summary>最近一次敌方施法提示的时间。</summary>
         private float _lastEnemySpellToast = -100f;
 
+        /// <summary>待开始或当前关卡的资源标识。</summary>
         public int LevelAssetId = 1;
+        /// <summary>用于初始化人类玩家的阵营。</summary>
         public Faction HumanFaction = Faction.Westaria;
+        /// <summary>用于初始化敌方的阵营。</summary>
         public Faction EnemyFaction = Faction.Empire;
 
         /// <summary>调试开关：关掉后不再创建 squad 头顶徽标（排查卡顿/不显示时用）。</summary>
@@ -72,6 +110,7 @@ namespace GameLogic.Takeover
         /// <summary>调试开关：关掉后不再创建建筑头顶徽标。</summary>
         public bool ShowBuildingBadges = true;
 
+        /// <summary>初始化战场对象、摄像机和界面运行状态。</summary>
         private void Awake()
         {
             Application.targetFrameRate = 60;
@@ -96,6 +135,7 @@ namespace GameLogic.Takeover
                 TakeoverToastUI.Show(Campaign.LastLoadWarning, 5f);
         }
 
+        /// <summary>停止战场资源加载并清理表现对象及标记。</summary>
         private void OnDestroy()
         {
             ClearSquadBadges();
@@ -111,11 +151,13 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>按当前关卡资源标识开始战斗。</summary>
         public void NewGame()
         {
             StartLevel(LevelAssetId);
         }
 
+        /// <summary>打开关卡选择界面。</summary>
         public void ShowLevelSelect()
         {
             PlayMusic("takeover_sfx_8126_musicMenuClass_musicMenuClass");
@@ -135,6 +177,7 @@ namespace GameLogic.Takeover
                 TakeoverToastUI.Show(Campaign.LastLoadWarning, 5f);
         }
 
+        /// <summary>按关卡资源标识开始战斗。</summary>
         public void StartLevel(int levelAssetId)
         {
             if (!Campaign.IsUnlocked(levelAssetId))
@@ -194,6 +237,7 @@ namespace GameLogic.Takeover
             Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
         }
 
+        /// <summary>显示当前关卡的教程或场景提示。</summary>
         private void ShowScenarioHint()
         {
             if (LevelAssetId == 1)
@@ -204,6 +248,7 @@ namespace GameLogic.Takeover
                 TakeoverToastUI.Show("左键按住头顶徽标拖动下令；左键点击建筑打开面板", 6f);
         }
 
+        /// <summary>注册当前战斗界面。</summary>
         public void RegisterBattleUI(TakeoverBattleUI ui)
         {
             _battleUI = ui;
@@ -211,6 +256,7 @@ namespace GameLogic.Takeover
                 _battleUI.ShowBattle();
         }
 
+        /// <summary>注销指定战斗界面。</summary>
         public void UnregisterBattleUI(TakeoverBattleUI ui)
         {
             if (_battleUI != ui) return;
@@ -221,6 +267,7 @@ namespace GameLogic.Takeover
             _badgeDisabled = false;
         }
 
+        /// <summary>将摄像机调整到当前战场的合适位置。</summary>
         private void FocusCamera()
         {
             if (_sim.Nodes.Count == 0) return;
@@ -239,11 +286,13 @@ namespace GameLogic.Takeover
             _cam.orthographicSize = Mathf.Max(halfH, halfW / Mathf.Max(0.1f, _cam.aspect));
         }
 
+        /// <summary>将模拟坐标转换为战场显示坐标。</summary>
         private static Vector2 DisplayPosition(Vector2 logical)
         {
             return TakeoverCoordinates.LogicalToDisplay(logical);
         }
 
+        /// <summary>为地图节点创建并绑定场景显示对象。</summary>
         private void BuildNodeViews()
         {
             foreach (var n in _sim.Nodes)
@@ -264,9 +313,10 @@ namespace GameLogic.Takeover
             BuildNodeClickableAreas();
         }
 
+        /// <summary>为可交互地图节点创建点击区域。</summary>
         private void BuildNodeClickableAreas()
         {
-            foreach (MapNode node in _sim.Nodes)
+            foreach (MapNodeEntity node in _sim.Nodes)
             {
                 if (!IsNodeClickable(node)) continue;
                 _nodeClickableAreas[node] =
@@ -274,6 +324,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>加载并布置当前关卡的地图背景。</summary>
         private void BuildMapBackground()
         {
             if (_sim.Nodes.Count == 0) return;
@@ -289,6 +340,7 @@ namespace GameLogic.Takeover
             _mapBackground.sortingOrder = -10;
         }
 
+        /// <summary>开始绑定当前关卡的地图视觉资源。</summary>
         private void BindLevelVisuals()
         {
             _visualBindingCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(
@@ -296,6 +348,7 @@ namespace GameLogic.Takeover
             BindLevelVisualsAsync(_visualBindingCancellationTokenSource.Token).Forget();
         }
 
+        /// <summary>异步加载并绑定当前关卡视觉资源。</summary>
         private async UniTask BindLevelVisualsAsync(CancellationToken cancellationToken)
         {
             // ResourceExtComponent 会在首帧之后创建精灵缓存。
@@ -317,6 +370,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>取消尚未完成的关卡视觉资源绑定。</summary>
         private void CancelVisualBinding()
         {
             if (_visualBindingCancellationTokenSource == null) return;
@@ -325,7 +379,8 @@ namespace GameLogic.Takeover
             _visualBindingCancellationTokenSource = null;
         }
 
-        private static Color NodeColor(MapNode n)
+        /// <summary>根据节点状态计算节点显示颜色。</summary>
+        private static Color NodeColor(MapNodeEntity n)
         {
             if (n.Building != null)
             {
@@ -346,13 +401,14 @@ namespace GameLogic.Takeover
         /// 建筑贴图各阵营共用一张底图（building.xlsx 的 sprite 列），
         /// 用 SpriteRenderer.color 把底图朝所属阵营色叠加，靠颜色区分国家。
         /// </summary>
-        private static Color FactionTint(MapNode node)
+        private static Color FactionTint(MapNodeEntity node)
         {
             if (node.Building == null) return Color.white;
             return Color.Lerp(Color.white, NodeColor(node), FactionTintBlend);
         }
 
-        private void BindNodeVisual(MapNode node, SpriteRenderer renderer)
+        /// <summary>将地图节点外观绑定到对应渲染对象。</summary>
+        private void BindNodeVisual(MapNodeEntity node, SpriteRenderer renderer)
         {
             if (node.Kind == NodeKind.Empty)
             {
@@ -372,6 +428,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>创建地图连接边和行军路径的显示对象。</summary>
         private void BuildEdgeViews()
         {
             foreach (MapEdge edge in _sim.Edges)
@@ -392,6 +449,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>创建节点与部队选中状态的显示对象。</summary>
         private void BuildSelectionVisuals()
         {
             if (_clickableAreaMaterial != null)
@@ -400,6 +458,7 @@ namespace GameLogic.Takeover
             _orderPreview = CreateOverlayLine("OrderPreview", new Color(1f, 0.85f, 0.35f, 0.9f));
         }
 
+        /// <summary>创建指定形状和位置的可点击区域。</summary>
         private LineRenderer CreateClickableArea(string objectName, int sortingOrder)
         {
             var go = new GameObject(objectName);
@@ -413,6 +472,7 @@ namespace GameLogic.Takeover
             return line;
         }
 
+        /// <summary>创建用于覆盖层显示的线条渲染器。</summary>
         private LineRenderer CreateOverlayLine(string objectName, Color color)
         {
             var go = new GameObject(objectName);
@@ -430,6 +490,7 @@ namespace GameLogic.Takeover
             return line;
         }
 
+        /// <summary>推进战斗模拟并同步战场表现。</summary>
         private void Update()
         {
             if (_sim == null || _levelSelectOpen) return;
@@ -468,6 +529,7 @@ namespace GameLogic.Takeover
             HandleInput();
         }
 
+        /// <summary>处理模拟器事件并触发对应界面反馈。</summary>
         private void ProcessBattleEvents()
         {
             foreach (BattleEvent battleEvent in _sim.DrainEvents())
@@ -511,7 +573,7 @@ namespace GameLogic.Takeover
         {
             var spell = Cfg.TbSpell.DataList.FirstOrDefault(value =>
                 value.Id == Mathf.RoundToInt(battleEvent.Value));
-            PlayerState caster = _sim != null
+            PlayerStateEntity caster = _sim != null
                 ? _sim.Players.FirstOrDefault(value => value.Id == battleEvent.ActorId)
                 : null;
             int originalId = spell != null ? OriginalRules.OriginalSpellIndex(spell.Id) : -1;
@@ -532,6 +594,7 @@ namespace GameLogic.Takeover
             Toast($"{who} 施放 {name}：{effect}");
         }
 
+        /// <summary>获取阵营对应的界面显示名称。</summary>
         private static string FactionDisplayName(Faction faction)
         {
             switch (faction)
@@ -544,15 +607,22 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>保存短暂法术线条特效的显示状态。</summary>
         private struct SpellFx
         {
+            /// <summary>绘制特效的线条渲染器。</summary>
             public LineRenderer Line;
+            /// <summary>特效的剩余显示时间。</summary>
             public float Life;
+            /// <summary>特效的总显示时间。</summary>
             public float Total;
+            /// <summary>特效使用的颜色。</summary>
             public Color Color;
         }
 
+        /// <summary>法术线条特效的显示时长，单位为秒。</summary>
         private const float SpellFxLife = 1.2f;
+        /// <summary>当前显示的法术线条特效集合。</summary>
         private readonly List<SpellFx> _spellFx = new List<SpellFx>();
 
         /// <summary>法术落点表现：一圈会淡出的范围指示；全屏类法术（半径 0）画满舞台。</summary>
@@ -582,6 +652,7 @@ namespace GameLogic.Takeover
             _spellFx.Add(new SpellFx { Line = line, Life = SpellFxLife, Total = SpellFxLife, Color = color });
         }
 
+        /// <summary>根据法术事件类型确定特效颜色。</summary>
         private static Color SpellFxColor(int originalId)
         {
             switch (originalId)
@@ -605,6 +676,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>更新法术线条特效的位置和剩余显示时间。</summary>
         private void UpdateSpellFx(float dt)
         {
             for (int i = _spellFx.Count - 1; i >= 0; i--)
@@ -624,6 +696,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>清理当前显示的法术线条特效。</summary>
         private void ClearSpellFx()
         {
             for (int i = 0; i < _spellFx.Count; i++)
@@ -633,12 +706,13 @@ namespace GameLogic.Takeover
             _spellFx.Clear();
         }
 
+        /// <summary>同步部队模拟状态与战场显示对象。</summary>
         private void SyncSquads()
         {
             var liveUnitIds = new HashSet<int>();
-            foreach (Squad squad in _sim.Squads)
+            foreach (SquadEntity squad in _sim.Squads)
             {
-                foreach (CombatUnit unit in squad.Units.Where(value => !value.IsDead))
+                foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead))
                 {
                     liveUnitIds.Add(unit.Id);
                     if (!_squadViews.TryGetValue(unit.Id, out SpriteRenderer renderer))
@@ -717,7 +791,7 @@ namespace GameLogic.Takeover
             }
 
             var live = new HashSet<int>();
-            foreach (Squad squad in _sim.Squads)
+            foreach (SquadEntity squad in _sim.Squads)
             {
                 if (squad.IsDead) continue;
                 live.Add(squad.Id);
@@ -769,6 +843,7 @@ namespace GameLogic.Takeover
             return pixelsPerStagePixel / canvas.scaleFactor;
         }
 
+        /// <summary>销毁指定部队的界面标记。</summary>
         private void DestroySquadBadge(int squadId)
         {
             if (!_squadBadges.TryGetValue(squadId, out TakeoverSquadBadgeWidget badge)) return;
@@ -776,6 +851,7 @@ namespace GameLogic.Takeover
             _squadBadges.Remove(squadId);
         }
 
+        /// <summary>清理所有部队界面标记。</summary>
         private void ClearSquadBadges()
         {
             foreach (int id in _squadBadges.Keys.ToList()) DestroySquadBadge(id);
@@ -795,7 +871,7 @@ namespace GameLogic.Takeover
                 return;
 
             var live = new HashSet<int>();
-            foreach (MapNode node in _sim.Nodes)
+            foreach (MapNodeEntity node in _sim.Nodes)
             {
                 BuildingState building = node.Building;
                 if (building == null || !BattleSim.IsKeyBuilding(building)) continue;
@@ -855,6 +931,7 @@ namespace GameLogic.Takeover
             return true;
         }
 
+        /// <summary>销毁指定建筑的界面标记。</summary>
         private void DestroyBuildingBadge(int nodeId)
         {
             if (!_buildingBadges.TryGetValue(nodeId, out TakeoverBuildingBadgeWidget badge)) return;
@@ -862,12 +939,14 @@ namespace GameLogic.Takeover
             _buildingBadges.Remove(nodeId);
         }
 
+        /// <summary>清理所有建筑界面标记。</summary>
         private void ClearBuildingBadges()
         {
             foreach (int id in _buildingBadges.Keys.ToList()) DestroyBuildingBadge(id);
             _buildingBadges.Clear();
         }
 
+        /// <summary>同步地图节点模拟状态与战场显示对象。</summary>
         private void SyncNodes()
         {
             foreach (var kv in _nodeViews)
@@ -888,6 +967,7 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>获取指定单位对应的可点击区域。</summary>
         private LineRenderer UnitClickableArea(int unitId)
         {
             if (_unitClickableAreas.TryGetValue(unitId, out LineRenderer area))
@@ -897,12 +977,14 @@ namespace GameLogic.Takeover
             return area;
         }
 
-        private static bool IsNodeClickable(MapNode node)
+        /// <summary>判断地图节点当前是否可响应玩家点击。</summary>
+        private static bool IsNodeClickable(MapNodeEntity node)
         {
             return node != null && (node.Building != null || node.Kind == NodeKind.BuildSpot);
         }
 
-        private Color ClickableNodeColor(MapNode node)
+        /// <summary>根据节点交互状态计算点击区域颜色。</summary>
+        private Color ClickableNodeColor(MapNodeEntity node)
         {
             if (node == _selected) return new Color(1f, 0.91f, 0.52f, 0.48f);
             if (node.Building != null)
@@ -922,6 +1004,7 @@ namespace GameLogic.Takeover
             return Color.clear;
         }
 
+        /// <summary>更新节点和单位可点击区域的显示状态。</summary>
         private void UpdateClickableArea(LineRenderer area, Vector2 logicalCenter,
             float radiusPixels, Color color)
         {
@@ -942,11 +1025,13 @@ namespace GameLogic.Takeover
             area.enabled = color.a > 0f;
         }
 
+        /// <summary>将屏幕像素坐标转换为世界坐标。</summary>
         private float ScreenPixelsToWorld(float pixels)
         {
             return 2f * _cam.orthographicSize / Mathf.Max(1f, Screen.height) * pixels;
         }
 
+        /// <summary>处理战场鼠标输入、选中和命令操作。</summary>
         private void HandleInput()
         {
             if (Input.GetKeyDown(KeyCode.Space)) _paused = !_paused;
@@ -966,7 +1051,7 @@ namespace GameLogic.Takeover
                 {
                     _selectedSquad = _dragSquad;
                     _selected = null;
-                    MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
+                    MapNodeEntity hover = FindNodeAtScreen(Input.mousePosition, 34f);
                     // UpdateOrderPreview 内部自己做 逻辑->显示 转换，这里必须传逻辑坐标，
                     // 否则起点会被转换两次（第二次是 600-y/2 的镜像折叠），曲线从错误的位置画出去。
                     UpdateOrderPreview(_dragSquad.Pos,
@@ -979,7 +1064,7 @@ namespace GameLogic.Takeover
             {
                 if (_dragSquad != null)
                 {
-                    MapNode hover = FindNodeAtScreen(Input.mousePosition, 34f);
+                    MapNodeEntity hover = FindNodeAtScreen(Input.mousePosition, 34f);
                     UpdateOrderPreview(_dragSquad.Pos,
                         hover?.Pos ?? MouseWorldPosition(),
                         hover?.Building != null && hover.Building.Owner != HumanFaction);
@@ -1005,10 +1090,11 @@ namespace GameLogic.Takeover
             }
         }
 
-        private void IssueOrderAtMouse(Squad squad)
+        /// <summary>在鼠标位置为选中部队下达移动命令。</summary>
+        private void IssueOrderAtMouse(SquadEntity squad)
         {
             if (squad == null || squad.IsDead) return;
-            MapNode node = FindNodeAtScreen(Input.mousePosition, 34f);
+            MapNodeEntity node = FindNodeAtScreen(Input.mousePosition, 34f);
             Vector2 target = node?.Pos ?? MouseWorldPosition();
             _sim.Enqueue(BattleCommand.Move(new[] { squad.Id }, target, node?.Id ?? 0));
             if (node?.Building != null && node.Building.Owner != HumanFaction)
@@ -1017,12 +1103,13 @@ namespace GameLogic.Takeover
                 Toast($"已命令 {squad.Def.CnName} 移动");
         }
 
+        /// <summary>处理鼠标左键在战场上的点击操作。</summary>
         private void HandleLeftClickAtMouse()
         {
             Vector2 mouse = Input.mousePosition;
             if (_pendingSpell != null)
             {
-                MapNode spellNode = FindNodeAtScreen(mouse, 34f);
+                MapNodeEntity spellNode = FindNodeAtScreen(mouse, 34f);
                 Vector2 target = spellNode?.Pos ?? MouseWorldPosition();
                 bool cast = _sim.ExecuteNow(BattleCommand.CastSpell(
                     _pendingSpell.Id, target, spellNode?.Id ?? 0));
@@ -1032,7 +1119,7 @@ namespace GameLogic.Takeover
                 return;
             }
 
-            MapNode node = FindNodeAtScreen(mouse, 30f);
+            MapNodeEntity node = FindNodeAtScreen(mouse, 30f);
             if (node?.Building != null)
             {
                 _selected = node;
@@ -1056,7 +1143,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>选中/下令都走头顶徽标：点士兵本体不再生效（原版也是这样操作的）。</summary>
-        private Squad PickHumanSquadByBadge(Vector2 screen)
+        private SquadEntity PickHumanSquadByBadge(Vector2 screen)
         {
             RectTransform layer = _battleUI != null ? _battleUI.SquadBadgeLayer : null;
             if (layer == null) return null;
@@ -1066,7 +1153,7 @@ namespace GameLogic.Takeover
                 ? root.worldCamera
                 : null;
 
-            Squad best = null;
+            SquadEntity best = null;
             foreach (TakeoverSquadBadgeWidget badge in _squadBadges.Values)
             {
                 if (badge == null || badge.RectTransform == null || badge.Squad == null) continue;
@@ -1077,11 +1164,12 @@ namespace GameLogic.Takeover
             return best;
         }
 
-        private MapNode FindNodeAtScreen(Vector2 screen, float maxDistance)
+        /// <summary>查找屏幕坐标下的地图节点。</summary>
+        private MapNodeEntity FindNodeAtScreen(Vector2 screen, float maxDistance)
         {
-            MapNode best = null;
+            MapNodeEntity best = null;
             float bestDistance = maxDistance;
-            foreach (MapNode node in _sim.Nodes)
+            foreach (MapNodeEntity node in _sim.Nodes)
             {
                 Vector3 nodeScreen = _cam.WorldToScreenPoint(DisplayPosition(node.Pos));
                 float distance = Vector2.Distance(screen, nodeScreen);
@@ -1092,12 +1180,14 @@ namespace GameLogic.Takeover
             return best;
         }
 
+        /// <summary>获取鼠标指针对应的战场世界坐标。</summary>
         private Vector2 MouseWorldPosition()
         {
             Vector3 world = _cam.ScreenToWorldPoint(Input.mousePosition);
             return new Vector2(world.x, (OriginalRules.NativeStageHeight - world.y) * OriginalRules.WorldYScale);
         }
 
+        /// <summary>清除当前地图节点和部队的选中状态。</summary>
         private void ClearSelection()
         {
             _selectedSquad = null;
@@ -1130,6 +1220,7 @@ namespace GameLogic.Takeover
             _orderPreview.enabled = true;
         }
 
+        /// <summary>根据用户输入更新战场摄像机。</summary>
         private void UpdateCamera()
         {
             bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null
@@ -1159,11 +1250,13 @@ namespace GameLogic.Takeover
 
         }
 
+        /// <summary>显示战斗界面提示消息。</summary>
         private void Toast(string msg)
         {
             TakeoverToastUI.Show(msg);
         }
 
+        /// <summary>播放指定的 Takeover 音乐资源。</summary>
         private static void PlayMusic(string location)
         {
             try
@@ -1188,14 +1281,22 @@ namespace GameLogic.Takeover
             }
         }
 
+        /// <summary>当前战斗模拟实例。</summary>
         public BattleSimulation Simulation => _sim;
-        public MapNode SelectedNode => _selected;
-        public Squad SelectedSquad => _selectedSquad;
+        /// <summary>当前选中的地图节点。</summary>
+        public MapNodeEntity SelectedNode => _selected;
+        /// <summary>当前选中的部队。</summary>
+        public SquadEntity SelectedSquad => _selectedSquad;
+        /// <summary>战斗是否处于暂停状态。</summary>
         public bool Paused => _paused;
+        /// <summary>当前战斗推进速度。</summary>
         public float Speed => _speed;
+        /// <summary>关卡选择界面是否打开。</summary>
         public bool LevelSelectOpen => _levelSelectOpen;
 
+        /// <summary>切换战斗暂停状态。</summary>
         public void TogglePause() => _paused = !_paused;
+        /// <summary>设置战斗推进速度并限制到允许范围内。</summary>
         public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, 1f, MaxSpeed);
 
         /// <summary>GM 面板最高 64 倍速。</summary>
@@ -1204,12 +1305,14 @@ namespace GameLogic.Takeover
         /// <summary>玩家是否已被 AI 托管（底栏 AI 开关）。</summary>
         public bool HumanAiControlled => _sim != null && _sim.Human != null && _sim.Human.AiControlled;
 
+        /// <summary>切换人类玩家的 AI 托管状态。</summary>
         public void ToggleHumanAi()
         {
             if (_sim == null || _sim.Human == null) return;
             SetHumanAi(!_sim.Human.AiControlled);
         }
 
+        /// <summary>设置是否由 AI 托管人类玩家。</summary>
         public void SetHumanAi(bool enabled)
         {
             if (_sim == null || _sim.Human == null) return;
@@ -1222,6 +1325,7 @@ namespace GameLogic.Takeover
             Toast(enabled ? "AI 已接管我方（再点一次收回）" : "已收回 AI，恢复手动操作");
         }
 
+        /// <summary>通过调试命令为人类玩家增减金币和魔法。</summary>
         public void GrantResources(int gold, int mana)
         {
             if (_sim == null) return;
@@ -1245,12 +1349,14 @@ namespace GameLogic.Takeover
             Toast(victory ? "GM：判定本关胜利" : "GM：判定本关失败");
         }
 
-        public bool CanBuy(GameConfig.takeover.Unit unit, MapNode node)
+        /// <summary>检查当前玩家能否在节点招募指定单位。</summary>
+        public bool CanBuy(GameConfig.takeover.Unit unit, MapNodeEntity node)
         {
             return _sim != null && _sim.State.CanBuy(_sim.Human, unit, node, out _);
         }
 
-        public List<GameConfig.takeover.Unit> UnitsAt(MapNode node)
+        /// <summary>获取当前玩家在指定节点可招募的单位配置。</summary>
+        public List<GameConfig.takeover.Unit> UnitsAt(MapNodeEntity node)
         {
             if (_sim == null || node?.Building == null) return new List<GameConfig.takeover.Unit>();
             return Cfg.TbUnit.DataList
@@ -1259,7 +1365,8 @@ namespace GameLogic.Takeover
                 .OrderBy(u => u.UnitType).ThenBy(u => u.Tier).ToList();
         }
 
-        public void Buy(GameConfig.takeover.Unit unit, MapNode node)
+        /// <summary>提交在指定节点招募单位的命令。</summary>
+        public void Buy(GameConfig.takeover.Unit unit, MapNodeEntity node)
         {
             if (_sim == null) return;
             bool ok = _sim.ExecuteNow(BattleCommand.BuyUnit(unit.Id, node.Id));
@@ -1267,14 +1374,16 @@ namespace GameLogic.Takeover
             Toast(ok ? $"已招募 {unit.CnName}" : reason ?? "招募失败");
         }
 
-        public void Upgrade(MapNode node)
+        /// <summary>提交升级指定节点建筑的命令。</summary>
+        public void Upgrade(MapNodeEntity node)
         {
             if (_sim == null) return;
             bool ok = _sim.ExecuteNow(BattleCommand.Upgrade(node.Id));
             Toast(ok ? "升级成功" : "升级失败");
         }
 
-        public void Build(MapNode node, int buildingId)
+        /// <summary>提交在指定节点建造建筑的命令。</summary>
+        public void Build(MapNodeEntity node, int buildingId)
         {
             if (_sim == null) return;
             _sim.State.CanPlace(_sim.Human, node, buildingId, out string reason);
@@ -1282,11 +1391,13 @@ namespace GameLogic.Takeover
             Toast(ok ? "建造完成" : reason ?? "建造失败");
         }
 
-        public bool CanBuild(MapNode node, int buildingId)
+        /// <summary>检查当前玩家能否在节点建造指定建筑。</summary>
+        public bool CanBuild(MapNodeEntity node, int buildingId)
         {
             return _sim != null && _sim.State.CanPlace(_sim.Human, node, buildingId, out _);
         }
 
+        /// <summary>进入指定法术的目标选择状态。</summary>
         public void BeginSpellTarget(GameConfig.takeover.Spell spell)
         {
             _pendingSpell = spell;

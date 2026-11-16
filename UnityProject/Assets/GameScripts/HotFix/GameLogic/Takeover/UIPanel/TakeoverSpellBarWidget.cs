@@ -4,18 +4,24 @@ using UnityEngine;
 
 namespace GameLogic.Takeover
 {
+    /// <summary>显示玩家可用法术及其操作。</summary>
     public sealed class TakeoverSpellBarWidget : TakeoverActionListWidget
     {
+        /// <summary>法术栏当前生成的操作布局。</summary>
         private readonly List<TakeoverActionPlan> _plan = new List<TakeoverActionPlan>(8);
+        /// <summary>法术栏查询和施法的战斗运行器。</summary>
         private TakeoverRunner _runner;
+        /// <summary>最近一次刷新使用的模拟实例。</summary>
         private BattleSimulation _lastSimulation;
 
+        /// <summary>设置法术栏使用的战斗运行器。</summary>
         public void SetRunner(TakeoverRunner runner)
         {
             _runner = runner;
             Refresh();
         }
 
+        /// <summary>刷新当前玩家可用的法术按钮。</summary>
         public void Refresh()
         {
             _plan.Clear();
