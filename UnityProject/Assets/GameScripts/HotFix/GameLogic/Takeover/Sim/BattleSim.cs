@@ -103,25 +103,6 @@ namespace GameLogic.Takeover
         private int _nextUnitId = 1;
         /// <summary>最近一次处理的整数模拟秒数。</summary>
         private int _lastLogicalSecond = -1;
-        /// <summary>关卡教程脚本使用的城镇节点。</summary>
-        private MapNodeEntity _tutorialTown;
-        /// <summary>关卡教程脚本使用的敌方部队。</summary>
-        private SquadEntity _tutorialEnemySquad;
-        /// <summary>教程中是否已购买守军。</summary>
-        private bool _tutorialGuardPurchased;
-        /// <summary>教程中的初始敌军是否已被替换。</summary>
-        private bool _tutorialEnemyReplaced;
-        /// <summary>教程中的城镇是否已被占领。</summary>
-        private bool _tutorialTownCaptured;
-        /// <summary>本关食人魔对应的部队。</summary>
-        private SquadEntity _ogreSquad;
-        /// <summary>食人魔是否已进入战斗。</summary>
-        private bool _ogreEngaged;
-        /// <summary>食人魔是否已被击败。</summary>
-        private bool _ogreKilled;
-        /// <summary>第二关的法师塔是否已被占领。</summary>
-        private bool _l2MagicTowerCaptured;
-
         /// <summary>供模拟系统访问地图逻辑的内部入口。</summary>
         internal BattleMapSystem MapSystem => _mapSystem;
         /// <summary>供模拟系统访问经济逻辑的内部入口。</summary>
@@ -142,25 +123,6 @@ namespace GameLogic.Takeover
         internal int AllocateSquadId() => _nextSquadId++;
         /// <summary>分配并返回下一个士兵标识。</summary>
         internal int AllocateUnitId() => _nextUnitId++;
-        /// <summary>教程场景使用的城镇节点。</summary>
-        internal MapNodeEntity TutorialTown { get => _tutorialTown; set => _tutorialTown = value; }
-        /// <summary>教程场景使用的敌方部队。</summary>
-        internal SquadEntity TutorialEnemySquad { get => _tutorialEnemySquad; set => _tutorialEnemySquad = value; }
-        /// <summary>教程中守军是否已购买。</summary>
-        internal bool TutorialGuardPurchased { get => _tutorialGuardPurchased; set => _tutorialGuardPurchased = value; }
-        /// <summary>教程敌军是否已替换。</summary>
-        internal bool TutorialEnemyReplaced { get => _tutorialEnemyReplaced; set => _tutorialEnemyReplaced = value; }
-        /// <summary>教程城镇是否已占领。</summary>
-        internal bool TutorialTownCaptured { get => _tutorialTownCaptured; set => _tutorialTownCaptured = value; }
-        /// <summary>本关食人魔部队。</summary>
-        internal SquadEntity OgreSquad { get => _ogreSquad; set => _ogreSquad = value; }
-        /// <summary>食人魔是否已交战。</summary>
-        internal bool OgreEngaged { get => _ogreEngaged; set => _ogreEngaged = value; }
-        /// <summary>食人魔是否已被击败。</summary>
-        internal bool OgreKilled { get => _ogreKilled; set => _ogreKilled = value; }
-        /// <summary>第二关法师塔是否已被占领。</summary>
-        internal bool L2MagicTowerCaptured { get => _l2MagicTowerCaptured; set => _l2MagicTowerCaptured = value; }
-
         /// <summary>按关卡、双方阵营、修正项和随机种子初始化模拟场景。</summary>
         public BattleSim(int levelAssetId, Faction humanFaction, Faction enemyFaction,
             int[] humanMods = null, int seed = 20120920)
@@ -418,23 +380,18 @@ namespace GameLogic.Takeover
             else SpawnScenarioOgre();
         }
 
-        /// <summary>初始化第一关的教程、初始部队和场景状态。</summary>
+        /// <summary>初始化第一关的开场状态和初始部队。</summary>
         private void InitializeLevelOne()
         {
-            foreach (PlayerStateEntity player in Players) player.SpellsEnabled = false;
-            Human.UnitTypeLimit = 0;
             PlayerStateEntity empire = PlayerOf(Faction.Empire);
             if (empire == null) return;
-            empire.AiEnabled = false;
             GameConfig.takeover.Unit undeadWarrior = _economySystem.FindUnit(Faction.Empire, UnitKind.Infantry, 1);
             if (undeadWarrior == null) return;
             empire.Gold = undeadWarrior.Cost * 2f;
-            _tutorialTown = empire.OwnedNodes.FirstOrDefault(node => node.Building?.Kind == 1);
             foreach (MapNodeEntity node in empire.OwnedNodes.Where(value => value.Building != null))
             {
-                SquadEntity squad = _economySystem.SpawnSquad(empire, undeadWarrior, node.Pos, node, 0, false);
+                _economySystem.SpawnSquad(empire, undeadWarrior, node.Pos, node, 0, false);
                 empire.Gold -= undeadWarrior.Cost;
-                if (node == _tutorialTown) _tutorialEnemySquad = squad;
             }
         }
 
@@ -444,8 +401,6 @@ namespace GameLogic.Takeover
             Human.Gold += 300f;
             PlayerStateEntity khaganate = PlayerOf(Faction.Khaganate);
             if (khaganate == null) return;
-            khaganate.AiEnabled = false;
-            Human.SpellsEnabled = false;
 
             _economySystem.TryBuildFirstType(Human, 6);
             _economySystem.TryBuildFirstType(Human, 7);
@@ -489,7 +444,7 @@ namespace GameLogic.Takeover
             PlayerStateEntity bandits = _mapSystem.EnsurePlayer(Faction.Bandits);
             GameConfig.takeover.Unit ogre = Cfg.TbUnit.DataList.FirstOrDefault(unit => unit.Name == "Ogre");
             if (ogre != null)
-                _ogreSquad = _economySystem.SpawnSquad(bandits, ogre, ogreNode.Pos, ogreNode, 0, false);
+                _economySystem.SpawnSquad(bandits, ogre, ogreNode.Pos, ogreNode, 0, false);
         }
 
         /// <summary>执行一次以整数秒为间隔的战斗逻辑处理。</summary>

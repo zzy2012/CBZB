@@ -232,20 +232,8 @@ namespace GameLogic.Takeover
             FocusCamera();
             BindLevelVisuals();
             GameModule.UI.ShowUIAsync<TakeoverBattleUI>(this);
-            ShowScenarioHint();
 
             Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
-        }
-
-        /// <summary>显示当前关卡的教程或场景提示。</summary>
-        private void ShowScenarioHint()
-        {
-            if (LevelAssetId == 1)
-                TakeoverToastUI.Show("点击己方城堡招募，再按住头顶徽标拖到目标", 6f);
-            else if (LevelAssetId == 2)
-                TakeoverToastUI.Show("先建造农场增加补给；左键按住头顶徽标拖动下令", 6f);
-            else
-                TakeoverToastUI.Show("左键按住头顶徽标拖动下令；左键点击建筑打开面板", 6f);
         }
 
         /// <summary>注册当前战斗界面。</summary>
@@ -545,21 +533,6 @@ namespace GameLogic.Takeover
                         break;
                     case "ChestCollected":
                         Toast("宝箱 +500 金币");
-                        break;
-                    case "OgreFightStarted":
-                        Toast("与食人魔交战，法术已解锁");
-                        break;
-                    case "OgreDefeated":
-                        Toast("食人魔已击败，敌方开始行动");
-                        break;
-                    case "TutorialEnemyReinforced":
-                        Toast("敌军得到增援");
-                        break;
-                    case "TutorialTownCaptured":
-                        Toast("已占领敌方城镇");
-                        break;
-                    case "UltimateUnlocked":
-                        Toast("占领魔法塔，终极技能已充满");
                         break;
                 }
             }

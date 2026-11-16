@@ -46,69 +46,6 @@ namespace GameLogic.Takeover
         /// <summary>人类玩家本局已解锁的建筑标识集合。</summary>
         protected HashSet<int> _humanBuildingsUnlocked => Sim.HumanBuildingsUnlocked;
 
-        /// <summary>教程脚本使用的城镇节点。</summary>
-        protected MapNodeEntity _tutorialTown
-        {
-            get => Sim.TutorialTown;
-            set => Sim.TutorialTown = value;
-        }
-
-        /// <summary>教程脚本使用的敌方部队。</summary>
-        protected SquadEntity _tutorialEnemySquad
-        {
-            get => Sim.TutorialEnemySquad;
-            set => Sim.TutorialEnemySquad = value;
-        }
-
-        /// <summary>教程中守军是否已购买。</summary>
-        protected bool _tutorialGuardPurchased
-        {
-            get => Sim.TutorialGuardPurchased;
-            set => Sim.TutorialGuardPurchased = value;
-        }
-
-        /// <summary>教程敌军是否已替换。</summary>
-        protected bool _tutorialEnemyReplaced
-        {
-            get => Sim.TutorialEnemyReplaced;
-            set => Sim.TutorialEnemyReplaced = value;
-        }
-
-        /// <summary>教程城镇是否已占领。</summary>
-        protected bool _tutorialTownCaptured
-        {
-            get => Sim.TutorialTownCaptured;
-            set => Sim.TutorialTownCaptured = value;
-        }
-
-        /// <summary>本关食人魔部队。</summary>
-        protected SquadEntity _ogreSquad
-        {
-            get => Sim.OgreSquad;
-            set => Sim.OgreSquad = value;
-        }
-
-        /// <summary>食人魔是否已进入战斗。</summary>
-        protected bool _ogreEngaged
-        {
-            get => Sim.OgreEngaged;
-            set => Sim.OgreEngaged = value;
-        }
-
-        /// <summary>食人魔是否已被击败。</summary>
-        protected bool _ogreKilled
-        {
-            get => Sim.OgreKilled;
-            set => Sim.OgreKilled = value;
-        }
-
-        /// <summary>第二关法师塔是否已被占领。</summary>
-        protected bool _l2MagicTowerCaptured
-        {
-            get => Sim.L2MagicTowerCaptured;
-            set => Sim.L2MagicTowerCaptured = value;
-        }
-
         /// <summary>当前模拟使用的地图逻辑系统。</summary>
         protected BattleMapSystem MapSystem => Sim.MapSystem;
         /// <summary>当前模拟使用的经济逻辑系统。</summary>

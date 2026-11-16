@@ -233,32 +233,6 @@ namespace GameLogic.Takeover
             capturer.HomeNode = node;
             capturer.AtNode = node;
             capturer.Owner.Gold += capturer.Owner.Mods[22];
-            if (LevelAssetId == 1 && node == _tutorialTown && !_tutorialTownCaptured)
-            {
-                _tutorialTownCaptured = true;
-                PlayerStateEntity empire = PlayerOf(Faction.Empire);
-                GameConfig.takeover.Unit replacement = EconomySystem.FindUnit(Faction.Empire, UnitKind.Infantry, 1);
-                if (empire != null && replacement != null) empire.Gold += replacement.Cost;
-                _events.Add(new BattleEvent
-                {
-                    Kind = "TutorialTownCaptured",
-                    ActorId = capturer.Id,
-                    TargetId = node.Id,
-                    Position = node.Pos,
-                });
-            }
-            if (LevelAssetId == 2 && node.Building.Kind == 4 && !_l2MagicTowerCaptured)
-            {
-                _l2MagicTowerCaptured = true;
-                Human.Ultimate = Human.UltimateMax;
-                _events.Add(new BattleEvent
-                {
-                    Kind = "UltimateUnlocked",
-                    ActorId = Human.Id,
-                    TargetId = node.Id,
-                    Position = node.Pos,
-                });
-            }
             RefreshOwnership();
             _events.Add(new BattleEvent
             {

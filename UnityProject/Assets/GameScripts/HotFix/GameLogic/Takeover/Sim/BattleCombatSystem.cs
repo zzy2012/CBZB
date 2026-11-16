@@ -326,19 +326,6 @@ namespace GameLogic.Takeover
         /// <summary>执行士兵对敌方士兵的攻击并结算效果。</summary>
         internal void AttackUnit(CombatUnitEntity attacker, CombatUnitEntity target, float dt)
         {
-            if (LevelAssetId == 2 && target.Squad == _ogreSquad && !_ogreEngaged &&
-                attacker.Squad.Owner.IsHuman)
-            {
-                _ogreEngaged = true;
-                Human.SpellsEnabled = true;
-                _events.Add(new BattleEvent
-                {
-                    Kind = "OgreFightStarted",
-                    ActorId = attacker.Id,
-                    TargetId = target.Id,
-                    Position = target.Pos,
-                });
-            }
             attacker.AttackTimer -= dt;
             if (attacker.AttackTimer > 0f) return;
             float slowMultiplier = attacker.SlowSeconds > 0f ? 2f : 1f;
@@ -568,47 +555,9 @@ namespace GameLogic.Takeover
             }
         }
 
-        /// <summary>处理部队全灭后的清理和战斗事件。</summary>
+        /// <summary>清理全灭部队并结算击杀后的效果。</summary>
         internal void KillSquad(SquadEntity squad)
         {
-            if (squad == _ogreSquad && !_ogreKilled)
-            {
-                _ogreKilled = true;
-                PlayerStateEntity khaganate = PlayerOf(Faction.Khaganate);
-                if (khaganate != null)
-                {
-                    khaganate.AiEnabled = true;
-                    khaganate.Gold = 0f;
-                }
-                _events.Add(new BattleEvent
-                {
-                    Kind = "OgreDefeated",
-                    ActorId = -1,
-                    TargetId = squad.Id,
-                    Position = squad.Pos,
-                });
-            }
-            if (squad == _tutorialEnemySquad && !_tutorialEnemyReplaced)
-            {
-                _tutorialEnemyReplaced = true;
-                PlayerStateEntity empire = PlayerOf(Faction.Empire);
-                GameConfig.takeover.Unit replacement = EconomySystem.FindUnit(Faction.Empire, UnitKind.Infantry, 1);
-                if (empire != null && replacement != null)
-                {
-                    empire.Gold += replacement.Cost;
-                    EconomySystem.SpawnSquad(empire, replacement, _tutorialTown.Pos, _tutorialTown, 0, false);
-                    empire.Gold -= replacement.Cost;
-                    empire.AiEnabled = true;
-                    Human.UnitTypeLimit = 1;
-                    _events.Add(new BattleEvent
-                    {
-                        Kind = "TutorialEnemyReinforced",
-                        ActorId = empire.Id,
-                        TargetId = _tutorialTown.Id,
-                        Position = _tutorialTown.Pos,
-                    });
-                }
-            }
             squad.Owner.Squads.Remove(squad);
             Squads.Remove(squad);
             Sim.RemoveSquadEntities(squad);

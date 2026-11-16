@@ -102,8 +102,9 @@ namespace GameLogic.Takeover
                             Check(sim.Human.OwnedNodes.Any(node => node.Building?.Kind == 6) &&
                                   sim.Human.OwnedNodes.Any(node => node.Building?.Kind == 7),
                                 "L2 未自动建造矿场和英雄碑", failures);
-                            Check(sim.AvailableSpells(sim.Human).Count == 0,
-                                "L2 食人魔战前不应开放玩家法术", failures);
+                            Check(sim.Human.SpellsEnabled && sim.Enemy.AiEnabled &&
+                                  sim.AvailableSpells(sim.Human).Count > 0,
+                                "L2 开场仍限制玩家法术或敌方 AI", failures);
                         }
                         var first = BattleSnapshot.From(sim);
                         var secondSim = new BattleSim(id, Faction.Westaria, primaryEnemy,
@@ -367,6 +368,8 @@ namespace GameLogic.Takeover
         private static void CheckBattleArchitecture(ICollection<string> failures)
         {
             var sim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 3601);
+            Check(sim.Human.SpellsEnabled && sim.Human.UnitTypeLimit == 4 && sim.Enemy.AiEnabled,
+                "首关法术、兵种或敌方 AI 仍被限制", failures);
             Check(sim.GetEntities(BattleEntityType.MapNode).Count == sim.Nodes.Count,
                 "战斗场景节点实体注册不完整", failures);
             Check(sim.GetEntities(BattleEntityType.Player).Count == sim.Players.Count,

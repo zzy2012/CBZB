@@ -69,12 +69,6 @@ namespace GameLogic.Takeover
             player.Gold -= UnitCost(player, def);
             int initialXp = at.Building.Level == 0 ? 0 : at.Building.Level == 1 ? 25 : 100;
             SquadEntity squad = SpawnSquad(player, def, at.Pos, at, initialXp, true);
-            if (LevelAssetId == 1 && player.IsHuman && def.Name == "Guards" && !_tutorialGuardPurchased)
-            {
-                _tutorialGuardPurchased = true;
-                if (_tutorialEnemySquad != null)
-                    MapSystem.OrderMove(_tutorialEnemySquad, new Vector2(340f, 290f * OriginalRules.WorldYScale), null);
-            }
             return squad;
         }
 
