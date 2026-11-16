@@ -43,7 +43,7 @@ namespace GameLogic.Takeover
         private MapNodeEntity _selected;
         /// <summary>当前选中的部队。</summary>
         private SquadEntity _selectedSquad;
-        /// <summary>是否正在拖动鼠标选择单位。</summary>
+        /// <summary>是否正在拖动鼠标平移摄像机。</summary>
         private bool _dragging;
         /// <summary>上一次记录的鼠标屏幕位置。</summary>
         private Vector3 _lastMouse;
@@ -1007,9 +1007,6 @@ namespace GameLogic.Takeover
         /// <summary>处理战场鼠标输入、选中和命令操作。</summary>
         private void HandleInput()
         {
-            if (Input.GetKeyDown(KeyCode.Space)) _paused = !_paused;
-            if (Input.GetKeyDown(KeyCode.R)) NewGame();
-            if (Input.GetKeyDown(KeyCode.Escape)) ShowLevelSelect();
             bool pointerOverUI = UnityEngine.EventSystems.EventSystem.current != null
                                  && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
             if (pointerOverUI && _dragSquad == null)
@@ -1202,14 +1199,6 @@ namespace GameLogic.Takeover
             float scroll = Input.mouseScrollDelta.y;
             if (Mathf.Abs(scroll) > 0.01f)
                 _cam.orthographicSize = Mathf.Clamp(_cam.orthographicSize - scroll * 40f, 60f, 700f);
-
-            float pan = 420f * Time.unscaledDeltaTime * (_cam.orthographicSize / 300f);
-            var move = Vector3.zero;
-            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) move.x -= 1f;
-            if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) move.x += 1f;
-            if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) move.y += 1f;
-            if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) move.y -= 1f;
-            _cam.transform.position += move * pan;
 
             if (Input.GetMouseButtonDown(2)) { _dragging = true; _lastMouse = Input.mousePosition; }
             if (Input.GetMouseButtonUp(2)) _dragging = false;
