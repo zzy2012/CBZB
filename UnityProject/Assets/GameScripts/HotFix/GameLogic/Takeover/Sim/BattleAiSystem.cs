@@ -391,7 +391,7 @@ namespace GameLogic.Takeover
                 .OrderByDescending(unit => beneficial ? 1f - unit.HpRatio : 1f)
                 .ThenBy(unit => Vector2.Distance(unit.Pos, player.OwnedNodes.FirstOrDefault()?.Pos ?? Vector2.zero))
                 .FirstOrDefault();
-            if (best != null) return best.Pos + Sim.FormationOffset(0, 1);
+            if (best != null) return best.Pos + Sim.FormationSystem.FormationOffset(0, 1);
             return player.OwnedNodes.FirstOrDefault()?.Pos ??
                    new Vector2(OriginalRules.NativeStageWidth * 0.5f, OriginalRules.NativeStageHeight);
         }

@@ -401,7 +401,7 @@ namespace GameLogic.Takeover
         private void ExecuteQueuedCommands()
         {
             while (_commands.Count > 0)
-                State.ExecuteCommand(State.Human, _commands.Dequeue());
+                State.CommandSystem.ExecuteCommand(State.Human, _commands.Dequeue());
         }
 
         /// <summary>销毁当前战斗并释放模拟管理器。</summary>

@@ -176,7 +176,7 @@ namespace GameLogic.Takeover
             {
                 CombatUnitEntity unit = squad.Units[i];
                 if (unit.IsDead) continue;
-                Vector2 formationOffset = Sim.FormationOffset(i, squad.Units.Count, facing);
+                Vector2 formationOffset = Sim.FormationSystem.FormationOffset(i, squad.Units.Count, facing);
                 Vector2 desired = newCenter + formationOffset;
                 Vector2 unitDelta = desired - unit.Pos;
                 float unitDistance = unitDelta.magnitude;

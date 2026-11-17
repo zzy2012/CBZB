@@ -1083,7 +1083,7 @@ namespace GameLogic.Takeover
             {
                 MapNodeEntity spellNode = FindNodeAtScreen(mouse, 34f);
                 Vector2 target = spellNode?.Pos ?? MouseWorldPosition();
-                bool cast = _sim.State.ExecuteCommand(
+                bool cast = _sim.State.CommandSystem.ExecuteCommand(
                     _sim.State.Human, BattleCommand.CastSpell(
                         _pendingSpell.Id, target, spellNode?.Id ?? 0));
                 // 成功时的播报交给 SpellCast 事件（带施法者和效果说明），这里只报失败
@@ -1297,7 +1297,8 @@ namespace GameLogic.Takeover
             if (_sim == null) return;
             float oldGold = _sim.State.Human.Gold;
             float oldMana = _sim.State.Human.Mana;
-            bool ok = _sim.State.ExecuteCommand(_sim.State.Human, BattleCommand.GrantResources(gold, mana));
+            bool ok = _sim.State.CommandSystem.ExecuteCommand(
+                _sim.State.Human, BattleCommand.GrantResources(gold, mana));
             if (!ok) return;
             Toast($"GM：金币 +{_sim.State.Human.Gold - oldGold:F0}    " +
                   $"法力 +{_sim.State.Human.Mana - oldMana:F0}");
@@ -1336,7 +1337,7 @@ namespace GameLogic.Takeover
         public void Buy(GameConfig.takeover.Unit unit, MapNodeEntity node)
         {
             if (_sim == null) return;
-            bool ok = _sim.State.ExecuteCommand(
+            bool ok = _sim.State.CommandSystem.ExecuteCommand(
                 _sim.State.Human, BattleCommand.BuyUnit(unit.Id, node.Id));
             _sim.State.EconomySystem.CanBuy(_sim.State.Human, unit, node, out string reason);
             Toast(ok ? $"已招募 {unit.CnName}" : reason ?? "招募失败");
@@ -1346,7 +1347,8 @@ namespace GameLogic.Takeover
         public void Upgrade(MapNodeEntity node)
         {
             if (_sim == null) return;
-            bool ok = _sim.State.ExecuteCommand(_sim.State.Human, BattleCommand.Upgrade(node.Id));
+            bool ok = _sim.State.CommandSystem.ExecuteCommand(
+                _sim.State.Human, BattleCommand.Upgrade(node.Id));
             Toast(ok ? "升级成功" : "升级失败");
         }
 
@@ -1355,7 +1357,7 @@ namespace GameLogic.Takeover
         {
             if (_sim == null) return;
             _sim.State.EconomySystem.CanPlace(_sim.State.Human, node, buildingId, out string reason);
-            bool ok = _sim.State.ExecuteCommand(
+            bool ok = _sim.State.CommandSystem.ExecuteCommand(
                 _sim.State.Human, BattleCommand.Build(buildingId, node.Id));
             Toast(ok ? "建造完成" : reason ?? "建造失败");
         }

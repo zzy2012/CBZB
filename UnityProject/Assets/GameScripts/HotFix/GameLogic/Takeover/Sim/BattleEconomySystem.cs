@@ -103,7 +103,7 @@ namespace GameLogic.Takeover
             };
             for (int i = 0; i < count; i++)
             {
-                Vector2 spawnPosition = position + Sim.FormationOffset(i, count);
+                Vector2 spawnPosition = position + Sim.FormationSystem.FormationOffset(i, count);
                 var unit = new CombatUnitEntity
                 {
                     Id = Sim.AllocateUnitId(),

@@ -175,7 +175,8 @@ namespace GameLogic.Takeover
                 var gmSim = new TakeoverScene(1, Faction.Westaria, Faction.Empire, null, 9001);
                 float gmStartGold = gmSim.Human.Gold;
                 float gmStartMana = gmSim.Human.Mana;
-                Check(gmSim.ExecuteCommand(gmSim.Human, BattleCommand.GrantResources(1000, 500)) &&
+                Check(gmSim.CommandSystem.ExecuteCommand(
+                          gmSim.Human, BattleCommand.GrantResources(1000, 500)) &&
                       Mathf.Approximately(gmSim.Human.Gold, gmStartGold + 1000f) &&
                       Mathf.Approximately(gmSim.Human.Mana, TakeoverScene.ManaCap) &&
                       gmSim.Human.Mana > gmStartMana,
