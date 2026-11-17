@@ -1,11 +1,8 @@
 namespace GameLogic.Takeover
 {
     /// <summary>将 Takeover 模拟场景接入战斗生命周期。</summary>
-    public sealed class TakeoverBattle : Battle
+    public sealed class TakeoverBattle : BattleBase
     {
-        /// <summary>当前战斗模拟实例。</summary>
-        public TakeoverScene Simulation => CurScene as TakeoverScene;
-
         /// <summary>使用指定模拟场景创建战斗实例。</summary>
         public TakeoverBattle(TakeoverScene simulation)
         {
@@ -15,7 +12,8 @@ namespace GameLogic.Takeover
         /// <summary>推进 Takeover 战斗及其场景。</summary>
         public override void OnUpdate(float deltaSeconds)
         {
-            Simulation?.Tick(deltaSeconds);
+            if (CurScene is TakeoverScene simulation)
+                simulation.Tick(deltaSeconds);
         }
     }
 }

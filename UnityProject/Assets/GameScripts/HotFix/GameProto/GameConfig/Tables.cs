@@ -13,39 +13,193 @@ namespace GameConfig
 {
 public partial class Tables
 {
-    public item.TbItem TbItem {get; }
-    public takeover.TbUnit TbUnit {get; }
-    public takeover.TbBuilding TbBuilding {get; }
-    public takeover.TbSpell TbSpell {get; }
-    public takeover.TbMapNode TbMapNode {get; }
-    public takeover.TbMapEdge TbMapEdge {get; }
-    public takeover.TbLevel TbLevel {get; }
-    public takeover.TbEdict TbEdict {get; }
+    #region The Tables
+
+    private item.TbItem m_TbItem;
+    public item.TbItem TbItem 
+    {
+        get
+        {
+            if (m_TbItem == null)
+            {
+                m_TbItem = new item.TbItem(defaultLoader("item_tbitem"));
+                m_TbItem.ResolveRef(this);
+            }
+            return m_TbItem;
+        }
+        set
+        {
+            m_TbItem = value;
+            m_TbItem.ResolveRef(this);
+        }
+    }
+    private takeover.TbUnit m_TbUnit;
+    public takeover.TbUnit TbUnit 
+    {
+        get
+        {
+            if (m_TbUnit == null)
+            {
+                m_TbUnit = new takeover.TbUnit(defaultLoader("takeover_tbunit"));
+                m_TbUnit.ResolveRef(this);
+            }
+            return m_TbUnit;
+        }
+        set
+        {
+            m_TbUnit = value;
+            m_TbUnit.ResolveRef(this);
+        }
+    }
+    private takeover.TbBuilding m_TbBuilding;
+    public takeover.TbBuilding TbBuilding 
+    {
+        get
+        {
+            if (m_TbBuilding == null)
+            {
+                m_TbBuilding = new takeover.TbBuilding(defaultLoader("takeover_tbbuilding"));
+                m_TbBuilding.ResolveRef(this);
+            }
+            return m_TbBuilding;
+        }
+        set
+        {
+            m_TbBuilding = value;
+            m_TbBuilding.ResolveRef(this);
+        }
+    }
+    private takeover.TbSpell m_TbSpell;
+    public takeover.TbSpell TbSpell 
+    {
+        get
+        {
+            if (m_TbSpell == null)
+            {
+                m_TbSpell = new takeover.TbSpell(defaultLoader("takeover_tbspell"));
+                m_TbSpell.ResolveRef(this);
+            }
+            return m_TbSpell;
+        }
+        set
+        {
+            m_TbSpell = value;
+            m_TbSpell.ResolveRef(this);
+        }
+    }
+    private takeover.TbMapNode m_TbMapNode;
+    public takeover.TbMapNode TbMapNode 
+    {
+        get
+        {
+            if (m_TbMapNode == null)
+            {
+                m_TbMapNode = new takeover.TbMapNode(defaultLoader("takeover_tbmapnode"));
+                m_TbMapNode.ResolveRef(this);
+            }
+            return m_TbMapNode;
+        }
+        set
+        {
+            m_TbMapNode = value;
+            m_TbMapNode.ResolveRef(this);
+        }
+    }
+    private takeover.TbMapEdge m_TbMapEdge;
+    public takeover.TbMapEdge TbMapEdge 
+    {
+        get
+        {
+            if (m_TbMapEdge == null)
+            {
+                m_TbMapEdge = new takeover.TbMapEdge(defaultLoader("takeover_tbmapedge"));
+                m_TbMapEdge.ResolveRef(this);
+            }
+            return m_TbMapEdge;
+        }
+        set
+        {
+            m_TbMapEdge = value;
+            m_TbMapEdge.ResolveRef(this);
+        }
+    }
+    private takeover.TbLevel m_TbLevel;
+    public takeover.TbLevel TbLevel 
+    {
+        get
+        {
+            if (m_TbLevel == null)
+            {
+                m_TbLevel = new takeover.TbLevel(defaultLoader("takeover_tblevel"));
+                m_TbLevel.ResolveRef(this);
+            }
+            return m_TbLevel;
+        }
+        set
+        {
+            m_TbLevel = value;
+            m_TbLevel.ResolveRef(this);
+        }
+    }
+    private takeover.TbEdict m_TbEdict;
+    public takeover.TbEdict TbEdict 
+    {
+        get
+        {
+            if (m_TbEdict == null)
+            {
+                m_TbEdict = new takeover.TbEdict(defaultLoader("takeover_tbedict"));
+                m_TbEdict.ResolveRef(this);
+            }
+            return m_TbEdict;
+        }
+        set
+        {
+            m_TbEdict = value;
+            m_TbEdict.ResolveRef(this);
+        }
+    }
+    /// <summary>
+    /// Takeover编队偏移配置
+    /// </summary>
+    private takeover.TbFormation m_TbFormation;
+    public takeover.TbFormation TbFormation 
+    {
+        get
+        {
+            if (m_TbFormation == null)
+            {
+                m_TbFormation = new takeover.TbFormation(defaultLoader("takeover_tbformation"));
+                m_TbFormation.ResolveRef(this);
+            }
+            return m_TbFormation;
+        }
+        set
+        {
+            m_TbFormation = value;
+            m_TbFormation.ResolveRef(this);
+        }
+    }
+
+    #endregion
+
+    System.Func<string, ByteBuf> defaultLoader;
 
     public Tables(System.Func<string, ByteBuf> loader)
     {
-        TbItem = new item.TbItem(loader("item_tbitem"));
-        TbUnit = new takeover.TbUnit(loader("takeover_tbunit"));
-        TbBuilding = new takeover.TbBuilding(loader("takeover_tbbuilding"));
-        TbSpell = new takeover.TbSpell(loader("takeover_tbspell"));
-        TbMapNode = new takeover.TbMapNode(loader("takeover_tbmapnode"));
-        TbMapEdge = new takeover.TbMapEdge(loader("takeover_tbmapedge"));
-        TbLevel = new takeover.TbLevel(loader("takeover_tblevel"));
-        TbEdict = new takeover.TbEdict(loader("takeover_tbedict"));
-        ResolveRef();
+        SetDefaultLoader(loader);
+        Init();
     }
     
-    private void ResolveRef()
+    public void SetDefaultLoader(System.Func<string, ByteBuf> loader)
     {
-        TbItem.ResolveRef(this);
-        TbUnit.ResolveRef(this);
-        TbBuilding.ResolveRef(this);
-        TbSpell.ResolveRef(this);
-        TbMapNode.ResolveRef(this);
-        TbMapEdge.ResolveRef(this);
-        TbLevel.ResolveRef(this);
-        TbEdict.ResolveRef(this);
+        defaultLoader = null;
+        defaultLoader = loader;
     }
+
+    //public partial void Init();
+
+    public void Init(){}
 }
 
 }

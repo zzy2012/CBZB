@@ -38,8 +38,8 @@ namespace GameLogic.Takeover
                 InvalidateActionButtons();
             }
 
-            var human = simulation.Human;
-            var spells = simulation.State.AvailableSpells(human);
+            var human = simulation.State.Human;
+            var spells = simulation.State.SpellSystem.AvailableSpells(human);
             for (int i = 0; i < spells.Count; i++)
             {
                 var spell = spells[i];
@@ -54,13 +54,13 @@ namespace GameLogic.Takeover
                     Click = () => _runner.BeginSpellTarget(spell),
                     Enabled = () => _runner.Simulation != null &&
                         (spell.SpellType == 2
-                            ? _runner.Simulation.Human.Ultimate + 0.0001f >=
-                              _runner.Simulation.Human.UltimateMax
-                            : _runner.Simulation.Human.Mana >= cost),
+                            ? _runner.Simulation.State.Human.Ultimate + 0.0001f >=
+                              _runner.Simulation.State.Human.UltimateMax
+                            : _runner.Simulation.State.Human.Mana >= cost),
                 });
             }
 
-            RefreshActionButtons(_plan, $"spell:{simulation.LevelAssetId}");
+            RefreshActionButtons(_plan, $"spell:{simulation.State.LevelAssetId}");
         }
     }
 }

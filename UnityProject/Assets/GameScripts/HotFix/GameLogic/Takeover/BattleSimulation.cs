@@ -333,7 +333,8 @@ namespace GameLogic.Takeover
                     Ultimate = player.Ultimate,
                     SupplyUsed = player.SupplyUsed,
                     SupplyCap = player.SupplyCap,
-                    AvailableSpellIds = sim.AvailableSpells(player).Select(spell => spell.Id).ToList(),
+                    AvailableSpellIds = sim.SpellSystem.AvailableSpells(player)
+                        .Select(spell => spell.Id).ToList(),
                 });
             }
 
@@ -369,70 +370,32 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>
-    /// 供 Unity 表现层使用的定步长模拟器门面。
-    /// 表现层通过读取快照渲染，不直接推进战斗逻辑。
+    /// 供 Unity 表现层使用的定步长模拟器，场景数据通过 State 直接读取。
     /// </summary>
     public sealed class BattleSimulation
     {
-        /// <summary>战斗模拟的固定时间步长，单位为秒。</summary>
-        public const float FixedStep = BattleManager.FixedStep;
         /// <summary>等待固定模拟步处理的战斗命令队列。</summary>
         private readonly Queue<BattleCommand> _commands = new Queue<BattleCommand>();
         /// <summary>负责推进底层战斗场景的管理器。</summary>
         private readonly BattleManager _battleManager = new BattleManager();
-        /// <summary>每个固定模拟步执行前调用的可选回调。</summary>
-        private readonly Action _beforeFixedStep;
 
-        /// <summary>关联的战斗模拟或节点状态。</summary>
+        /// <summary>关联的战斗场景状态。</summary>
         public TakeoverScene State { get; }
-        /// <summary>当前战斗实例。</summary>
-        public TakeoverBattle Battle { get; }
-        /// <summary>战场地图节点集合。</summary>
-        public IReadOnlyList<MapNodeEntity> Nodes => State.Nodes;
-        /// <summary>部队集合。</summary>
-        public IReadOnlyList<SquadEntity> Squads => State.Squads;
-        /// <summary>战斗参与方集合。</summary>
-        public IReadOnlyList<PlayerStateEntity> Players => State.Players;
-        /// <summary>地图连接边的集合。</summary>
-        public IReadOnlyList<MapEdge> Edges => State.Edges;
-        /// <summary>人类玩家参与方。</summary>
-        public PlayerStateEntity Human => State.Human;
-        /// <summary>战斗是否已经结束。</summary>
-        public bool IsOver => State.IsOver;
-        /// <summary>战斗是否由人类玩家获胜。</summary>
-        public bool HumanVictory => State.HumanVictory;
-        /// <summary>战斗已运行的时间，单位为秒。</summary>
-        public float Time => State.Time;
-        /// <summary>按照战斗耗时计算的通关星级。</summary>
-        public int Stars => State.Stars;
-        /// <summary>当前模拟的关卡资源标识。</summary>
-        public int LevelAssetId => State.LevelAssetId;
 
         /// <summary>按关卡、双方阵营、修正项和随机种子创建战斗模拟。</summary>
         public BattleSimulation(int levelAssetId, Faction humanFaction, Faction enemyFaction,
             int[] humanMods = null, int seed = 20120920)
         {
-            _beforeFixedStep = ExecuteQueuedCommands;
             State = new TakeoverScene(levelAssetId, humanFaction, enemyFaction, humanMods, seed);
-            Battle = new TakeoverBattle(State);
-            _battleManager.CreateBattle(Battle);
+            _battleManager.CreateBattle(new TakeoverBattle(State));
         }
 
         /// <summary>将命令加入队列，等待固定步执行。</summary>
         public void Enqueue(BattleCommand command) => _commands.Enqueue(command);
 
-        /// <summary>GM 的「AI 托管」开关打开时，立刻让 AI 跑一拍，玩家马上能看到它开始买兵/建造。</summary>
-        public void ForceAiTick(PlayerStateEntity player)
-        {
-            if (player == null) return;
-            State.AiSystem.TickAiSecond(player);
-        }
-
-        /// <summary>立即以人类玩家身份执行命令并返回执行结果。</summary>
-        public bool ExecuteNow(BattleCommand command) => State.ExecuteCommand(State.Human, command);
-
         /// <summary>按实际时间推进固定步战斗模拟。</summary>
-        public void Tick(float realDeltaSeconds) => _battleManager.Update(realDeltaSeconds, _beforeFixedStep);
+        public void Tick(float realDeltaSeconds) =>
+            _battleManager.Update(realDeltaSeconds, ExecuteQueuedCommands);
 
         /// <summary>按队列顺序处理等待执行的玩家命令。</summary>
         private void ExecuteQueuedCommands()
@@ -440,9 +403,6 @@ namespace GameLogic.Takeover
             while (_commands.Count > 0)
                 State.ExecuteCommand(State.Human, _commands.Dequeue());
         }
-
-        /// <summary>取出并清空模拟器积累的战斗事件。</summary>
-        public IReadOnlyList<BattleEvent> DrainEvents() => State.DrainEvents();
 
         /// <summary>销毁当前战斗并释放模拟管理器。</summary>
         public void Dispose() => _battleManager.Dispose();

@@ -25,6 +25,20 @@ namespace GameLogic.Takeover
         public static TbUnit TbUnit => T.TbUnit;
         /// <summary>建筑配置表。</summary>
         public static TbBuilding TbBuilding => T.TbBuilding;
+        /// <summary>可建造的附属建筑配置。</summary>
+        public static IEnumerable<Building> BuildableBuildings =>
+            TbBuilding.DataList.Where(building => building.BuildCost > 0);
+        /// <summary>提供补给的可建造建筑配置。</summary>
+        public static Building SupplyBuilding =>
+            BuildableBuildings.Single(building => building.Supply > 0);
+        /// <summary>提供金币收入的可建造建筑配置。</summary>
+        public static Building GoldBuilding =>
+            BuildableBuildings.Single(building => building.Gold > 0);
+        /// <summary>提供法力收入的可建造建筑配置。</summary>
+        public static Building ManaBuilding =>
+            BuildableBuildings.Single(building => building.Mana > 0);
+        /// <summary>编队偏移配置表。</summary>
+        public static TbFormation TbFormation => T.TbFormation;
         /// <summary>法术配置表。</summary>
         public static TbSpell TbSpell => T.TbSpell;
         /// <summary>政令配置表。</summary>

@@ -51,17 +51,17 @@ namespace GameLogic.Takeover
         /// </summary>
         internal void EnsureEconomy(PlayerStateEntity player)
         {
-            int farmCost = Cfg.BuildingById(5)?.BuildCost ?? 150;
+            int farmCost = Cfg.SupplyBuilding.BuildCost;
             for (int i = 0; i < MaxFarmsPerTick && player.FreeSupply < SupplyComfort && player.Gold >= farmCost; i++)
             {
-                if (!Sim.EconomySystem.TryBuildFirstType(player, 5)) break;
+                if (!Sim.EconomySystem.TryBuildFirstType(player, Cfg.SupplyBuilding.Id)) break;
             }
 
             int buildingCount = Mathf.Max(1, player.ActiveBuildings);
             if (player.ManaIncome < Mathf.RoundToInt(buildingCount / 3f))
-                Sim.EconomySystem.TryBuildFirstType(player, 7);
+                Sim.EconomySystem.TryBuildFirstType(player, Cfg.ManaBuilding.Id);
             if (player.BaseGoldIncome < 2 && buildingCount > player.BaseGoldIncome)
-                Sim.EconomySystem.TryBuildFirstType(player, 6);
+                Sim.EconomySystem.TryBuildFirstType(player, Cfg.GoldBuilding.Id);
         }
 
         // ---------------- 造兵 ----------------
@@ -391,7 +391,7 @@ namespace GameLogic.Takeover
                 .OrderByDescending(unit => beneficial ? 1f - unit.HpRatio : 1f)
                 .ThenBy(unit => Vector2.Distance(unit.Pos, player.OwnedNodes.FirstOrDefault()?.Pos ?? Vector2.zero))
                 .FirstOrDefault();
-            if (best != null) return best.Pos + TakeoverScene.FormationOffset(0, 1);
+            if (best != null) return best.Pos + Sim.FormationOffset(0, 1);
             return player.OwnedNodes.FirstOrDefault()?.Pos ??
                    new Vector2(OriginalRules.NativeStageWidth * 0.5f, OriginalRules.NativeStageHeight);
         }

@@ -14,15 +14,12 @@ namespace GameLogic.Takeover
         private const int MaxStepsPerTick = 1500;
 
         /// <summary>由管理器驱动的当前战斗实例。</summary>
-        private Battle _battle;
+        private BattleBase _battle;
         /// <summary>等待转换为固定步更新的时间累积值。</summary>
         private float _accumulator;
 
-        /// <summary>当前战斗实例。</summary>
-        public Battle Battle => _battle;
-
         /// <summary>销毁现有战斗并初始化指定战斗实例。</summary>
-        public void CreateBattle(Battle battle)
+        public void CreateBattle(BattleBase battle)
         {
             if (battle == null) throw new ArgumentNullException(nameof(battle));
             DestroyBattle();

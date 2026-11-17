@@ -19,7 +19,7 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>管理战斗实体并转发生命周期调用的场景基类。</summary>
-    public abstract class BattleScene
+    public abstract class SceneBase
     {
         /// <summary>按实体类型登记的场景实体集合。</summary>
         private readonly Dictionary<BattleEntityType, List<EntityBase>> _entities =

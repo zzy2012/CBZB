@@ -233,7 +233,7 @@ namespace GameLogic.Takeover
             BindLevelVisuals();
             GameModule.UI.ShowUIAsync<TakeoverBattleUI>(this);
 
-            Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.Nodes.Count} 建筑={_sim.Nodes.Count(n => n.HasBuilding)}");
+            Log.Info($"[Takeover] 启动 L{LevelAssetId} 节点={_sim.State.Nodes.Count} 建筑={_sim.State.Nodes.Count(n => n.HasBuilding)}");
         }
 
         /// <summary>注册当前战斗界面。</summary>
@@ -258,10 +258,10 @@ namespace GameLogic.Takeover
         /// <summary>将摄像机调整到当前战场的合适位置。</summary>
         private void FocusCamera()
         {
-            if (_sim.Nodes.Count == 0) return;
+            if (_sim.State.Nodes.Count == 0) return;
             var min = Vector2.zero;
             var max = new Vector2(OriginalRules.NativeStageWidth, OriginalRules.NativeStageHeight);
-            foreach (var n in _sim.Nodes)
+            foreach (var n in _sim.State.Nodes)
             {
                 var display = DisplayPosition(n.Pos);
                 min = Vector2.Min(min, display);
@@ -283,7 +283,7 @@ namespace GameLogic.Takeover
         /// <summary>为地图节点创建并绑定场景显示对象。</summary>
         private void BuildNodeViews()
         {
-            foreach (var n in _sim.Nodes)
+            foreach (var n in _sim.State.Nodes)
             {
                 var go = new GameObject($"node_{n.Key}");
                 go.transform.SetParent(_root, false);
@@ -304,7 +304,7 @@ namespace GameLogic.Takeover
         /// <summary>为可交互地图节点创建点击区域。</summary>
         private void BuildNodeClickableAreas()
         {
-            foreach (MapNodeEntity node in _sim.Nodes)
+            foreach (MapNodeEntity node in _sim.State.Nodes)
             {
                 if (!IsNodeClickable(node)) continue;
                 _nodeClickableAreas[node] =
@@ -315,7 +315,7 @@ namespace GameLogic.Takeover
         /// <summary>加载并布置当前关卡的地图背景。</summary>
         private void BuildMapBackground()
         {
-            if (_sim.Nodes.Count == 0) return;
+            if (_sim.State.Nodes.Count == 0) return;
             var go = new GameObject("TakeoverMapBackground");
             go.transform.SetParent(_root, false);
             // 地图 PNG 与舞台坐标差一个平移（居中裁切导致），按表里的修正量把贴图挪回去：
@@ -350,7 +350,7 @@ namespace GameLogic.Takeover
                 BindNodeVisual(pair.Key, pair.Value);
             }
 
-            if (_mapBackground != null && _sim.Nodes.Count > 0)
+            if (_mapBackground != null && _sim.State.Nodes.Count > 0)
             {
                 TakeoverVisualCatalog.BindMapBackground(
                     _mapBackground, LevelAssetId,
@@ -419,7 +419,7 @@ namespace GameLogic.Takeover
         /// <summary>创建地图连接边和行军路径的显示对象。</summary>
         private void BuildEdgeViews()
         {
-            foreach (MapEdge edge in _sim.Edges)
+            foreach (MapEdge edge in _sim.State.Edges)
             {
                 var go = new GameObject($"edge_{edge.Id}");
                 go.transform.SetParent(_root, false);
@@ -483,20 +483,20 @@ namespace GameLogic.Takeover
         {
             if (_sim == null || _levelSelectOpen) return;
             UpdateCamera();
-            if (!_paused && !_sim.IsOver)
+            if (!_paused && !_sim.State.IsOver)
             {
                 float dt = Mathf.Min(0.1f, Time.deltaTime) * _speed;
                 _sim.Tick(dt);
                 ProcessBattleEvents();
             }
 
-            if (_sim.IsOver && !_reported)
+            if (_sim.State.IsOver && !_reported)
             {
                 _reported = true;
-                if (_sim.HumanVictory)
+                if (_sim.State.HumanVictory)
                 {
                     var lvCfg = Cfg.TbLevel.DataList.FirstOrDefault(l => l.AssetId == LevelAssetId);
-                    Campaign.Complete(LevelAssetId, _sim.Time, lvCfg?.Xp ?? 0);
+                    Campaign.Complete(LevelAssetId, _sim.State.Time, lvCfg?.Xp ?? 0);
                 }
                 GameModule.UI.CloseUI<TakeoverBattleUI>();
                 GameModule.UI.ShowUIAsync<TakeoverResultUI>(this);
@@ -508,7 +508,7 @@ namespace GameLogic.Takeover
             if (!_paused) UpdateSpellFx(Time.deltaTime);
 
             if (_selectedSquad != null && _selectedSquad.IsDead) _selectedSquad = null;
-            if (_sim.IsOver)
+            if (_sim.State.IsOver)
             {
                 _selected = null;
                 _selectedSquad = null;
@@ -520,7 +520,7 @@ namespace GameLogic.Takeover
         /// <summary>处理模拟器事件并触发对应界面反馈。</summary>
         private void ProcessBattleEvents()
         {
-            foreach (BattleEvent battleEvent in _sim.DrainEvents())
+            foreach (BattleEvent battleEvent in _sim.State.DrainEvents())
             {
                 switch (battleEvent.Kind)
                 {
@@ -547,13 +547,14 @@ namespace GameLogic.Takeover
             var spell = Cfg.TbSpell.DataList.FirstOrDefault(value =>
                 value.Id == Mathf.RoundToInt(battleEvent.Value));
             PlayerStateEntity caster = _sim != null
-                ? _sim.Players.FirstOrDefault(value => value.Id == battleEvent.ActorId)
+                ? _sim.State.Players.FirstOrDefault(value => value.Id == battleEvent.ActorId)
                 : null;
             int originalId = spell != null ? OriginalRules.OriginalSpellIndex(spell.Id) : -1;
             SpawnSpellFx(battleEvent.Position, spell != null ? spell.Radius : 0f, originalId);
 
             bool ultimate = battleEvent.Kind == "UltimateCast";
-            bool byHuman = caster != null && _sim != null && _sim.Human != null && caster == _sim.Human;
+            bool byHuman = caster != null && _sim != null &&
+                           _sim.State.Human != null && caster == _sim.State.Human;
             if (!byHuman && !ultimate &&
                 Time.unscaledTime - _lastEnemySpellToast < EnemySpellToastInterval)
             {
@@ -683,7 +684,7 @@ namespace GameLogic.Takeover
         private void SyncSquads()
         {
             var liveUnitIds = new HashSet<int>();
-            foreach (SquadEntity squad in _sim.Squads)
+            foreach (SquadEntity squad in _sim.State.Squads)
             {
                 foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead))
                 {
@@ -757,14 +758,14 @@ namespace GameLogic.Takeover
             if (!_badgeProbeLogged)
             {
                 _badgeProbeLogged = true;
-                Log.Info($"[Takeover] 头顶 UI: squads={_sim.Squads.Count} " +
+                Log.Info($"[Takeover] 头顶 UI: squads={_sim.State.Squads.Count} " +
                          $"renderMode={rootCanvas?.renderMode} " +
                          $"scaleFactor={rootCanvas?.scaleFactor:F2} badgeScale={badgeScale:F2} " +
                          $"camera={(uiCamera != null ? uiCamera.name : "null")}");
             }
 
             var live = new HashSet<int>();
-            foreach (SquadEntity squad in _sim.Squads)
+            foreach (SquadEntity squad in _sim.State.Squads)
             {
                 if (squad.IsDead) continue;
                 live.Add(squad.Id);
@@ -844,7 +845,7 @@ namespace GameLogic.Takeover
                 return;
 
             var live = new HashSet<int>();
-            foreach (MapNodeEntity node in _sim.Nodes)
+            foreach (MapNodeEntity node in _sim.State.Nodes)
             {
                 BuildingState building = node.Building;
                 if (building == null || !TakeoverScene.IsKeyBuilding(building)) continue;
@@ -876,7 +877,8 @@ namespace GameLogic.Takeover
                 if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(layer, screen, uiCamera, out local))
                     continue;
                 badge.SetPosition(local);
-                badge.RefreshVisuals(node == _selected, building.Owner == _sim.Human.Faction, badgeScale);
+                badge.RefreshVisuals(
+                    node == _selected, building.Owner == _sim.State.Human.Faction, badgeScale);
             }
 
             foreach (int id in _buildingBadges.Keys.ToList())
@@ -969,7 +971,7 @@ namespace GameLogic.Takeover
             if (node.Kind == NodeKind.BuildSpot)
             {
                 bool controlled = _sim != null &&
-                                  _sim.State.IsLocControlledBy(_sim.Human, node);
+                                  _sim.State.IsLocControlledBy(_sim.State.Human, node);
                 return controlled
                     ? new Color(1f, 0.88f, 0.52f, 0.25f)
                     : new Color(0.72f, 0.72f, 0.68f, 0.13f);
@@ -1081,8 +1083,9 @@ namespace GameLogic.Takeover
             {
                 MapNodeEntity spellNode = FindNodeAtScreen(mouse, 34f);
                 Vector2 target = spellNode?.Pos ?? MouseWorldPosition();
-                bool cast = _sim.ExecuteNow(BattleCommand.CastSpell(
-                    _pendingSpell.Id, target, spellNode?.Id ?? 0));
+                bool cast = _sim.State.ExecuteCommand(
+                    _sim.State.Human, BattleCommand.CastSpell(
+                        _pendingSpell.Id, target, spellNode?.Id ?? 0));
                 // 成功时的播报交给 SpellCast 事件（带施法者和效果说明），这里只报失败
                 if (!cast) Toast("法术施放失败");
                 _pendingSpell = null;
@@ -1100,7 +1103,7 @@ namespace GameLogic.Takeover
             else if (node?.Kind == NodeKind.BuildSpot && node.Building == null)
             {
                 _selected = node;
-                Toast(_sim.State.IsLocControlledBy(_sim.Human, node)
+                Toast(_sim.State.IsLocControlledBy(_sim.State.Human, node)
                     ? $"空地 {node.Key}：可以建造"
                     : $"空地 {node.Key}：不在己方控制区");
             }
@@ -1139,7 +1142,7 @@ namespace GameLogic.Takeover
         {
             MapNodeEntity best = null;
             float bestDistance = maxDistance;
-            foreach (MapNodeEntity node in _sim.Nodes)
+            foreach (MapNodeEntity node in _sim.State.Nodes)
             {
                 Vector3 nodeScreen = _cam.WorldToScreenPoint(DisplayPosition(node.Pos));
                 float distance = Vector2.Distance(screen, nodeScreen);
@@ -1265,24 +1268,25 @@ namespace GameLogic.Takeover
         public const float MaxSpeed = 256f;
 
         /// <summary>玩家是否已被 AI 托管（底栏 AI 开关）。</summary>
-        public bool HumanAiControlled => _sim != null && _sim.Human != null && _sim.Human.AiControlled;
+        public bool HumanAiControlled => _sim != null && _sim.State.Human != null &&
+                                         _sim.State.Human.AiControlled;
 
         /// <summary>切换人类玩家的 AI 托管状态。</summary>
         public void ToggleHumanAi()
         {
-            if (_sim == null || _sim.Human == null) return;
-            SetHumanAi(!_sim.Human.AiControlled);
+            if (_sim == null || _sim.State.Human == null) return;
+            SetHumanAi(!_sim.State.Human.AiControlled);
         }
 
         /// <summary>设置是否由 AI 托管人类玩家。</summary>
         public void SetHumanAi(bool enabled)
         {
-            if (_sim == null || _sim.Human == null) return;
-            _sim.Human.AiControlled = enabled;
+            if (_sim == null || _sim.State.Human == null) return;
+            _sim.State.Human.AiControlled = enabled;
             if (enabled)
             {
                 // 立刻跑一拍，不用等下一个逻辑秒，开关点下去就能看到 AI 开始行动
-                _sim.ForceAiTick(_sim.Human);
+                _sim.State.AiSystem.TickAiSecond(_sim.State.Human);
             }
             Toast(enabled ? "AI 已接管我方（再点一次收回）" : "已收回 AI，恢复手动操作");
         }
@@ -1291,12 +1295,12 @@ namespace GameLogic.Takeover
         public void GrantResources(int gold, int mana)
         {
             if (_sim == null) return;
-            float oldGold = _sim.Human.Gold;
-            float oldMana = _sim.Human.Mana;
-            bool ok = _sim.ExecuteNow(BattleCommand.GrantResources(gold, mana));
+            float oldGold = _sim.State.Human.Gold;
+            float oldMana = _sim.State.Human.Mana;
+            bool ok = _sim.State.ExecuteCommand(_sim.State.Human, BattleCommand.GrantResources(gold, mana));
             if (!ok) return;
-            Toast($"GM：金币 +{_sim.Human.Gold - oldGold:F0}    " +
-                  $"法力 +{_sim.Human.Mana - oldMana:F0}");
+            Toast($"GM：金币 +{_sim.State.Human.Gold - oldGold:F0}    " +
+                  $"法力 +{_sim.State.Human.Mana - oldMana:F0}");
         }
 
         /// <summary>
@@ -1305,7 +1309,7 @@ namespace GameLogic.Takeover
         /// </summary>
         public void GmEndBattle(bool victory)
         {
-            if (_sim == null || _sim.IsOver) return;
+            if (_sim == null || _sim.State.IsOver) return;
             _sim.State.IsOver = true;
             _sim.State.HumanVictory = victory;
             Toast(victory ? "GM：判定本关胜利" : "GM：判定本关失败");
@@ -1314,7 +1318,8 @@ namespace GameLogic.Takeover
         /// <summary>检查当前玩家能否在节点招募指定单位。</summary>
         public bool CanBuy(GameConfig.takeover.Unit unit, MapNodeEntity node)
         {
-            return _sim != null && _sim.State.CanBuy(_sim.Human, unit, node, out _);
+            return _sim != null &&
+                   _sim.State.EconomySystem.CanBuy(_sim.State.Human, unit, node, out _);
         }
 
         /// <summary>获取当前玩家在指定节点可招募的单位配置。</summary>
@@ -1323,7 +1328,7 @@ namespace GameLogic.Takeover
             if (_sim == null || node?.Building == null) return new List<GameConfig.takeover.Unit>();
             return Cfg.TbUnit.DataList
                 .Where(u => OriginalRules.FromConfigFaction(u.Faction) == HumanFaction &&
-                            TakeoverScene.AllowedAt(_sim.Human, node.Building, u))
+                            BattleEconomySystem.AllowedAt(_sim.State.Human, node.Building, u))
                 .OrderBy(u => u.UnitType).ThenBy(u => u.Tier).ToList();
         }
 
@@ -1331,8 +1336,9 @@ namespace GameLogic.Takeover
         public void Buy(GameConfig.takeover.Unit unit, MapNodeEntity node)
         {
             if (_sim == null) return;
-            bool ok = _sim.ExecuteNow(BattleCommand.BuyUnit(unit.Id, node.Id));
-            _sim.State.CanBuy(_sim.Human, unit, node, out string reason);
+            bool ok = _sim.State.ExecuteCommand(
+                _sim.State.Human, BattleCommand.BuyUnit(unit.Id, node.Id));
+            _sim.State.EconomySystem.CanBuy(_sim.State.Human, unit, node, out string reason);
             Toast(ok ? $"已招募 {unit.CnName}" : reason ?? "招募失败");
         }
 
@@ -1340,7 +1346,7 @@ namespace GameLogic.Takeover
         public void Upgrade(MapNodeEntity node)
         {
             if (_sim == null) return;
-            bool ok = _sim.ExecuteNow(BattleCommand.Upgrade(node.Id));
+            bool ok = _sim.State.ExecuteCommand(_sim.State.Human, BattleCommand.Upgrade(node.Id));
             Toast(ok ? "升级成功" : "升级失败");
         }
 
@@ -1348,15 +1354,17 @@ namespace GameLogic.Takeover
         public void Build(MapNodeEntity node, int buildingId)
         {
             if (_sim == null) return;
-            _sim.State.CanPlace(_sim.Human, node, buildingId, out string reason);
-            bool ok = _sim.ExecuteNow(BattleCommand.Build(buildingId, node.Id));
+            _sim.State.EconomySystem.CanPlace(_sim.State.Human, node, buildingId, out string reason);
+            bool ok = _sim.State.ExecuteCommand(
+                _sim.State.Human, BattleCommand.Build(buildingId, node.Id));
             Toast(ok ? "建造完成" : reason ?? "建造失败");
         }
 
         /// <summary>检查当前玩家能否在节点建造指定建筑。</summary>
         public bool CanBuild(MapNodeEntity node, int buildingId)
         {
-            return _sim != null && _sim.State.CanPlace(_sim.Human, node, buildingId, out _);
+            return _sim != null &&
+                   _sim.State.EconomySystem.CanPlace(_sim.State.Human, node, buildingId, out _);
         }
 
         /// <summary>进入指定法术的目标选择状态。</summary>

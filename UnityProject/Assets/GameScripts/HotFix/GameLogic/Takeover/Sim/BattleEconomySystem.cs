@@ -103,7 +103,7 @@ namespace GameLogic.Takeover
             };
             for (int i = 0; i < count; i++)
             {
-                Vector2 spawnPosition = position + TakeoverScene.FormationOffset(i, count);
+                Vector2 spawnPosition = position + Sim.FormationOffset(i, count);
                 var unit = new CombatUnitEntity
                 {
                     Id = Sim.AllocateUnitId(),
@@ -233,8 +233,9 @@ namespace GameLogic.Takeover
                 UltimatePerSec = def.Ultimate,
             };
             if (!player.OwnedNodes.Contains(spot)) player.OwnedNodes.Add(spot);
-            if (Sim.LevelAssetId == 2 && player.IsHuman && def.Id == 5)
-                Sim.HumanBuildingsUnlocked.UnionWith(new[] { 6, 7 });
+            if (Sim.LevelAssetId == 2 && player.IsHuman && def.Id == Cfg.SupplyBuilding.Id)
+                Sim.HumanBuildingsUnlocked.UnionWith(
+                    Cfg.BuildableBuildings.Select(building => building.Id));
             return true;
         }
 

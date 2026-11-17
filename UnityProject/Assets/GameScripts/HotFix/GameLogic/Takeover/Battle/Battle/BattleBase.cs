@@ -1,10 +1,10 @@
 namespace GameLogic.Takeover
 {
     /// <summary>管理当前战斗场景生命周期的战斗基类。</summary>
-    public abstract class Battle
+    public abstract class BattleBase
     {
         /// <summary>当前战斗场景。</summary>
-        public BattleScene CurScene { get; protected set; }
+        public SceneBase CurScene { get; protected set; }
 
         /// <summary>初始化当前战斗场景。</summary>
         public virtual void OnInit()

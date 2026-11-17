@@ -136,7 +136,7 @@ namespace GameLogic.Takeover
                     new Vector2(250f, 32f),
                     () => _runner.Upgrade(node),
                     () => building.Level < 2 && _runner.Simulation != null &&
-                          _runner.Simulation.Human.Gold >= upgradeCost);
+                          _runner.Simulation.State.Human.Gold >= upgradeCost);
                 return true;
             }
 
@@ -154,15 +154,14 @@ namespace GameLogic.Takeover
             {
                 _title.text = $"空地 {node.Key}";
                 bool controlled = _runner.Simulation.State.IsLocControlledBy(
-                    _runner.Simulation.Human, node);
+                    _runner.Simulation.State.Human, node);
                 _body.text = controlled ? "在己方控制区段建造附属建筑" : "不在己方控制区";
                 if (!controlled) return true;
 
-                for (int i = 0; i < TakeoverScene.SupplyBuildingIds.Length; i++)
+                int i = 0;
+                foreach (var definition in Cfg.BuildableBuildings)
                 {
-                    int id = TakeoverScene.SupplyBuildingIds[i];
-                    var definition = Cfg.BuildingById(id);
-                    if (definition == null) continue;
+                    int id = definition.Id;
                     string effect = definition.Supply > 0
                         ? "补给 +1"
                         : definition.Gold > 0 ? "金币 +1/s" : "法力 +1/s";

@@ -15,7 +15,7 @@ namespace GameLogic.Takeover
         private bool _isDestroyed;
 
         /// <summary>实体所属的战斗场景。</summary>
-        public BattleScene Scene { get; private set; }
+        public SceneBase Scene { get; private set; }
         /// <summary>实体是否已完成初始化。</summary>
         internal bool IsInitialized => _isInitialized;
 
@@ -41,7 +41,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>设置实体所属场景。</summary>
-        internal void SetScene(BattleScene scene)
+        internal void SetScene(SceneBase scene)
         {
             if (_isDestroyed)
                 throw new InvalidOperationException("A destroyed entity cannot rejoin a battle scene.");

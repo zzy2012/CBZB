@@ -188,16 +188,16 @@ namespace GameLogic.Takeover
             BattleSimulation simulation = _runner != null ? _runner.Simulation : null;
             if (simulation == null) return;
 
-            var player = simulation.Human;
+            var player = simulation.State.Human;
             _resources.text =
-                $"L{simulation.LevelAssetId}    " +
-                $"{(simulation.IsOver ? "结束" : _runner.Paused ? "暂停" : $"×{_runner.Speed:0}")}\n" +
+                $"L{simulation.State.LevelAssetId}    " +
+                $"{(simulation.State.IsOver ? "结束" : _runner.Paused ? "暂停" : $"×{_runner.Speed:0}")}\n" +
                 $"金币 {Mathf.FloorToInt(player.Gold)}   +{player.NetGoldIncome()}/s    " +
                 $"法力 {Mathf.FloorToInt(player.Mana)}/500\n" +
                 $"补给 {player.SupplyUsed}/{player.SupplyCap}   " +
                 $"部队 {player.Squads.Count(squad => !squad.IsDead)}   " +
                 $"敌城 {CountEnemyKeyBuildings(simulation)}";
-            _clock.text = $"{FormatTime(simulation.Time)}  ·  三星 < {FormatTime(330f)}";
+            _clock.text = $"{FormatTime(simulation.State.Time)}  ·  三星 < {FormatTime(330f)}";
 
             _gmPanel.RefreshSpeed(_runner.Speed);
             for (int i = 0; i < BottomSpeeds.Length; i++)
@@ -224,7 +224,7 @@ namespace GameLogic.Takeover
         private static int CountEnemyKeyBuildings(BattleSimulation simulation)
         {
             int count = 0;
-            foreach (var player in simulation.Players)
+            foreach (var player in simulation.State.Players)
             {
                 if (player.IsHuman) continue;
                 foreach (MapNodeEntity node in player.OwnedNodes)

@@ -8,48 +8,15 @@ namespace GameLogic.Takeover
     /// <summary>
     /// Takeover 战斗场景及其确定性模拟逻辑。
     /// </summary>
-    public sealed class TakeoverScene : BattleScene
+    public sealed class TakeoverScene : SceneBase
     {
         /// <summary>参与方魔法值上限。</summary>
         public const float ManaCap = 500f;
         /// <summary>AI 购买单位时使用的资源阈值。</summary>
         public const int AiBuyThreshold = OriginalRules.AiBuyThreshold;
-        /// <summary>提供补给的建筑配置标识。</summary>
-        public static readonly int[] SupplyBuildingIds = { 5, 6, 7 };
-        /// <summary>三名士兵编队的相对坐标。</summary>
-        private static readonly Vector2[] FormationThree =
-        {
-            new Vector2(0f, 0f), new Vector2(-14f, 7f), new Vector2(-14f, -7f),
-        };
-        /// <summary>五名士兵编队的相对坐标。</summary>
-        private static readonly Vector2[] FormationFive =
-        {
-            new Vector2(0f, 0f), new Vector2(-21f, 14f), new Vector2(-21f, -14f),
-            new Vector2(-42f, 14f), new Vector2(-42f, -14f),
-        };
-        /// <summary>七名士兵编队的相对坐标。</summary>
-        private static readonly Vector2[] FormationSeven =
-        {
-            new Vector2(0f, 0f), new Vector2(-21f, 14f), new Vector2(-21f, -14f),
-            new Vector2(-42f, 14f), new Vector2(-42f, -14f),
-            new Vector2(-63f, 14f), new Vector2(-63f, -14f),
-        };
-        /// <summary>六名士兵编队的相对坐标。</summary>
-        private static readonly Vector2[] FormationThreeByTwo =
-        {
-            new Vector2(0f, 0f), new Vector2(-14f, 10.5f), new Vector2(-14f, -10.5f),
-            new Vector2(-21f, 0f), new Vector2(-31.5f, 10.5f), new Vector2(-31.5f, -10.5f),
-        };
-        /// <summary>十二名士兵编队的相对坐标。</summary>
-        private static readonly Vector2[] FormationThreeByFour =
-        {
-            new Vector2(0f, 0f), new Vector2(0f, 14f), new Vector2(0f, -14f),
-            new Vector2(-14f, 0f), new Vector2(-14f, 14f), new Vector2(-14f, -14f),
-            new Vector2(-28f, 0f), new Vector2(-28f, 14f), new Vector2(-28f, -14f),
-            new Vector2(-42f, 0f), new Vector2(-42f, 14f), new Vector2(-42f, -14f),
-        };
-        /// <summary>单名士兵编队的相对坐标。</summary>
-        private static readonly Vector2[] FormationOne = { Vector2.zero };
+        /// <summary>按编队最小单位数索引的坐标配置。</summary>
+        private readonly SortedDictionary<int, Vector2[]> _formationLayouts =
+            new SortedDictionary<int, Vector2[]>();
 
         /// <summary>战场地图节点集合。</summary>
         public readonly List<MapNodeEntity> Nodes = new List<MapNodeEntity>();
@@ -132,6 +99,7 @@ namespace GameLogic.Takeover
             _combatSystem = new BattleCombatSystem(this);
             _spellSystem = new BattleSpellSystem(this);
             _aiSystem = new BattleAiSystem(this);
+            InitializeFormationLayouts();
             LevelAssetId = levelAssetId;
             Human = new PlayerStateEntity
             {
@@ -275,7 +243,7 @@ namespace GameLogic.Takeover
                     {
                         for (int i = 0; i < group.Count; i++)
                         {
-                            OrderMove(group[i], command.Position, node);
+                            _mapSystem.OrderMove(group[i], command.Position, node);
                             group[i].MoveDelaySeconds = i * 4f;
                         }
                     }
@@ -284,16 +252,17 @@ namespace GameLogic.Takeover
                 case BattleCommandType.BuyUnit:
                 {
                     GameConfig.takeover.Unit unit = Cfg.TbUnit.DataList.FirstOrDefault(value => value.Id == command.ConfigId);
-                    return unit != null && BuyUnit(player, unit, node, out _) != null;
+                    return unit != null && _economySystem.BuyUnit(player, unit, node, out _) != null;
                 }
                 case BattleCommandType.Upgrade:
-                    return TryUpgrade(player, node);
+                    return _economySystem.TryUpgrade(player, node);
                 case BattleCommandType.Build:
-                    return TryBuild(player, node, command.ConfigId, out _);
+                    return _economySystem.TryBuild(player, node, command.ConfigId, out _);
                 case BattleCommandType.CastSpell:
                 {
                     GameConfig.takeover.Spell spell = Cfg.TbSpell.DataList.FirstOrDefault(value => value.Id == command.ConfigId);
-                    return spell != null && TryCastSpell(player, spell, command.Position, node, out _);
+                    return spell != null &&
+                           _spellSystem.TryCastSpell(player, spell, command.Position, node, out _);
                 }
                 case BattleCommandType.GrantResources:
                     player.Gold = Mathf.Max(0f, player.Gold + command.GoldDelta);
@@ -309,59 +278,6 @@ namespace GameLogic.Takeover
         /// <summary>查找指定阵营的参与方，未找到时返回空。</summary>
         public PlayerStateEntity PlayerOf(Faction faction) => Players.FirstOrDefault(player => player.Faction == faction);
 
-        /// <summary>检查参与方能否在指定节点招募单位，并输出失败原因。</summary>
-        public bool CanBuy(PlayerStateEntity player, GameConfig.takeover.Unit def, MapNodeEntity at, out string reason) =>
-            _economySystem.CanBuy(player, def, at, out reason);
-
-        /// <summary>检查指定建筑是否允许招募该单位。</summary>
-        public static bool AllowedAt(BuildingState building, GameConfig.takeover.Unit def) =>
-            BattleEconomySystem.AllowedAt(building, def);
-
-        /// <summary>检查指定建筑是否允许招募该单位。</summary>
-        public static bool AllowedAt(PlayerStateEntity player, BuildingState building, GameConfig.takeover.Unit def) =>
-            BattleEconomySystem.AllowedAt(player, building, def);
-
-        /// <summary>尝试招募单位，返回创建的部队并输出失败原因。</summary>
-        public SquadEntity BuyUnit(PlayerStateEntity player, GameConfig.takeover.Unit def, MapNodeEntity at, out string reason) =>
-            _economySystem.BuyUnit(player, def, at, out reason);
-
-        /// <summary>尝试升级指定节点上的建筑。</summary>
-        public bool TryUpgrade(PlayerStateEntity player, MapNodeEntity at) => _economySystem.TryUpgrade(player, at);
-
-        /// <summary>检查参与方能否在指定节点建造建筑，并输出失败原因。</summary>
-        public bool CanPlace(PlayerStateEntity player, MapNodeEntity spot, int buildingId, out string reason) =>
-            _economySystem.CanPlace(player, spot, buildingId, out reason);
-
-        /// <summary>尝试在指定节点建造建筑，并输出失败原因。</summary>
-        public bool TryBuild(PlayerStateEntity player, MapNodeEntity spot, int buildingId, out string reason) =>
-            _economySystem.TryBuild(player, spot, buildingId, out reason);
-
-        /// <summary>尝试对指定节点或位置施放法术，并输出失败原因。</summary>
-        public bool TryCastSpell(PlayerStateEntity player, GameConfig.takeover.Spell spell,
-            MapNodeEntity target, out string reason) => _spellSystem.TryCastSpell(player, spell, target, out reason);
-
-        /// <summary>尝试对指定节点或位置施放法术，并输出失败原因。</summary>
-        public bool TryCastSpell(PlayerStateEntity player, GameConfig.takeover.Spell spell,
-            Vector2 position, MapNodeEntity target, out string reason) =>
-            _spellSystem.TryCastSpell(player, spell, position, target, out reason);
-
-        /// <summary>向部队下达前往指定节点或位置的移动命令。</summary>
-        public void OrderMove(SquadEntity squad, MapNodeEntity targetNode) => _mapSystem.OrderMove(squad, targetNode);
-
-        /// <summary>向部队下达前往指定节点或位置的移动命令。</summary>
-        public void OrderMove(SquadEntity squad, Vector2 position, MapNodeEntity targetNode = null) =>
-            _mapSystem.OrderMove(squad, position, targetNode);
-
-        /// <summary>查找距离指定位置最近的地图节点。</summary>
-        public MapNodeEntity NearestNode(Vector2 position) => _mapSystem.NearestNode(position);
-
-        /// <summary>查找两个地图节点之间的路径。</summary>
-        public List<MapNodeEntity> FindPath(MapNodeEntity from, MapNodeEntity to) => _mapSystem.FindPath(from, to);
-
-        /// <summary>获取指定参与方当前可用的法术配置。</summary>
-        public List<GameConfig.takeover.Spell> AvailableSpells(PlayerStateEntity player) =>
-            _spellSystem.AvailableSpells(player);
-
         /// <summary>将初始修正项应用到指定参与方。</summary>
         private static void ApplyModifiers(PlayerStateEntity player, int[] modifiers)
         {
@@ -373,7 +289,7 @@ namespace GameLogic.Takeover
         /// <summary>根据关卡编号初始化对应战斗场景。</summary>
         private void InitializeScenario()
         {
-            _humanBuildingsUnlocked.UnionWith(SupplyBuildingIds);
+            _humanBuildingsUnlocked.UnionWith(Cfg.BuildableBuildings.Select(building => building.Id));
             if (LevelAssetId == 1) InitializeLevelOne();
             else if (LevelAssetId == 2) InitializeLevelTwo();
             else SpawnScenarioOgre();
@@ -401,21 +317,27 @@ namespace GameLogic.Takeover
             PlayerStateEntity khaganate = PlayerOf(Faction.Khaganate);
             if (khaganate == null) return;
 
-            _economySystem.TryBuildFirstType(Human, 6);
-            _economySystem.TryBuildFirstType(Human, 7);
+            GameConfig.takeover.Building farm =
+                Cfg.BuildableBuildings.Single(building => building.Supply > 0);
+            GameConfig.takeover.Building mine =
+                Cfg.BuildableBuildings.Single(building => building.Gold > 0);
+            GameConfig.takeover.Building obelisk =
+                Cfg.BuildableBuildings.Single(building => building.Mana > 0);
+            _economySystem.TryBuildFirstType(Human, mine.Id);
+            _economySystem.TryBuildFirstType(Human, obelisk.Id);
             _humanBuildingsUnlocked.Clear();
-            _humanBuildingsUnlocked.Add(5);
+            _humanBuildingsUnlocked.Add(farm.Id);
 
             GameConfig.takeover.Unit warrior = _economySystem.FindUnit(Faction.Khaganate, UnitKind.Infantry, 1);
             GameConfig.takeover.Unit hunter = _economySystem.FindUnit(Faction.Khaganate, UnitKind.Archers, 1);
             if (warrior == null) return;
-            var villageCost = Cfg.BuildingById(5)?.BuildCost ?? 150;
-            var mineCost = Cfg.BuildingById(6)?.BuildCost ?? 100;
+            int villageCost = farm.BuildCost;
+            int mineCost = mine.BuildCost;
             khaganate.Gold = warrior.Cost * 3f + (hunter?.Cost ?? 0) + villageCost + mineCost;
-            _economySystem.TryBuildFirstType(khaganate, 5);
+            _economySystem.TryBuildFirstType(khaganate, farm.Id);
             foreach (MapNodeEntity node in khaganate.OwnedNodes.Where(value => value.Building != null))
             {
-                if (node.Building.Kind == 4)
+                if (node.Kind == NodeKind.MageTower)
                 {
                     _economySystem.SpawnSquad(khaganate, warrior, node.Pos, node, 0, false);
                     khaganate.Gold -= warrior.Cost;
@@ -517,34 +439,40 @@ namespace GameLogic.Takeover
                 (UnitKind)squad.Def.UnitType == UnitKind.Cavalry ? 10f : 8f;
         }
 
-        /// <summary>根据部队人数和士兵索引计算编队偏移。</summary>
-        internal static Vector2 FormationOffset(int index, int count, float rotation = 0f)
+        /// <summary>从配置加载编队坐标并校验索引连续性。</summary>
+        private void InitializeFormationLayouts()
         {
-            Vector2[] formation;
-            if (count >= 9)
+            foreach (var group in Cfg.TbFormation.DataList.GroupBy(value => value.MinUnitCount))
             {
-                formation = FormationThreeByFour;
+                if (group.Key < 1)
+                    throw new InvalidOperationException("Formation minimum unit count must be positive.");
+
+                GameConfig.takeover.Formation[] entries = group.OrderBy(value => value.UnitIndex).ToArray();
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    if (entries[i].UnitIndex != i)
+                        throw new InvalidOperationException(
+                            $"Formation {group.Key} has a missing or duplicate unit index.");
+                }
+
+                _formationLayouts.Add(group.Key,
+                    entries.Select(value => new Vector2(value.OffsetX, value.OffsetY)).ToArray());
             }
-            else if (count >= 7)
+
+            if (_formationLayouts.Count == 0 || _formationLayouts.First().Key != 1)
+                throw new InvalidOperationException("A formation layout for one unit is required.");
+        }
+
+        /// <summary>根据部队人数和士兵索引计算编队偏移。</summary>
+        internal Vector2 FormationOffset(int index, int count, float rotation = 0f)
+        {
+            Vector2[] formation = _formationLayouts.First().Value;
+            foreach (KeyValuePair<int, Vector2[]> layout in _formationLayouts)
             {
-                formation = FormationSeven;
+                if (layout.Key > count) break;
+                formation = layout.Value;
             }
-            else if (count >= 6)
-            {
-                formation = FormationThreeByTwo;
-            }
-            else if (count >= 5)
-            {
-                formation = FormationFive;
-            }
-            else if (count >= 3)
-            {
-                formation = FormationThree;
-            }
-            else
-            {
-                formation = FormationOne;
-            }
+
             Vector2 offset = formation[Mathf.Clamp(index, 0, formation.Length - 1)];
             float cos = Mathf.Cos(rotation);
             float sin = Mathf.Sin(rotation);

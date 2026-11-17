@@ -85,17 +85,17 @@ namespace GameLogic.Takeover
             BattleSimulation simulation = _runner != null ? _runner.Simulation : null;
             if (simulation == null) return;
 
-            _title.text = simulation.HumanVictory ? "胜利" : "战败";
-            if (simulation.HumanVictory)
+            _title.text = simulation.State.HumanVictory ? "胜利" : "战败";
+            if (simulation.State.HumanVictory)
             {
                 _body.text =
-                    $"L{simulation.LevelAssetId}  用时 {simulation.Time:F0}s   " +
-                    $"{new string('★', simulation.Stars)}\n累计经验 {Campaign.Xp}";
+                    $"L{simulation.State.LevelAssetId}  用时 {simulation.State.Time:F0}s   " +
+                    $"{new string('★', simulation.State.Stars)}\n累计经验 {Campaign.Xp}";
             }
             else
             {
                 _body.text =
-                    $"L{simulation.LevelAssetId}  用时 {simulation.Time:F0}s\n重新部署后再次挑战";
+                    $"L{simulation.State.LevelAssetId}  用时 {simulation.State.Time:F0}s\n重新部署后再次挑战";
             }
         }
 

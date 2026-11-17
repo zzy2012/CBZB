@@ -152,7 +152,7 @@ public static class TakeoverValidation
         if (started <= 0f || EditorApplication.timeSinceStartup - started < 3f) return;
 
         bool uiReady = GameModule.UI.HasWindow<TakeoverBattleUI>();
-        bool simulated = runner.Simulation.Time > 0.5f;
+        bool simulated = runner.Simulation.State.Time > 0.5f;
         const string music = "takeover_sfx_2910_musicGameplayClass_musicGameplayClass";
         Debug.Log($"[TakeoverValidation] audio candidates: " +
                   $"plain={GameModule.Resource.CheckLocationValid(music)} " +

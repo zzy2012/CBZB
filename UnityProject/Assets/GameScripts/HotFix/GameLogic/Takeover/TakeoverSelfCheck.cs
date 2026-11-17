@@ -99,11 +99,13 @@ namespace GameLogic.Takeover
                         {
                             Check(Mathf.Approximately(sim.Human.Gold, 300f),
                                 $"L2 自动建设后金币应为 300，实际 {sim.Human.Gold}", failures);
-                            Check(sim.Human.OwnedNodes.Any(node => node.Building?.Kind == 6) &&
-                                  sim.Human.OwnedNodes.Any(node => node.Building?.Kind == 7),
+                            Check(sim.Human.OwnedNodes.Any(node =>
+                                      node.Building?.Kind == Cfg.GoldBuilding.Id) &&
+                                  sim.Human.OwnedNodes.Any(node =>
+                                      node.Building?.Kind == Cfg.ManaBuilding.Id),
                                 "L2 未自动建造矿场和英雄碑", failures);
                             Check(sim.Human.SpellsEnabled && sim.Enemy.AiEnabled &&
-                                  sim.AvailableSpells(sim.Human).Count > 0,
+                                  sim.SpellSystem.AvailableSpells(sim.Human).Count > 0,
                                 "L2 开场仍限制玩家法术或敌方 AI", failures);
                         }
                         var first = BattleSnapshot.From(sim);
@@ -124,16 +126,17 @@ namespace GameLogic.Takeover
                             var home = sim.Human.OwnedNodes.FirstOrDefault(n => n.Building != null);
                             var buyable = home == null ? null : tables.TbUnit.DataList
                                 .Where(u => OriginalRules.FromConfigFaction(u.Faction) == Faction.Westaria)
-                                .FirstOrDefault(u => sim.CanBuy(sim.Human, u, home, out _));
+                                .FirstOrDefault(u => sim.EconomySystem.CanBuy(sim.Human, u, home, out _));
                             int beforeBuy = sim.Human.Squads.Count;
-                            Check(buyable != null && sim.BuyUnit(sim.Human, buyable, home, out _) != null
+                            Check(buyable != null &&
+                                  sim.EconomySystem.BuyUnit(sim.Human, buyable, home, out _) != null
                                   && sim.Human.Squads.Count == beforeBuy + 1,
                                 "L1 招募流程失败", failures);
                             if (home?.Building != null)
                             {
                                 sim.Human.Gold = 1000;
                                 int oldLevel = home.Building.Level;
-                                Check(sim.TryUpgrade(sim.Human, home)
+                                Check(sim.EconomySystem.TryUpgrade(sim.Human, home)
                                       && home.Building.Level == oldLevel + 1,
                                     "L1 建筑升级失败", failures);
                             }
@@ -142,7 +145,8 @@ namespace GameLogic.Takeover
                             if (buildSpot != null)
                             {
                                 sim.Human.Gold = 1000;
-                                Check(sim.TryBuild(sim.Human, buildSpot, 5, out _)
+                                Check(sim.EconomySystem.TryBuild(
+                                          sim.Human, buildSpot, Cfg.SupplyBuilding.Id, out _)
                                       && buildSpot.Building != null && buildSpot.Building.Supply == 1,
                                     "L1 农场建造失败", failures);
                             }
@@ -155,7 +159,8 @@ namespace GameLogic.Takeover
                                 sim.Human.Mana = TakeoverScene.ManaCap;
                                 var target = sim.Nodes.FirstOrDefault(n => n.Building != null
                                     && n.Building.Owner != Faction.Westaria);
-                                Check(target != null && sim.TryCastSpell(sim.Human, spell, target, out _),
+                                Check(target != null &&
+                                      sim.SpellSystem.TryCastSpell(sim.Human, spell, target, out _),
                                     "L1 普通法术无法施放", failures);
                             }
                         }
@@ -297,7 +302,7 @@ namespace GameLogic.Takeover
                             if (target != null)
                             {
                                 foreach (SquadEntity squad in sim.Human.Squads.Where(squad => !squad.IsDead && !squad.HasMoveOrder))
-                                    sim.OrderMove(squad, target);
+                                    sim.MapSystem.OrderMove(squad, target);
                             }
                         }
                         sim.Tick(1f / 30f);
@@ -336,23 +341,24 @@ namespace GameLogic.Takeover
         /// <summary>执行自检场景中人类玩家的一步脚本操作。</summary>
         private static void ScriptPlayerStep(TakeoverScene sim)
         {
-            if (sim.Human.FreeSupply <= 0 && sim.Human.Gold >= 150)
+            if (sim.Human.FreeSupply <= 0 && sim.Human.Gold >= Cfg.SupplyBuilding.BuildCost)
             {
                 var spot = sim.Nodes.FirstOrDefault(n => n.Kind == NodeKind.BuildSpot
                     && n.Building == null && sim.IsLocControlledBy(sim.Human, n));
-                if (spot != null) sim.TryBuild(sim.Human, spot, 5, out _);
+                if (spot != null)
+                    sim.EconomySystem.TryBuild(sim.Human, spot, Cfg.SupplyBuilding.Id, out _);
             }
 
             foreach (var node in sim.Human.OwnedNodes.Where(n => n.Building != null))
             {
                 var unit = Cfg.TbUnit.DataList
                     .Where(u => OriginalRules.FromConfigFaction(u.Faction) == Faction.Westaria)
-                    .Where(u => sim.CanBuy(sim.Human, u, node, out _))
+                    .Where(u => sim.EconomySystem.CanBuy(sim.Human, u, node, out _))
                     .OrderBy(u => u.Cost)
                     .FirstOrDefault();
                 if (unit != null)
                 {
-                    sim.BuyUnit(sim.Human, unit, node, out _);
+                    sim.EconomySystem.BuyUnit(sim.Human, unit, node, out _);
                     break;
                 }
             }
@@ -387,20 +393,20 @@ namespace GameLogic.Takeover
                     unit.Status.Entity == unit && unit.Combat.Entity == unit),
                 "战斗单位组件未绑定到战斗场景", failures);
 
-            sim.Tick(BattleSimulation.FixedStep);
+            sim.Tick(BattleManager.FixedStep);
             Check(sim.GetEntities(BattleEntityType.MapNode).All(entity => entity.IsInitialized),
                 "战斗场景未初始化已注册实体", failures);
 
             var managed = new BattleSimulation(1, Faction.Westaria, Faction.Empire, null, 3602);
-            float initialGold = managed.Human.Gold;
+            float initialGold = managed.State.Human.Gold;
             managed.Enqueue(BattleCommand.GrantResources(100, 0));
-            managed.Tick(BattleSimulation.FixedStep * 0.6f);
-            Check(Mathf.Approximately(managed.Time, 0f) &&
-                  Mathf.Approximately(managed.Human.Gold, initialGold),
+            managed.Tick(BattleManager.FixedStep * 0.6f);
+            Check(Mathf.Approximately(managed.State.Time, 0f) &&
+                  Mathf.Approximately(managed.State.Human.Gold, initialGold),
                 "BattleManager 在不足一个固定步长时提前推进", failures);
-            managed.Tick(BattleSimulation.FixedStep * 0.6f);
-            Check(Mathf.Approximately(managed.Time, BattleSimulation.FixedStep) &&
-                  Mathf.Approximately(managed.Human.Gold, initialGold + 100f),
+            managed.Tick(BattleManager.FixedStep * 0.6f);
+            Check(Mathf.Approximately(managed.State.Time, BattleManager.FixedStep) &&
+                  Mathf.Approximately(managed.State.Human.Gold, initialGold + 100f),
                 "BattleManager 固定步长或命令队列推进错误", failures);
             managed.Dispose();
         }
@@ -495,7 +501,7 @@ namespace GameLogic.Takeover
                     case 13: player.Mods[42] = 1; break;
                     case 14: player.Mods[43] = 1; break;
                 }
-                Check(sim.TryCastSpell(player, spell, target.Pos, target, out string reason),
+                Check(sim.SpellSystem.TryCastSpell(player, spell, target.Pos, target, out string reason),
                     $"法术 {spell.Id} {spell.Name} 无法执行: {reason}", failures);
             }
             for (int i = 0; i < 240; i++) sim.Tick(OriginalRules.LogicStep);
@@ -512,12 +518,12 @@ namespace GameLogic.Takeover
                 MapNodeEntity home = sim.Human.OwnedNodes.First(node => node.Building != null);
                 GameConfig.takeover.Unit guard = tables.TbUnit.DataList.First(unit =>
                     unit.Name == "Guards" && OriginalRules.FromConfigFaction(unit.Faction) == Faction.Westaria);
-                SquadEntity squad = sim.BuyUnit(sim.Human, guard, home, out _);
+                SquadEntity squad = sim.EconomySystem.BuyUnit(sim.Human, guard, home, out _);
                 MapNodeEntity target = sim.Nodes
                     .Where(node => TakeoverScene.IsKeyBuilding(node.Building) && node.Building.Owner != Faction.Westaria)
                     .OrderBy(node => (node.Pos - home.Pos).sqrMagnitude)
                     .First();
-                sim.OrderMove(squad, target);
+                sim.MapSystem.OrderMove(squad, target);
                 var text = new System.Text.StringBuilder();
                 text.AppendLine($"home={home.Key}{home.Pos} target={target.Key}{target.Pos} path={squad.Path.Count} " +
                                 $"points={string.Join(" -> ", squad.Path.Select(point => point.ToString()))}");
@@ -548,7 +554,7 @@ namespace GameLogic.Takeover
             MapNodeEntity home = sim.Human.OwnedNodes.First(node => node.Building != null);
             GameConfig.takeover.Unit guard = tables.TbUnit.DataList.First(unit =>
                 unit.Name == "Guards" && OriginalRules.FromConfigFaction(unit.Faction) == Faction.Westaria);
-            SquadEntity playerSquad = sim.BuyUnit(sim.Human, guard, home, out _);
+            SquadEntity playerSquad = sim.EconomySystem.BuyUnit(sim.Human, guard, home, out _);
             Check(playerSquad != null, "L1 无法招募 Guards", failures);
             SquadEntity enemySquad = sim.Squads.FirstOrDefault(squad => squad.Faction == Faction.Empire);
             Check(enemySquad != null, "L1 没有剧本敌军", failures);
