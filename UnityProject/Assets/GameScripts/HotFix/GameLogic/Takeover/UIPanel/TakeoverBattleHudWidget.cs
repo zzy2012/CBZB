@@ -229,7 +229,7 @@ namespace GameLogic.Takeover
                 if (player.IsHuman) continue;
                 foreach (MapNodeEntity node in player.OwnedNodes)
                 {
-                    if (BattleSim.IsKeyBuilding(node.Building))
+                    if (TakeoverScene.IsKeyBuilding(node.Building))
                         count++;
                 }
             }

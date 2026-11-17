@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
     internal sealed class BattleCombatSystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的战斗系统。</summary>
-        internal BattleCombatSystem(BattleSim sim) : base(sim) { }
+        internal BattleCombatSystem(TakeoverScene sim) : base(sim) { }
 
         /// <summary>推进部队和士兵的战斗、移动及状态更新。</summary>
         internal void TickSquads(float dt)
@@ -93,7 +93,7 @@ namespace GameLogic.Takeover
                     if (allySquad.IsDead || allySquad.Faction != source.Faction) continue;
                     foreach (CombatUnitEntity ally in allySquad.Units)
                     {
-                        if (ally.IsDead || BattleSim.HasMoraleLock(allySquad) ||
+                        if (ally.IsDead || TakeoverScene.HasMoraleLock(allySquad) ||
                             Vector2.Distance(ally.Pos, source.Pos) > 100f)
                             continue;
                         ally.MoraleCurrent = Mathf.Min(ally.MoraleBase,
@@ -176,7 +176,7 @@ namespace GameLogic.Takeover
             {
                 CombatUnitEntity unit = squad.Units[i];
                 if (unit.IsDead) continue;
-                Vector2 formationOffset = BattleSim.FormationOffset(i, squad.Units.Count, facing);
+                Vector2 formationOffset = TakeoverScene.FormationOffset(i, squad.Units.Count, facing);
                 Vector2 desired = newCenter + formationOffset;
                 Vector2 unitDelta = desired - unit.Pos;
                 float unitDistance = unitDelta.magnitude;
@@ -241,7 +241,7 @@ namespace GameLogic.Takeover
                 return;
             foreach (CombatUnitEntity unit in squad.Units.Where(value => !value.IsDead && value.Hp < value.MaxHp))
             {
-                if (BattleSim.HasMechanism(squad)) continue;
+                if (TakeoverScene.HasMechanism(squad)) continue;
                 float repair = unit.MaxHp / 4f + 1f;
                 unit.Hp = Mathf.Min(unit.MaxHp, unit.Hp + repair * dt * 2f);
             }
@@ -282,7 +282,7 @@ namespace GameLogic.Takeover
                 {
                     if (candidate.IsDead) continue;
                     float distance = Vector2.Distance(unit.Pos, candidate.Pos);
-                    float reach = Mathf.Max(90f, unit.Squad.Def.Range) + BattleSim.UnitRadius(candidate.Squad);
+                    float reach = Mathf.Max(90f, unit.Squad.Def.Range) + TakeoverScene.UnitRadius(candidate.Squad);
                     if (distance > reach || distance >= bestDistance) continue;
                     best = candidate;
                     bestDistance = distance;
@@ -314,7 +314,7 @@ namespace GameLogic.Takeover
         /// <summary>为攻击者查找可攻击的敌方建筑目标。</summary>
         internal MapNodeEntity FindTargetBuilding(CombatUnitEntity unit, SquadEntity squad)
         {
-            if (!BattleSim.IsKeyBuilding(squad.TargetNode?.Building) || squad.TargetNode.Building.Owner == squad.Faction ||
+            if (!TakeoverScene.IsKeyBuilding(squad.TargetNode?.Building) || squad.TargetNode.Building.Owner == squad.Faction ||
                 squad.TargetNode.Building.Hp <= 0)
                 return null;
             if (Vector2.Distance(unit.Pos, squad.TargetNode.Pos) >
@@ -381,7 +381,7 @@ namespace GameLogic.Takeover
             float roll = attacker.MaxDamageSeconds > 0f
                 ? def.DmgMax
                 : Mathf.Lerp(def.DmgMin, def.DmgMax, (float)Sim.RandomSource.NextDouble());
-            float levelMultiplier = 1f + BattleSim.LevelTier(attacker.Squad) * 0.1f;
+            float levelMultiplier = 1f + TakeoverScene.LevelTier(attacker.Squad) * 0.1f;
             roll *= levelMultiplier;
             if (def.UnitType == (int)UnitKind.Archers || def.UnitType == (int)UnitKind.Siege)
                 roll *= attacker.Squad.Owner.ModMul(13);
@@ -414,7 +414,7 @@ namespace GameLogic.Takeover
                     roll -= Mathf.RoundToInt(roll * shield / 100f);
                 }
                 if (def.Range > 0 &&
-                    Vector2.Distance(attacker.Pos, target.Pos) <= BattleSim.UnitRadius(target.Squad) + 10f &&
+                    Vector2.Distance(attacker.Pos, target.Pos) <= TakeoverScene.UnitRadius(target.Squad) + 10f &&
                     (attackerAbilities & AbilityMask.MartialArtists) == 0)
                 {
                     roll *= Mathf.Max(0f, (100f - def.MeleePenalty) / 100f);
@@ -492,7 +492,7 @@ namespace GameLogic.Takeover
             if (magic && target.MagicImmunitySeconds > 0f) return;
             if (target.DamageResistSeconds > 0f) damage *= 1f - target.DamageResist / 100f;
             target.Hp = Mathf.Max(0f, target.Hp - damage);
-            if (!BattleSim.HasMoraleLock(target.Squad))
+            if (!TakeoverScene.HasMoraleLock(target.Squad))
                 target.MoraleCurrent = Mathf.Max(0f, target.MoraleCurrent - damage * 0.5f);
             if (!target.IsDead)
             {
@@ -579,7 +579,7 @@ namespace GameLogic.Takeover
                     if (b.IsDead) continue;
                     Vector2 delta = b.Pos - a.Pos;
                     float distance = delta.magnitude;
-                    float minimum = BattleSim.UnitRadius(squad) * 1.6f;
+                    float minimum = TakeoverScene.UnitRadius(squad) * 1.6f;
                     if (distance >= minimum) continue;
                     if (distance < 0.001f) delta = Vector2.right;
                     else delta /= distance;

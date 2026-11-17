@@ -72,7 +72,7 @@ namespace GameLogic.Takeover
             return null;
         }
 
-        /// <summary>已购教令汇总出的 45 长度修正器数组，进关时交给 BattleSim。</summary>
+        /// <summary>已购教令汇总出的 45 长度修正器数组，进关时交给 TakeoverScene。</summary>
         public static int[] BuildHumanMods()
         {
             Data.EnsureEdictTiers();

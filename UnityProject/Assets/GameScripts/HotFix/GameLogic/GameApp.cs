@@ -35,7 +35,7 @@ public partial class GameApp
     
     private static void StartGameLogic()
     {
-        // 城邦争霸复刻：垂直切片直接起战斗场景（逻辑在 BattleSim，表现由 TakeoverRunner 运行时生成）
+        // 城邦争霸复刻：垂直切片直接起战斗场景（逻辑在 TakeoverScene，表现由 TakeoverRunner 运行时生成）
         var go = new UnityEngine.GameObject("TakeoverGame");
         go.AddComponent<GameLogic.Takeover.TakeoverRunner>();
     }

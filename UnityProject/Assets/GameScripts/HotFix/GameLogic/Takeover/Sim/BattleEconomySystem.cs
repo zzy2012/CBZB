@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
     internal sealed class BattleEconomySystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的经济系统。</summary>
-        internal BattleEconomySystem(BattleSim sim) : base(sim) { }
+        internal BattleEconomySystem(TakeoverScene sim) : base(sim) { }
 
         /// <summary>按配置标识查找单位定义。</summary>
         internal GameConfig.takeover.Unit FindUnit(Faction faction, UnitKind kind, int tier)
@@ -25,7 +25,7 @@ namespace GameLogic.Takeover
         {
             MapNodeEntity spot = Sim.Nodes.FirstOrDefault(node => node.Kind == NodeKind.BuildSpot &&
                                                         node.Building == null &&
-                                                        BattleSim.IsLocControlled(player, node.Loc));
+                                                        TakeoverScene.IsLocControlled(player, node.Loc));
             return spot != null && TryBuild(player, spot, buildingId, out _);
         }
 
@@ -34,7 +34,7 @@ namespace GameLogic.Takeover
         {
             reason = null;
             if (player == null || def == null || at?.Building == null) { reason = "无效招募目标"; return false; }
-            if (!BattleSim.IsKeyBuilding(at.Building)) { reason = "附属建筑不能招募"; return false; }
+            if (!TakeoverScene.IsKeyBuilding(at.Building)) { reason = "附属建筑不能招募"; return false; }
             if (at.Building.Owner != player.Faction || !at.Building.IsActive) { reason = "不是己方可用建筑"; return false; }
             if (!AllowedAt(player, at.Building, def)) { reason = "该建筑不能生产此兵种"; return false; }
             if (player.Gold < UnitCost(player, def)) { reason = "金币不足"; return false; }
@@ -103,7 +103,7 @@ namespace GameLogic.Takeover
             };
             for (int i = 0; i < count; i++)
             {
-                Vector2 spawnPosition = position + BattleSim.FormationOffset(i, count);
+                Vector2 spawnPosition = position + TakeoverScene.FormationOffset(i, count);
                 var unit = new CombatUnitEntity
                 {
                     Id = Sim.AllocateUnitId(),
@@ -121,7 +121,7 @@ namespace GameLogic.Takeover
                 squad.Units.Add(unit);
                 Sim.AddEntity(BattleEntityType.Unit, unit);
             }
-            squad.LevelIndex = BattleSim.LevelForXp(squad.Xp);
+            squad.LevelIndex = TakeoverScene.LevelForXp(squad.Xp);
             ApplyLevel(squad);
             owner.Squads.Add(squad);
             Sim.Squads.Add(squad);
@@ -162,7 +162,7 @@ namespace GameLogic.Takeover
         {
             if (squad == null || squad.IsDead) return;
             squad.Xp += amount * squad.Owner.ModMul(37);
-            int level = BattleSim.LevelForXp(squad.Xp);
+            int level = TakeoverScene.LevelForXp(squad.Xp);
             if (level <= squad.LevelIndex) return;
             squad.LevelIndex = level;
             ApplyLevel(squad);
@@ -173,7 +173,7 @@ namespace GameLogic.Takeover
         {
             if (at?.Building == null || at.Building.Owner != player.Faction || at.Building.Level >= BuildingState.MaxLevel)
                 return false;
-            if (!BattleSim.IsKeyBuilding(at.Building)) return false;
+            if (!TakeoverScene.IsKeyBuilding(at.Building)) return false;
             var def = Cfg.BuildingById(at.Building.Kind);
             if (def == null) return false;
             int cost = at.Building.Level == 0 ? def.UpgradeCost1 : def.UpgradeCost2;
@@ -200,7 +200,7 @@ namespace GameLogic.Takeover
                 reason = "该建筑尚未解锁";
                 return false;
             }
-            if (!BattleSim.IsLocControlled(player, spot.Loc))
+            if (!TakeoverScene.IsLocControlled(player, spot.Loc))
             {
                 reason = "不在己方控制范围";
                 return false;

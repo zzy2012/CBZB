@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
 {
     /// <summary>
     /// 首章表现控制器：运行时生成地图、单位和正式 UGUI HUD。
-    /// 逻辑全部在 BattleSim 中，View 只负责渲染与输入。
+    /// 逻辑全部在 TakeoverScene 中，View 只负责渲染与输入。
     /// </summary>
     public sealed class TakeoverRunner : MonoBehaviour
     {
@@ -847,7 +847,7 @@ namespace GameLogic.Takeover
             foreach (MapNodeEntity node in _sim.Nodes)
             {
                 BuildingState building = node.Building;
-                if (building == null || !BattleSim.IsKeyBuilding(building)) continue;
+                if (building == null || !TakeoverScene.IsKeyBuilding(building)) continue;
                 live.Add(node.Id);
                 if (!_buildingBadges.TryGetValue(node.Id, out TakeoverBuildingBadgeWidget badge))
                 {
@@ -1323,7 +1323,7 @@ namespace GameLogic.Takeover
             if (_sim == null || node?.Building == null) return new List<GameConfig.takeover.Unit>();
             return Cfg.TbUnit.DataList
                 .Where(u => OriginalRules.FromConfigFaction(u.Faction) == HumanFaction &&
-                            BattleSim.AllowedAt(_sim.Human, node.Building, u))
+                            TakeoverScene.AllowedAt(_sim.Human, node.Building, u))
                 .OrderBy(u => u.UnitType).ThenBy(u => u.Tier).ToList();
         }
 

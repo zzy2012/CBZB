@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
     internal sealed class BattleMapSystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的地图系统。</summary>
-        internal BattleMapSystem(BattleSim sim) : base(sim) { }
+        internal BattleMapSystem(TakeoverScene sim) : base(sim) { }
 
         /// <summary>依据关卡配置创建地图节点、连接边和建筑状态。</summary>
         internal void BuildMap(int levelAssetId)
@@ -95,7 +95,7 @@ namespace GameLogic.Takeover
         internal MapNodeEntity FindNearestHostileNode(MapNodeEntity from, PlayerStateEntity player)
         {
             if (from == null) return null;
-            return Sim.Nodes.Where(node => BattleSim.IsKeyBuilding(node.Building) && node.Building.Owner != player.Faction)
+            return Sim.Nodes.Where(node => TakeoverScene.IsKeyBuilding(node.Building) && node.Building.Owner != player.Faction)
                 .OrderBy(node => ShortestDistance(from, node))
                 .FirstOrDefault();
         }
@@ -226,7 +226,7 @@ namespace GameLogic.Takeover
         /// <summary>处理部队对中立或敌方建筑的占领。</summary>
         internal void Capture(MapNodeEntity node, SquadEntity capturer)
         {
-            if (!BattleSim.IsKeyBuilding(node?.Building) || node.Building.Owner == capturer.Faction) return;
+            if (!TakeoverScene.IsKeyBuilding(node?.Building) || node.Building.Owner == capturer.Faction) return;
             Faction previousOwner = node.Building.Owner;
             node.Building.Owner = capturer.Faction;
             ReinitializeBuilding(node.Building, capturer.Owner);

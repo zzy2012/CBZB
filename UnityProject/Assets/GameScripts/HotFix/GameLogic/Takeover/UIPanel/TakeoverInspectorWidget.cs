@@ -109,7 +109,7 @@ namespace GameLogic.Takeover
             if (node == null) return false;
 
             if (node.Building != null && node.Building.Owner == _runner.HumanFaction &&
-                BattleSim.IsKeyBuilding(node.Building))
+                TakeoverScene.IsKeyBuilding(node.Building))
             {
                 var building = node.Building;
                 _title.text = $"{node.Key}  等级 {building.Level + 1}/3";
@@ -158,9 +158,9 @@ namespace GameLogic.Takeover
                 _body.text = controlled ? "在己方控制区段建造附属建筑" : "不在己方控制区";
                 if (!controlled) return true;
 
-                for (int i = 0; i < BattleSim.SupplyBuildingIds.Length; i++)
+                for (int i = 0; i < TakeoverScene.SupplyBuildingIds.Length; i++)
                 {
-                    int id = BattleSim.SupplyBuildingIds[i];
+                    int id = TakeoverScene.SupplyBuildingIds[i];
                     var definition = Cfg.BuildingById(id);
                     if (definition == null) continue;
                     string effect = definition.Supply > 0

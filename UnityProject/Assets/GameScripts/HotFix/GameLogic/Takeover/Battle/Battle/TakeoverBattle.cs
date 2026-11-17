@@ -4,10 +4,10 @@ namespace GameLogic.Takeover
     public sealed class TakeoverBattle : Battle
     {
         /// <summary>当前战斗模拟实例。</summary>
-        public BattleSim Simulation => CurScene as BattleSim;
+        public TakeoverScene Simulation => CurScene as TakeoverScene;
 
         /// <summary>使用指定模拟场景创建战斗实例。</summary>
-        public TakeoverBattle(BattleSim simulation)
+        public TakeoverBattle(TakeoverScene simulation)
         {
             CurScene = simulation;
         }

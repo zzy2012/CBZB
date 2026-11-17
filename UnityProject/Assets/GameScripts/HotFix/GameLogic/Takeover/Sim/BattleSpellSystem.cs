@@ -9,7 +9,7 @@ namespace GameLogic.Takeover
     internal sealed class BattleSpellSystem : BattleSimSystemBase
     {
         /// <summary>创建并关联当前战斗模拟的法术系统。</summary>
-        internal BattleSpellSystem(BattleSim sim) : base(sim) { }
+        internal BattleSpellSystem(TakeoverScene sim) : base(sim) { }
 
         /// <summary>推进持续法术效果并处理到期移除。</summary>
         internal void TickSpellEffects(float dt)
@@ -48,7 +48,7 @@ namespace GameLogic.Takeover
                 case SpellEffectKind.Desecration:
                     foreach (SquadEntity squad in Sim.Squads.Where(value => !value.IsDead && value.Faction == effect.Faction))
                     {
-                        if (BattleSim.HasMechanism(squad)) continue;
+                        if (TakeoverScene.HasMechanism(squad)) continue;
                         foreach (CombatUnitEntity unit in squad.Units)
                         {
                             if (Vector2.SqrMagnitude(unit.Pos - effect.Center) > radiusSquared) continue;
@@ -67,7 +67,7 @@ namespace GameLogic.Takeover
                 case SpellEffectKind.Heroism:
                     foreach (CombatUnitEntity unit in AlliedUnits(effect.Faction, effect.Center, radiusSquared))
                     {
-                        if (BattleSim.HasMoraleLock(unit.Squad)) continue;
+                        if (TakeoverScene.HasMoraleLock(unit.Squad)) continue;
                         unit.HeroicSeconds = Mathf.Max(unit.HeroicSeconds, 10f);
                         unit.FearedSeconds = 0f;
                         unit.MoraleCurrent = unit.MoraleBase;
@@ -336,7 +336,7 @@ namespace GameLogic.Takeover
                     foreach (CombatUnitEntity unit in HostileUnits(player.Faction, position,
                                  spell.Radius * spell.Radius, true))
                     {
-                        if (unit.MagicImmunitySeconds > 0f || BattleSim.HasFearLock(unit.Squad)) continue;
+                        if (unit.MagicImmunitySeconds > 0f || TakeoverScene.HasFearLock(unit.Squad)) continue;
                         unit.HeroicSeconds = 0f;
                         unit.FearedSeconds = Mathf.Max(unit.FearedSeconds, 10f);
                         unit.MoraleCurrent = 0f;

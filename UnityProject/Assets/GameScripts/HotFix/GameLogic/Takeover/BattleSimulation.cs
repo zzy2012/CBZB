@@ -23,7 +23,7 @@ namespace GameLogic.Takeover
     }
 
     /// <summary>
-    /// 模拟器接收的输入命令。表现层必须提交命令，不得直接修改 BattleSim 状态。
+    /// 模拟器接收的输入命令。表现层必须提交命令，不得直接修改 TakeoverScene 状态。
     /// </summary>
     [Serializable]
     public struct BattleCommand
@@ -273,7 +273,7 @@ namespace GameLogic.Takeover
         public List<SpellSnapshot> ActiveSpells = new List<SpellSnapshot>();
 
         /// <summary>从当前模拟状态构建战斗快照。</summary>
-        public static BattleSnapshot From(BattleSim sim)
+        public static BattleSnapshot From(TakeoverScene sim)
         {
             var snapshot = new BattleSnapshot
             {
@@ -384,7 +384,7 @@ namespace GameLogic.Takeover
         private readonly Action _beforeFixedStep;
 
         /// <summary>关联的战斗模拟或节点状态。</summary>
-        public BattleSim State { get; }
+        public TakeoverScene State { get; }
         /// <summary>当前战斗实例。</summary>
         public TakeoverBattle Battle { get; }
         /// <summary>战场地图节点集合。</summary>
@@ -413,7 +413,7 @@ namespace GameLogic.Takeover
             int[] humanMods = null, int seed = 20120920)
         {
             _beforeFixedStep = ExecuteQueuedCommands;
-            State = new BattleSim(levelAssetId, humanFaction, enemyFaction, humanMods, seed);
+            State = new TakeoverScene(levelAssetId, humanFaction, enemyFaction, humanMods, seed);
             Battle = new TakeoverBattle(State);
             _battleManager.CreateBattle(Battle);
         }

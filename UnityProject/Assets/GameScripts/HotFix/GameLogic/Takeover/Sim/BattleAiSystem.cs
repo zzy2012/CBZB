@@ -30,7 +30,7 @@ namespace GameLogic.Takeover
         private const int MaxGarrisonSquads = 2;
 
         /// <summary>创建并关联当前战斗模拟的 AI 系统。</summary>
-        internal BattleAiSystem(BattleSim sim) : base(sim) { }
+        internal BattleAiSystem(TakeoverScene sim) : base(sim) { }
 
         /// <summary>为启用 AI 的参与方执行一次逻辑秒决策。</summary>
         internal void TickAiSecond(PlayerStateEntity player)
@@ -71,13 +71,13 @@ namespace GameLogic.Takeover
         {
             for (int purchase = 0; purchase < MaxPurchasesPerTick; purchase++)
             {
-                if (player.Gold < BattleSim.AiBuyThreshold) return;
+                if (player.Gold < TakeoverScene.AiBuyThreshold) return;
 
                 MapNodeEntity bestNode = null;
                 GameConfig.takeover.Unit bestUnit = null;
                 float bestScore = float.NegativeInfinity;
                 foreach (MapNodeEntity node in player.OwnedNodes.Where(value =>
-                             BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive))
+                             TakeoverScene.IsKeyBuilding(value.Building) && value.Building.IsActive))
                 {
                     float frontier = FrontierBonus(node, player);
                     foreach (GameConfig.takeover.Unit unit in Cfg.TbUnit.DataList)
@@ -143,7 +143,7 @@ namespace GameLogic.Takeover
             int defenders = Sim.Squads.Count(squad => !squad.IsDead && squad.Faction == node.Building.Owner &&
                                                     squad.HomeNode == node &&
                                                     Vector2.Distance(squad.Pos, node.Pos) <= 60f);
-            foreach (MapNodeEntity other in Sim.Nodes.Where(value => BattleSim.IsKeyBuilding(value.Building) &&
+            foreach (MapNodeEntity other in Sim.Nodes.Where(value => TakeoverScene.IsKeyBuilding(value.Building) &&
                                                            value.Building.IsActive &&
                                                            value.Building.Owner != node.Building.Owner))
             {
@@ -161,7 +161,7 @@ namespace GameLogic.Takeover
         {
             float best = float.MaxValue;
             foreach (MapNodeEntity other in Sim.Nodes.Where(value =>
-                         BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive &&
+                         TakeoverScene.IsKeyBuilding(value.Building) && value.Building.IsActive &&
                          value.Building.Owner != player.Faction))
             {
                 best = Mathf.Min(best, Vector2.Distance(node.Pos, other.Pos));
@@ -177,7 +177,7 @@ namespace GameLogic.Takeover
             MapNodeEntity best = null;
             float bestScore = float.NegativeInfinity;
             foreach (MapNodeEntity node in player.OwnedNodes.Where(value =>
-                         BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive &&
+                         TakeoverScene.IsKeyBuilding(value.Building) && value.Building.IsActive &&
                          value.Building.Level < BuildingState.MaxLevel))
             {
                 GameConfig.takeover.Building def = Cfg.BuildingById(node.Building.Kind);
@@ -202,7 +202,7 @@ namespace GameLogic.Takeover
         internal void CommandArmy(PlayerStateEntity player)
         {
             MapNodeEntity underAttack = player.OwnedNodes
-                .Where(value => BattleSim.IsKeyBuilding(value.Building) && value.Building.IsActive)
+                .Where(value => TakeoverScene.IsKeyBuilding(value.Building) && value.Building.IsActive)
                 .OrderByDescending(BuildingThreat)
                 .FirstOrDefault(node => BuildingThreat(node) > 40f);
 
@@ -223,7 +223,7 @@ namespace GameLogic.Takeover
                 }
             }
 
-            int enemyKeys = Sim.Nodes.Count(node => BattleSim.IsKeyBuilding(node.Building) &&
+            int enemyKeys = Sim.Nodes.Count(node => TakeoverScene.IsKeyBuilding(node.Building) &&
                                                 node.Building.IsActive &&
                                                 node.Building.Owner != player.Faction);
             // 收尾阶段（敌方只剩 1-2 个关键建筑）不再留驻军、阈值也放宽，避免「围而不打」
@@ -285,7 +285,7 @@ namespace GameLogic.Takeover
         private bool OnGarrisonDuty(SquadEntity squad)
         {
             MapNodeEntity home = squad.HomeNode;
-            if (home?.Building == null || !BattleSim.IsKeyBuilding(home.Building)) return false;
+            if (home?.Building == null || !TakeoverScene.IsKeyBuilding(home.Building)) return false;
             if (Vector2.Distance(squad.Pos, home.Pos) > 80f) return false;
             if (BuildingThreat(home) <= 40f) return false;
             return GarrisonDutyCount() <= MaxGarrisonSquads;
@@ -300,7 +300,7 @@ namespace GameLogic.Takeover
                 SquadEntity squad = Sim.Squads[i];
                 if (squad.IsDead) continue;
                 MapNodeEntity home = squad.HomeNode;
-                if (home?.Building == null || !BattleSim.IsKeyBuilding(home.Building)) continue;
+                if (home?.Building == null || !TakeoverScene.IsKeyBuilding(home.Building)) continue;
                 if (Vector2.Distance(squad.Pos, home.Pos) > 80f) continue;
                 count++;
             }
@@ -311,7 +311,7 @@ namespace GameLogic.Takeover
         private bool CanPullGarrison(SquadEntity squad)
         {
             MapNodeEntity home = squad.HomeNode;
-            if (home?.Building == null || !BattleSim.IsKeyBuilding(home.Building)) return false;
+            if (home?.Building == null || !TakeoverScene.IsKeyBuilding(home.Building)) return false;
             if (Vector2.Distance(squad.Pos, home.Pos) > 80f) return false;
             int defenders = Sim.Squads.Count(other => !other.IsDead && other.HomeNode == home &&
                                                    Vector2.Distance(other.Pos, home.Pos) <= 80f);
@@ -325,7 +325,7 @@ namespace GameLogic.Takeover
             float bestScore = float.NegativeInfinity;
             MapNodeEntity from = player.OwnedNodes.FirstOrDefault();
             foreach (MapNodeEntity node in Sim.Nodes.Where(value =>
-                         BattleSim.IsKeyBuilding(value.Building) &&
+                         TakeoverScene.IsKeyBuilding(value.Building) &&
                          value.Building.Owner != player.Faction))
             {
                 int defenders = Sim.Squads.Count(squad => !squad.IsDead && squad.HomeNode == node &&
@@ -391,7 +391,7 @@ namespace GameLogic.Takeover
                 .OrderByDescending(unit => beneficial ? 1f - unit.HpRatio : 1f)
                 .ThenBy(unit => Vector2.Distance(unit.Pos, player.OwnedNodes.FirstOrDefault()?.Pos ?? Vector2.zero))
                 .FirstOrDefault();
-            if (best != null) return best.Pos + BattleSim.FormationOffset(0, 1);
+            if (best != null) return best.Pos + TakeoverScene.FormationOffset(0, 1);
             return player.OwnedNodes.FirstOrDefault()?.Pos ??
                    new Vector2(OriginalRules.NativeStageWidth * 0.5f, OriginalRules.NativeStageHeight);
         }
@@ -429,7 +429,7 @@ namespace GameLogic.Takeover
                     return enemies > 5;
                 case Faction.Westaria:
                     return Sim.Squads.Count(squad => !squad.IsDead && squad.Faction == player.Faction &&
-                                                 !BattleSim.HasMechanism(squad)) >= 3;
+                                                 !TakeoverScene.HasMechanism(squad)) >= 3;
                 case Faction.Khaganate:
                     return true;
                 case Faction.Cult:

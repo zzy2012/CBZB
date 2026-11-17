@@ -80,7 +80,7 @@ namespace GameLogic.Takeover
                     try
                     {
                         Faction primaryEnemy = OriginalRules.EnemyPlayers(id).First().Faction;
-                        var sim = new BattleSim(id, Faction.Westaria, primaryEnemy,
+                        var sim = new TakeoverScene(id, Faction.Westaria, primaryEnemy,
                             null, 1000 + id);
                         Check(sim.Nodes.Count == nodes.Count, $"L{id} 构筑节点数不一致", failures);
                         int levelWaypoints = sim.Edges.Sum(edge => Math.Max(0, edge.Waypoints.Count - 2));
@@ -107,7 +107,7 @@ namespace GameLogic.Takeover
                                 "L2 开场仍限制玩家法术或敌方 AI", failures);
                         }
                         var first = BattleSnapshot.From(sim);
-                        var secondSim = new BattleSim(id, Faction.Westaria, primaryEnemy,
+                        var secondSim = new TakeoverScene(id, Faction.Westaria, primaryEnemy,
                             null, 1000 + id);
                         for (int i = 0; i < 60; i++)
                         {
@@ -152,7 +152,7 @@ namespace GameLogic.Takeover
                                 s.SpellType != 2 && OriginalRules.IsSpellUnlocked(sim.Human, s.Id));
                             if (spell != null)
                             {
-                                sim.Human.Mana = BattleSim.ManaCap;
+                                sim.Human.Mana = TakeoverScene.ManaCap;
                                 var target = sim.Nodes.FirstOrDefault(n => n.Building != null
                                     && n.Building.Owner != Faction.Westaria);
                                 Check(target != null && sim.TryCastSpell(sim.Human, spell, target, out _),
@@ -167,12 +167,12 @@ namespace GameLogic.Takeover
                 }
                 Check(chapterWaypointCount >= 300,
                     $"首章原版道路 waypoint 数量不足: {chapterWaypointCount}", failures);
-                var gmSim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 9001);
+                var gmSim = new TakeoverScene(1, Faction.Westaria, Faction.Empire, null, 9001);
                 float gmStartGold = gmSim.Human.Gold;
                 float gmStartMana = gmSim.Human.Mana;
                 Check(gmSim.ExecuteCommand(gmSim.Human, BattleCommand.GrantResources(1000, 500)) &&
                       Mathf.Approximately(gmSim.Human.Gold, gmStartGold + 1000f) &&
-                      Mathf.Approximately(gmSim.Human.Mana, BattleSim.ManaCap) &&
+                      Mathf.Approximately(gmSim.Human.Mana, TakeoverScene.ManaCap) &&
                       gmSim.Human.Mana > gmStartMana,
                     "GM 资源命令失败", failures);
 
@@ -273,7 +273,7 @@ namespace GameLogic.Takeover
             {
                 for (int levelId = 1; levelId <= 8; levelId++)
                 {
-                    var sim = new BattleSim(levelId, Faction.Westaria,
+                    var sim = new TakeoverScene(levelId, Faction.Westaria,
                         OriginalRules.EnemyPlayers(levelId).First().Faction, null, 7000 + levelId);
                     float nextBuy = 0f;
                     float nextOrder = 0f;
@@ -288,7 +288,7 @@ namespace GameLogic.Takeover
                         {
                             nextOrder = sim.Time + 3f;
                             var target = sim.Nodes
-                                .Where(n => BattleSim.IsKeyBuilding(n.Building)
+                                .Where(n => TakeoverScene.IsKeyBuilding(n.Building)
                                             && n.Building.Owner != Faction.Westaria)
                                 .OrderBy(n => sim.Human.OwnedNodes.Count == 0
                                     ? 0f
@@ -334,7 +334,7 @@ namespace GameLogic.Takeover
         }
 
         /// <summary>执行自检场景中人类玩家的一步脚本操作。</summary>
-        private static void ScriptPlayerStep(BattleSim sim)
+        private static void ScriptPlayerStep(TakeoverScene sim)
         {
             if (sim.Human.FreeSupply <= 0 && sim.Human.Gold >= 150)
             {
@@ -367,7 +367,7 @@ namespace GameLogic.Takeover
         /// <summary>检查战斗场景、实体和组件生命周期结构。</summary>
         private static void CheckBattleArchitecture(ICollection<string> failures)
         {
-            var sim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 3601);
+            var sim = new TakeoverScene(1, Faction.Westaria, Faction.Empire, null, 3601);
             Check(sim.Human.SpellsEnabled && sim.Human.UnitTypeLimit == 4 && sim.Enemy.AiEnabled,
                 "首关法术、兵种或敌方 AI 仍被限制", failures);
             Check(sim.GetEntities(BattleEntityType.MapNode).Count == sim.Nodes.Count,
@@ -458,7 +458,7 @@ namespace GameLogic.Takeover
         /// <summary>检查法术命令和运行时效果是否正确执行。</summary>
         private static void CheckSpellExecution(Tables tables, ICollection<string> failures)
         {
-            var sim = new BattleSim(8, Faction.Westaria, Faction.Empire, null, 9091);
+            var sim = new TakeoverScene(8, Faction.Westaria, Faction.Empire, null, 9091);
             MapNodeEntity target = sim.Nodes.First(node => node.Building != null);
             foreach (GameConfig.takeover.Spell spell in tables.TbSpell.DataList.OrderBy(value => value.Id))
             {
@@ -477,7 +477,7 @@ namespace GameLogic.Takeover
                 }
                 player.IsHuman = true;
                 player.SpellsEnabled = true;
-                player.Mana = BattleSim.ManaCap;
+                player.Mana = TakeoverScene.ManaCap;
                 player.UltimateMax = 200f;
                 player.Ultimate = 200f;
                 switch (OriginalRules.OriginalSpellIndex(spell.Id))
@@ -507,14 +507,14 @@ namespace GameLogic.Takeover
             Cfg.InstallValidationTables(tables);
             try
             {
-                var sim = new BattleSim(levelId, Faction.Westaria,
+                var sim = new TakeoverScene(levelId, Faction.Westaria,
                     OriginalRules.EnemyPlayers(levelId).First().Faction, null, 7711);
                 MapNodeEntity home = sim.Human.OwnedNodes.First(node => node.Building != null);
                 GameConfig.takeover.Unit guard = tables.TbUnit.DataList.First(unit =>
                     unit.Name == "Guards" && OriginalRules.FromConfigFaction(unit.Faction) == Faction.Westaria);
                 SquadEntity squad = sim.BuyUnit(sim.Human, guard, home, out _);
                 MapNodeEntity target = sim.Nodes
-                    .Where(node => BattleSim.IsKeyBuilding(node.Building) && node.Building.Owner != Faction.Westaria)
+                    .Where(node => TakeoverScene.IsKeyBuilding(node.Building) && node.Building.Owner != Faction.Westaria)
                     .OrderBy(node => (node.Pos - home.Pos).sqrMagnitude)
                     .First();
                 sim.OrderMove(squad, target);
@@ -538,7 +538,7 @@ namespace GameLogic.Takeover
         /// <summary>检查关卡场景中的战斗流程和结果。</summary>
         private static void CheckScenarioCombat(Tables tables, ICollection<string> failures)
         {
-            var sim = new BattleSim(1, Faction.Westaria, Faction.Empire, null, 4488);
+            var sim = new TakeoverScene(1, Faction.Westaria, Faction.Empire, null, 4488);
             int waypointCount = sim.Edges.Sum(edge => Math.Max(0, edge.Waypoints.Count - 2));
             Check(waypointCount >= 10, $"原版道路 waypoint 缺失: {waypointCount}", failures);
             Check(sim.Edges.SelectMany(edge => edge.Waypoints.Skip(1).Take(edge.Waypoints.Count - 2))
@@ -562,7 +562,7 @@ namespace GameLogic.Takeover
             }
 
             MapNodeEntity enemyBuilding = sim.Nodes.First(node =>
-                node.Building != null && BattleSim.IsKeyBuilding(node.Building) &&
+                node.Building != null && TakeoverScene.IsKeyBuilding(node.Building) &&
                 node.Building.Owner != Faction.Westaria);
             enemyBuilding.Building.Level = 2;
             enemyBuilding.Building.Hp = 0;

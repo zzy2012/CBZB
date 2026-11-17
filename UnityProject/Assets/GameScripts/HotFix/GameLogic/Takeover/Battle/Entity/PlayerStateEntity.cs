@@ -53,7 +53,7 @@ namespace GameLogic.Takeover
 
         /// <summary>当前生效的关键建筑数量。</summary>
         public int ActiveBuildings => OwnedNodes.Count(node =>
-            node.Building != null && node.Building.IsActive && BattleSim.IsKeyBuilding(node.Building));
+            node.Building != null && node.Building.IsActive && TakeoverScene.IsKeyBuilding(node.Building));
         /// <summary>参与方的补给容量上限。</summary>
         public int SupplyCap => OwnedNodes.Where(node => node.Building != null && node.Building.IsActive)
             .Sum(node => node.Building.Supply);
